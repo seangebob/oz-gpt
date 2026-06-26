@@ -62,7 +62,7 @@ class Head (nn.Module):
         wei = wei.masked_fill(self.tril[:T, :T] == 0, float('-inf')) # (B, T, T)
         wei = F.softmax(wei, dim=-1) # (B, T, T)
         wei = self.dropout(wei)
-        #perform the weighted aggregations of the values
+        # perform the weighted aggregations of the values
         v = self.value(x)
         out = wei @ v 
         return out
