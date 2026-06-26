@@ -17,13 +17,13 @@ vocab_file = "vocab.txt"
 files = xz_files_in_dir(folder_path)
 total_files = len(files)
 
-# Calculate the split incdies
+# Calculate the split indices
 split_index = int(total_files * 0.9)
 files_train = files[:split_index]
 files_val = files[split_index:]
 
 
-# process files for training and validatio seperately
+# process files for training and validation separately
 vocab = set()
 
 # process training files 
