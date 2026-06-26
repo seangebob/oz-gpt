@@ -1,8 +1,6 @@
-# nanogpt-from-scratch
+# oz-gpt
 
-A minimal, educational implementation of a **GPT-style character-level language model** built entirely from scratch using PyTorch. Trained on *The Wizard of Oz*, the model learns to generate text one character at a time using a Transformer architecture with multi-head self-attention.
-
-Inspired by [Andrej Karpathy's nanoGPT](https://github.com/karpathy/nanoGPT).
+An LLM built entirely from scratch using PyTorch. Trained on The Wizard of Oz, the model learns to generate text one character at a time using a Transformer architecture with multi-head self-attention.
 
 ---
 
@@ -158,6 +156,15 @@ Linear projection → logits (vocab_size)
     ▼
 Softmax → sample next character
 ```
+
+---
+
+## Future Improvements
+- It's kind of bugged right now when prompting the GPT.
+- Tokenization and Data Preprocessing Pipeline (e.g. GPT from scratch) as the model uses tokenization and reads raw text chunks.
+- Enhancing Modern Transformer Architectures
+- Enchaning efficient Training & Optimization
+
 
 ---
 
