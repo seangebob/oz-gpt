@@ -3,7 +3,7 @@ import mmap
 import random
 import argparse
 
-from model import (
+from model.model import (
     GPTLanguageModel, vocab_size, encode,
     block_size, n_embd, n_head, n_layer, dropout,
     get_device, MODEL_PATH, DATA_PATH,

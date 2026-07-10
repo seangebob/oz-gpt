@@ -21,13 +21,17 @@ An LLM built entirely from scratch using PyTorch. Trained on The Wizard of Oz, t
 
 ```
 .
-├── model.py          # Model architecture & shared config (hyperparameters, vocab, paths)
-├── training.py       # Training loop — trains and saves model weights to model-01.pth
-├── chatbot.py        # Interactive CLI chatbot that loads the trained model
-├── data-extract.py   # Utility to extract & split large .xz corpora into train/val text files
-├── _test_model.py    # Non-interactive smoke-test: loads the model and generates sample text
-├── wizard_of_oz.txt  # Training corpus (public domain)
-└── model-01.pth      # Saved model weights (created after training — not tracked by git)
+├── README.md
+├── model/                # Core code & data
+│   ├── __init__.py       # Package marker
+│   ├── model.py          # Model architecture & shared config (hyperparameters, vocab, paths)
+│   ├── training.py       # Training loop — trains and saves model weights to model-01.pth
+│   ├── chatbot.py        # Interactive CLI chatbot that loads the trained model
+│   ├── data_extract.py   # Utility to extract & split large .xz corpora into train/val text files
+│   ├── _test_model.py    # Non-interactive smoke-test: loads the model and generates sample text
+│   ├── wizard_of_oz.txt  # Training corpus (public domain)
+│   └── model-01.pth      # Saved model weights (created after training — not tracked by git)
+└── extra/                # Notebooks, experiments, and other supporting files
 ```
 
 ---
@@ -36,7 +40,7 @@ An LLM built entirely from scratch using PyTorch. Trained on The Wizard of Oz, t
 
 - Python 3.9+
 - PyTorch 2.0+ (with optional CUDA support)
-- `tqdm` (only needed for `data-extract.py`)
+- `tqdm` (only needed for `data_extract.py`)
 
 Install dependencies:
 
@@ -53,7 +57,7 @@ pip install torch tqdm
 ### 1. Train the model
 
 ```bash
-python training.py -batch_size 32
+python -m model.training -batch_size 32
 ```
 
 This trains on `wizard_of_oz.txt` and saves the weights to `model-01.pth`.
@@ -69,13 +73,13 @@ This trains on `wizard_of_oz.txt` and saves the weights to `model-01.pth`.
 
 Example with custom settings:
 ```bash
-python training.py -batch_size 64 --max_iters 5000 --eval_iters 500 --lr 1e-3
+python -m model.training -batch_size 64 --max_iters 5000 --eval_iters 500 --lr 1e-3
 ```
 
 ### 2. Chat with the model
 
 ```bash
-python chatbot.py
+python -m model.chatbot
 ```
 
 Type any prompt and the model will auto-regressively complete it. Type `quit` or `exit` to stop.
@@ -88,13 +92,13 @@ Type any prompt and the model will auto-regressively complete it. Type `quit` or
 
 Example:
 ```bash
-python chatbot.py --max_tokens 300
+python -m model.chatbot --max_tokens 300
 ```
 
 ### 3. Run a quick smoke test
 
 ```bash
-python _test_model.py
+python -m model._test_model
 ```
 
 Loads the model and generates 100 tokens from the prompt `"Dorothy"` — useful for verifying a trained checkpoint is working correctly.
@@ -103,22 +107,22 @@ Loads the model and generates 100 tokens from the prompt `"Dorothy"` — useful 
 
 ## Training Your Own Corpus
 
-If you want to train on a **larger dataset** (e.g., OpenWebText `.xz` shards), use `data-extract.py`:
+If you want to train on a **larger dataset** (e.g., OpenWebText `.xz` shards), use `data_extract.py`:
 
-1. Place `.xz`-compressed text files in the project directory.
+1. Place `.xz`-compressed text files in the `model/` directory.
 2. Run:
    ```bash
-   python data-extract.py
+   python -m model.data_extract
    ```
 3. This produces `output.train.txt`, `output.val.txt`, and `vocab.txt` with a 90/10 train/val split.
 
-You would then update `DATA_PATH` in `model.py` to point at your new training file.
+You would then update `DATA_PATH` in `model/model.py` to point at your new training file.
 
 ---
 
 ## Hyperparameters
 
-All key hyperparameters live in `model.py` and are shared between training and inference:
+All key hyperparameters live in `model/model.py` and are shared between training and inference:
 
 | Parameter | Default | Description |
 |---|---|---|
@@ -128,7 +132,7 @@ All key hyperparameters live in `model.py` and are shared between training and i
 | `n_layer` | `1` | Number of Transformer blocks |
 | `dropout` | `0.2` | Dropout probability |
 
-> **Tip:** Increasing `n_head` and `n_layer` (e.g., `n_head=6`, `n_layer=6`) will produce a much more capable model but requires more memory and training time.
+> **Tip:** Increasing `n_head` and `n_layer` in `model/model.py` (e.g., `n_head=6`, `n_layer=6`) will produce a much more capable model but requires more memory and training time.
 
 ---
 
@@ -164,7 +168,7 @@ Softmax → sample next character
 - Enhancing Modern Transformer Architectures
 - Enhancing efficient Training & Optimization   
 
-> **Tip:** For noticeably better text quality, increase `n_head` and `n_layer` in `model.py` (e.g., `n_head=4`, `n_layer=4`) and train with more iterations (`--max_iters 5000`).
+> **Tip:** For noticeably better text quality, increase `n_head` and `n_layer` in `model/model.py` (e.g., `n_head=4`, `n_layer=4`) and train with more iterations (`--max_iters 5000`).
 
 
 ---

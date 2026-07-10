@@ -1,6 +1,6 @@
 """Non-interactive test: load the model and generate text from a prompt."""
 import torch
-from model import GPTLanguageModel, vocab_size, encode, decode, get_device, MODEL_PATH
+from model.model import GPTLanguageModel, vocab_size, encode, decode, get_device, MODEL_PATH
 
 device = get_device()
 model = GPTLanguageModel(vocab_size).to(device)

@@ -3,7 +3,7 @@ import argparse
 import sys
 import os
 
-from model import (
+from model.model import (
     GPTLanguageModel, vocab_size, encode, decode,
     get_device, MODEL_PATH,
 )

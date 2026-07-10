@@ -11,9 +11,9 @@ def xz_files_in_dir(directory):
 
 # Use the directory where this script lives, making the project portable
 folder_path = os.path.dirname(os.path.abspath(__file__))
-output_file_train = "output.train.txt"
-output_file_val = "output.val.txt" 
-vocab_file = "vocab.txt"
+output_file_train = os.path.join(folder_path, "output.train.txt")
+output_file_val  = os.path.join(folder_path, "output.val.txt")
+vocab_file       = os.path.join(folder_path, "vocab.txt")
  
 files = xz_files_in_dir(folder_path)
 total_files = len(files)
