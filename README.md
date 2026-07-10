@@ -1,6 +1,6 @@
 # oz-gpt
 
-An LLM built entirely from scratch using PyTorch. Trained on The Wizard of Oz, the model learns to generate text one character at a time using a Transformer architecture with multi-head self-attention.
+A Large Language Model (LLM) built entirely from scratch using PyTorch. Trained on The Wizard of Oz, the model learns to generate text one character at a time using a Transformer architecture with multi-head self-attention.
 
 ---
 
