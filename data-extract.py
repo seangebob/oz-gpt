@@ -18,8 +18,6 @@ vocab_file = "vocab.txt"
 files = xz_files_in_dir(folder_path)
 total_files = len(files)
 
-<<<<<<< Updated upstream
-=======
 if total_files == 0:
     print(f"WARNING: No .xz files found in {folder_path}. "
           "Output files will be empty. Place compressed data files in the project directory first.")
@@ -27,18 +25,13 @@ if total_files == 0:
 # Sort files for deterministic train/val splits across runs
 files.sort()
 
->>>>>>> Stashed changes
 # Calculate the split indices
 split_index = int(total_files * 0.9)
 files_train = files[:split_index]
 files_val = files[split_index:]
 
 
-<<<<<<< Updated upstream
-# process files for training and validation separately
-=======
 # Process files for training and validation separately
->>>>>>> Stashed changes
 vocab = set()
 
 # Process the training files
@@ -71,11 +64,6 @@ with open(output_file_val, "w", encoding="utf-8") as outfile:
 
 # Write the vocabulary to vocab.txt in sorted order for deterministic mappings
 with open(vocab_file, "w", encoding="utf-8") as vfile:
-<<<<<<< Updated upstream
-    for char in vocab:
-        vfile.write(char + '\n') 
-=======
     for char in sorted(vocab):
         # Use repr() so special characters like newlines are unambiguous
         vfile.write(char + '\n') 
->>>>>>> Stashed changes

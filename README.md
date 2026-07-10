@@ -160,10 +160,11 @@ Softmax → sample next character
 ---
 
 ## Future Improvements
-- It's kind of bugged right now when prompting the GPT.
 - Tokenization and Data Preprocessing Pipeline (e.g. GPT from scratch) as the model uses tokenization and reads raw text chunks.
 - Enhancing Modern Transformer Architectures
-- Enchaning efficient Training & Optimization
+- Enhancing efficient Training & Optimization   
+
+> **Tip:** For noticeably better text quality, increase `n_head` and `n_layer` in `model.py` (e.g., `n_head=4`, `n_layer=4`) and train with more iterations (`--max_iters 5000`).
 
 
 ---
