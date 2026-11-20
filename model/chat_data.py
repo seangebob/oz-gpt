@@ -8,7 +8,8 @@ from model.model import block_size, dropout, n_embd, n_head, n_layer
 
 CHAT_CHECKPOINT = Path(__file__).with_name('model-chat.pth')
 CHAT_FORMAT_VERSION = 1
-END_OF_TURN = '\n[END]'
+END_MARKER = '[END]'
+END_OF_TURN = '\n' + END_MARKER
 IGNORE_TARGET = -100  # PyTorch cross-entropy's default ignore_index
 MODEL_CONFIG = {
     'block_size': block_size,
@@ -46,13 +47,26 @@ def format_prompt(user_text):
     return f'User: {user_text}\nAssistant: '
 
 
+def format_turn(user_text, reply):
+    return format_prompt(user_text) + reply + END_OF_TURN + '\n'
+
+
+def with_history(prompt, history, max_prompt_chars):
+    """Prepend the newest consecutive complete turns that fit the prompt budget."""
+    for turn in reversed(history):
+        if len(turn) + len(prompt) > max_prompt_chars:
+            break
+        prompt = turn + prompt
+    return prompt
+
+
 def _message_text(message, role):
     if not isinstance(message, dict) or message.get('role') != role:
         raise ValueError(f'Expected a message with role {role!r}.')
     text = message.get('content')
     if not isinstance(text, str) or not text.strip():
         raise ValueError(f'Expected nonempty content for {role!r}.')
-    if '[END]' in text:
+    if END_MARKER in text:
         raise ValueError('Message content cannot contain the reserved [END] marker.')
     return text.strip()
 
@@ -65,21 +79,19 @@ def _conversation_examples(conversation, tokenizer):
     history = []
     for index in range(0, len(messages), 2):
         user_text = _message_text(messages[index], 'user')
-        reply = _message_text(messages[index + 1], 'assistant') + END_OF_TURN
+        assistant_text = _message_text(messages[index + 1], 'assistant')
+        reply = assistant_text + END_OF_TURN
         prompt = format_prompt(user_text)
         # Shifting by one yields at most block_size inputs and targets.
         if len(prompt) + len(reply) > block_size + 1:
             raise ValueError(f'Turn {index // 2 + 1} exceeds the {block_size}-character context. Shorten the prompt or reply.')
-        for previous in reversed(history):
-            if len(previous) + len(prompt) + len(reply) > block_size + 1:
-                break
-            prompt = previous + prompt
+        prompt = with_history(prompt, history, block_size + 1 - len(reply))
 
         tokens = tokenizer.encode(prompt + reply)
         # The final prompt character predicts the first character of the reply.
         targets = [IGNORE_TARGET] * (len(prompt) - 1) + tokens[len(prompt):]
         yield tokens[:-1], targets
-        history.append(format_prompt(user_text) + reply + '\n')
+        history.append(format_turn(user_text, assistant_text))
 
 
 def load_examples(path, tokenizer):

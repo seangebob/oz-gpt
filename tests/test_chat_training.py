@@ -1,5 +1,8 @@
+from contextlib import redirect_stdout
+from io import StringIO
 import json
 from pathlib import Path
+import runpy
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
@@ -8,7 +11,7 @@ import torch
 
 from model.chat_data import (
     END_OF_TURN, IGNORE_TARGET, ChatTokenizer, collate_examples, format_prompt,
-    load_chat_checkpoint, load_examples,
+    format_turn, load_chat_checkpoint, load_examples, with_history,
 )
 from model.chat_training import save_checkpoint
 from model.model import GPTLanguageModel, block_size, chars
@@ -47,6 +50,47 @@ class ChatTrainingTests(unittest.TestCase):
         self.assertEqual(self.tokenizer.decode(second[0]), (format_prompt('Hello') + 'b' * 50 + END_OF_TURN)[:-1])
         with self.assertRaisesRegex(ValueError, r'chat.jsonl:1: Turn 1 exceeds'):
             self.load_conversation(('Hi', 'a' * block_size))
+
+    def test_history_keeps_only_consecutive_recent_turns(self):
+        first = format_turn('Hi', 'Hello!')
+        second = format_turn('Who is Jim?', 'Jim is the cab-horse.')
+        prompt = format_prompt('What kind?')
+        self.assertEqual(with_history(prompt, [first, second], len(first + second + prompt)), first + second + prompt)
+        self.assertEqual(with_history(prompt, [first, second], len(second + prompt)), second + prompt)
+        self.assertEqual(with_history(prompt, [first, second], len(second + prompt) - 1), prompt)
+
+    def test_cli_uses_history_and_resets_it(self):
+        replies = ('Jim is the cab-horse.' + END_OF_TURN, 'A horse.' + END_OF_TURN, 'Ask me about Oz.' + END_OF_TURN)
+        seen_prompts = []
+
+        def generate(context, max_new_tokens, **kwargs):
+            seen_prompts.append(self.tokenizer.decode(context[0].tolist()))
+            reply = replies[len(seen_prompts) - 1]
+            self.assertLessEqual(context.size(1) + max_new_tokens, block_size + 1)
+            return torch.cat((context, torch.tensor([self.tokenizer.encode(reply)])), dim=1)
+
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / 'chat.pth'
+            path.touch()
+            with (
+                patch('sys.argv', ['chatbot', '--chat', str(path)]),
+                patch('model.chat_data.load_chat_checkpoint', return_value=({}, self.tokenizer)),
+                patch('model.model.get_device', return_value='cpu'),
+                patch('model.model.GPTLanguageModel') as model_class,
+                patch('builtins.input', side_effect=['Who is Jim?', 'What kind?', '/reset', 'What kind?', 'quit']),
+                redirect_stdout(StringIO()) as stdout,
+            ):
+                model_class.return_value.generate.side_effect = generate
+                runpy.run_module('model.chatbot', run_name='__main__')
+
+        follow_up = format_prompt('What kind?')
+        self.assertEqual(seen_prompts, [
+            format_prompt('Who is Jim?'),
+            format_turn('Who is Jim?', 'Jim is the cab-horse.') + follow_up,
+            follow_up,
+        ])
+        self.assertIn('Assistant: A horse.', stdout.getvalue())
+        self.assertNotIn(END_OF_TURN.strip(), stdout.getvalue())
 
     def test_checkpoint_restores_token_order(self):
         tokenizer = ChatTokenizer(list(reversed(chars)))

@@ -117,7 +117,7 @@ python -m model.chat_training
 python -m model.chatbot --chat
 ```
 
-Try `Hello` or `Who is Eureka?`. The demo answers one prompt at a time. The starter dataset is small, so expect inconsistent answers to unfamiliar prompts.
+Try `Who is Jim?` followed by `What kind?` in the same session. Chat uses the newest complete turns that fit in its 128-character context and leaves room for a reply. Type `/reset` to clear the conversation. Retrain an existing chat checkpoint to learn the new follow-up examples. The starter dataset focuses on short exchanges about Oz.
 
 Each line in the training and validation files is a complete conversation in JSONL format. Messages alternate between `user` and `assistant`. Keep whole conversations in separate files for training and validation.
 
@@ -127,7 +127,7 @@ Each line in the training and validation files is a complete conversation in JSO
 
 The trainer formats each turn with `User:` and `Assistant:` labels and appends `[END]` to the reply. It uses the prompt and any recent complete turns that fit as context. Only the current assistant reply and its end marker contribute to the loss. Keep each formatted turn short enough for the model's 128-character context and use characters from the base vocabulary.
 
-Training starts from `model/model-01.pth` and saves the weights with the lowest validation reply loss, the model settings, and the ordered character vocabulary to `model/model-chat.pth`. The generated chat checkpoint is ignored by Git. Pass `--train-data` and `--val-data` to use your own files, `--steps` to change the default 700 training steps, or `--output` to save to a different path. Load a custom output with `python -m model.chatbot --chat path/to/checkpoint.pth`. Chat training automatically selects CUDA, Apple MPS, or CPU, and `--device` can override that choice.
+Training starts from `model/model-01.pth` and saves the weights with the lowest validation reply loss, the model settings, and the ordered character vocabulary to `model/model-chat.pth`. The generated chat checkpoint is ignored by Git. Pass `--train-data` and `--val-data` to use your own files, `--steps` to change the default 1,600 training steps, or `--output` to save to a different path. Load a custom output with `python -m model.chatbot --chat path/to/checkpoint.pth`. Chat training automatically selects CUDA, Apple MPS, or CPU, and `--device` can override that choice.
 
 ---
 
