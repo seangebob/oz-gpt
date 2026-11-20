@@ -1,6 +1,6 @@
 # oz-gpt
 
-A Large Language Model (LLM) built entirely from scratch using PyTorch. Trained on The Wizard of Oz, the model learns to generate text one character at a time using a Transformer architecture with multi-head self-attention.
+A character-level language model built from scratch using PyTorch. The base Transformer learns to continue text from L. Frank Baum's *Dorothy and the Wizard in Oz*. A separate fine-tuning command teaches it to reply to short Oz questions in the terminal.
 
 ---
 
@@ -26,11 +26,14 @@ A Large Language Model (LLM) built entirely from scratch using PyTorch. Trained 
 │   ├── __init__.py       # Package marker
 │   ├── model.py          # Model architecture & shared config (hyperparameters, vocab, paths)
 │   ├── training.py       # Training loop — trains and saves model weights to model-01.pth
-│   ├── chatbot.py        # Interactive CLI chatbot that loads the trained model
+│   ├── chatbot.py        # Interactive CLI for book completions and chat replies
+│   ├── chat_training.py  # Fine-tunes the book checkpoint on user/assistant examples
+│   ├── chat_data.py      # Chat format, reply-only targets, and checkpoint loading
 │   ├── data_extract.py   # Utility to extract & split large .xz corpora into train/val text files
 │   ├── _test_model.py    # Non-interactive smoke-test: loads the model and generates sample text
 │   ├── wizard_of_oz.txt  # Training corpus (public domain)
-│   └── model-01.pth      # Saved model weights (created after training — not tracked by git)
+│   └── model-01.pth      # Bundled base model weights
+├── data/                 # Starter chat training and validation examples
 └── extra/                # Notebooks, experiments, and other supporting files
 ```
 
@@ -76,7 +79,7 @@ Example with custom settings:
 python -m model.training -batch_size 64 --max_iters 5000 --eval_iters 500 --lr 1e-3
 ```
 
-### 2. Chat with the model
+### 2. Try book-style completions
 
 ```bash
 python -m model.chatbot
@@ -102,6 +105,29 @@ python -m model._test_model
 ```
 
 Loads the model and generates 100 tokens from the prompt `"Dorothy"` — useful for verifying a trained checkpoint is working correctly.
+
+---
+
+## Fine-tune the model for chat
+
+From the repo root, fine-tune the bundled book checkpoint and open the chat demo:
+
+```bash
+python -m model.chat_training
+python -m model.chatbot --chat
+```
+
+Try `Hello` or `Who is Eureka?`. The demo answers one prompt at a time. The starter dataset is small, so expect inconsistent answers to unfamiliar prompts.
+
+Each line in the training and validation files is a complete conversation in JSONL format. Messages alternate between `user` and `assistant`. Keep whole conversations in separate files for training and validation.
+
+```json
+{"messages":[{"role":"user","content":"Who is Eureka?"},{"role":"assistant","content":"Eureka is Dorothy's kitten."}]}
+```
+
+The trainer formats each turn with `User:` and `Assistant:` labels and appends `[END]` to the reply. It uses the prompt and any recent complete turns that fit as context. Only the current assistant reply and its end marker contribute to the loss. Keep each formatted turn short enough for the model's 128-character context and use characters from the base vocabulary.
+
+Training starts from `model/model-01.pth` and saves the weights with the lowest validation reply loss, the model settings, and the ordered character vocabulary to `model/model-chat.pth`. Pass `--train-data` and `--val-data` to use your own files, `--steps` to control training duration, or `--output` to save to a different path. Load a custom output with `python -m model.chatbot --chat path/to/checkpoint.pth`. Chat training automatically selects CUDA, Apple MPS, or CPU, and `--device` can override that choice.
 
 ---
 

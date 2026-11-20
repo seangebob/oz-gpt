@@ -18,9 +18,13 @@ MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "model-01.
 DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "wizard_of_oz.txt")
 
 
-def get_device():
-    """Return the best available device (CUDA > CPU)."""
-    return 'cuda' if torch.cuda.is_available() else 'cpu'
+def get_device(*, allow_mps=False):
+    """Select CUDA, optionally Apple MPS, or CPU."""
+    if torch.cuda.is_available():
+        return 'cuda'
+    if allow_mps and torch.backends.mps.is_available():
+        return 'mps'
+    return 'cpu'
 
 
 
@@ -154,9 +158,14 @@ class GPTLanguageModel(nn.Module):
 
         return logits, loss
 
-    def generate(self, index, max_new_tokens):
-        """Auto-regressively generate *max_new_tokens* new tokens."""
-        for _ in range(max_new_tokens):
+    def generate(self, index, max_new_tokens, *, stop_ids=()):
+        """Sample new tokens, optionally stopping at a token sequence for one prompt."""
+        if stop_ids and index.size(0) != 1:
+            raise ValueError('A stop sequence requires a single prompt.')
+        stop_ids = list(stop_ids)
+        stop_length = len(stop_ids)
+
+        for step in range(max_new_tokens):
             # Crop to the last block_size tokens so positional embeddings stay valid
             index_cond = index[:, -block_size:]
             logits, _loss = self.forward(index_cond)
@@ -164,4 +173,7 @@ class GPTLanguageModel(nn.Module):
             probs = F.softmax(logits, dim=-1)     # (B, C)
             index_next = torch.multinomial(probs, num_samples=1)  # (B, 1)
             index = torch.cat((index, index_next), dim=1)         # (B, T+1)
+            if stop_length and step + 1 >= stop_length:
+                if index[0, -stop_length:].tolist() == stop_ids:
+                    break
         return index

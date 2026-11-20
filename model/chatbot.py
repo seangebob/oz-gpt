@@ -1,10 +1,11 @@
 import torch
 import argparse
 import sys
-import os
+from pathlib import Path
 
+from model.chat_data import CHAT_CHECKPOINT, END_OF_TURN, format_prompt, load_chat_checkpoint
 from model.model import (
-    GPTLanguageModel, vocab_size, encode, decode,
+    GPTLanguageModel, block_size, vocab_size, encode, decode,
     get_device, MODEL_PATH,
 )
 
@@ -12,28 +13,34 @@ from model.model import (
 parser = argparse.ArgumentParser(description='Chat with the trained GPT language model')
 parser.add_argument('--max_tokens', type=int, default=150,
                     help='Number of tokens to generate per prompt (default: 150)')
+parser.add_argument('--chat', nargs='?', const=CHAT_CHECKPOINT, type=Path, metavar='CHECKPOINT',
+                    help='Use an Oz chat checkpoint (default path: model/model-chat.pth)')
 args = parser.parse_args()
 
-device = get_device()
+device = get_device(allow_mps=args.chat is not None)
+checkpoint = args.chat or Path(MODEL_PATH)
+train_command = 'python -m model.chat_training' if args.chat else 'python -m model.training -batch_size 32'
 
 # Load model
-model = GPTLanguageModel(vocab_size).to(device)
-
-if not os.path.isfile(MODEL_PATH):
-    print(f"ERROR: No model file found at {MODEL_PATH}")
-    print("Please train the model first by running:")
-    print("  python training.py -batch_size 32")
+if not checkpoint.is_file():
+    print(f"ERROR: No model file found at {checkpoint}")
+    print(f"Train a model with {train_command}")
     sys.exit(1)
 
 print("Loading model parameters...")
 try:
-    state = torch.load(MODEL_PATH, map_location=device, weights_only=True)
+    if args.chat:
+        state, tokenizer = load_chat_checkpoint(checkpoint)
+        model = GPTLanguageModel(len(tokenizer.characters))
+        stop_ids = tokenizer.encode(END_OF_TURN)
+    else:
+        state = torch.load(checkpoint, map_location='cpu', weights_only=True)
+        model = GPTLanguageModel(vocab_size)
     model.load_state_dict(state)
+    model.to(device)
 except Exception as e:
     print(f"ERROR: Failed to load model — {e}")
-    print("The model file may be corrupt or from an older format.")
-    print("Please retrain by running:")
-    print("  python training.py -batch_size 32")
+    print(f"Train a model with {train_command}")
     sys.exit(1)
 
 model.eval()
@@ -57,6 +64,23 @@ while True:
             break
         if not prompt.strip():
             print("(Empty prompt — please enter text)\n")
+            continue
+
+        if args.chat:
+            try:
+                token_ids = tokenizer.encode(format_prompt(prompt.strip()))
+            except ValueError as error:
+                print(f"({error})")
+                continue
+            remaining = block_size + 1 - len(token_ids)
+            if remaining <= len(stop_ids):
+                print("(Prompt is too long for the chat context. Try a shorter message.)")
+                continue
+            context = torch.tensor([token_ids], dtype=torch.long, device=device)
+            with torch.inference_mode():
+                generated = model.generate(context, min(args.max_tokens, remaining), stop_ids=stop_ids)
+            reply = tokenizer.decode(generated[0, len(token_ids):].tolist())
+            print(f"\nAssistant: {reply.removesuffix(END_OF_TURN)}\n")
             continue
 
         context = torch.tensor(encode(prompt), dtype=torch.long, device=device)

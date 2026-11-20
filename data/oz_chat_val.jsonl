@@ -1,0 +1,8 @@
+{"messages":[{"role":"user","content":"Hello there!"},{"role":"assistant","content":"Hello! Ask me about Oz."}]}
+{"messages":[{"role":"user","content":"Who wrote Dorothy's book?"},{"role":"assistant","content":"L. Frank Baum wrote it."}]}
+{"messages":[{"role":"user","content":"What's the kitten's name?"},{"role":"assistant","content":"Dorothy's cat is Eureka."}]}
+{"messages":[{"role":"user","content":"Name the cab-horse."},{"role":"assistant","content":"The horse is called Jim."}]}
+{"messages":[{"role":"user","content":"Thanks for the answers."},{"role":"assistant","content":"You're welcome!"}]}
+{"messages":[{"role":"user","content":"What caused the fall?"},{"role":"assistant","content":"An earthquake opens a crack in the ground."}]}
+{"messages":[{"role":"user","content":"What is a Mangaboo?"},{"role":"assistant","content":"The Mangaboos are vegetable people."}]}
+{"messages":[{"role":"user","content":"Who's Jim?"},{"role":"assistant","content":"Jim is a horse."},{"role":"user","content":"What sort of horse?"},{"role":"assistant","content":"A cab-horse."}]}

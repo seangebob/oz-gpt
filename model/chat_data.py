@@ -1,0 +1,117 @@
+import json
+from pathlib import Path
+
+import torch
+
+from model.model import block_size, dropout, n_embd, n_head, n_layer
+
+
+CHAT_CHECKPOINT = Path(__file__).with_name('model-chat.pth')
+CHAT_FORMAT_VERSION = 1
+END_OF_TURN = '\n[END]'
+IGNORE_TARGET = -100  # PyTorch cross-entropy's default ignore_index
+MODEL_CONFIG = {
+    'block_size': block_size,
+    'n_embd': n_embd,
+    'n_head': n_head,
+    'n_layer': n_layer,
+    'dropout': dropout,
+}
+
+
+class ChatTokenizer:
+    def __init__(self, characters):
+        if (
+            not isinstance(characters, (list, tuple))
+            or not characters
+            or any(not isinstance(char, str) or len(char) != 1 for char in characters)
+            or len(set(characters)) != len(characters)
+        ):
+            raise ValueError('Expected an ordered vocabulary of distinct characters.')
+        self.characters = tuple(characters)
+        self.ids = {char: index for index, char in enumerate(characters)}
+        self.encode(format_prompt('') + END_OF_TURN)
+
+    def encode(self, text):
+        unknown = sorted(set(text).difference(self.ids))
+        if unknown:
+            raise ValueError(f'Characters outside the checkpoint vocabulary: {unknown!r}')
+        return [self.ids[char] for char in text]
+
+    def decode(self, ids):
+        return ''.join(self.characters[index] for index in ids)
+
+
+def format_prompt(user_text):
+    return f'User: {user_text}\nAssistant: '
+
+
+def _message_text(message, role):
+    if not isinstance(message, dict) or message.get('role') != role:
+        raise ValueError(f'Expected a message with role {role!r}.')
+    text = message.get('content')
+    if not isinstance(text, str) or not text.strip():
+        raise ValueError(f'Expected nonempty content for {role!r}.')
+    if '[END]' in text:
+        raise ValueError('Message content cannot contain the reserved [END] marker.')
+    return text.strip()
+
+
+def _conversation_examples(conversation, tokenizer):
+    messages = conversation.get('messages') if isinstance(conversation, dict) else None
+    if not isinstance(messages, list) or not messages or len(messages) % 2:
+        raise ValueError('Expected one or more complete user/assistant pairs in messages.')
+
+    history = []
+    for index in range(0, len(messages), 2):
+        user_text = _message_text(messages[index], 'user')
+        reply = _message_text(messages[index + 1], 'assistant') + END_OF_TURN
+        prompt = format_prompt(user_text)
+        # Shifting by one yields at most block_size inputs and targets.
+        if len(prompt) + len(reply) > block_size + 1:
+            raise ValueError(f'Turn {index // 2 + 1} exceeds the {block_size}-character context. Shorten the prompt or reply.')
+        for previous in reversed(history):
+            if len(previous) + len(prompt) + len(reply) > block_size + 1:
+                break
+            prompt = previous + prompt
+
+        tokens = tokenizer.encode(prompt + reply)
+        # The final prompt character predicts the first character of the reply.
+        targets = [IGNORE_TARGET] * (len(prompt) - 1) + tokens[len(prompt):]
+        yield tokens[:-1], targets
+        history.append(format_prompt(user_text) + reply + '\n')
+
+
+def load_examples(path, tokenizer):
+    examples = []
+    with path.open(encoding='utf-8') as source:
+        for line_number, line in enumerate(source, start=1):
+            if not line.strip():
+                continue
+            try:
+                examples.extend(_conversation_examples(json.loads(line), tokenizer))
+            except ValueError as error:
+                raise ValueError(f'{path}:{line_number}: {error}') from error
+    if not examples:
+        raise ValueError(f'{path} contains no training examples.')
+    return examples
+
+
+def collate_examples(examples):
+    length = max(len(inputs) for inputs, _ in examples)
+    inputs = torch.zeros((len(examples), length), dtype=torch.long)
+    targets = torch.full_like(inputs, IGNORE_TARGET)
+    for row, (input_ids, target_ids) in enumerate(examples):
+        inputs[row, :len(input_ids)] = torch.tensor(input_ids)
+        targets[row, :len(target_ids)] = torch.tensor(target_ids)
+    return inputs, targets
+
+
+def load_chat_checkpoint(path):
+    state = torch.load(path, map_location='cpu', weights_only=True)
+    if not isinstance(state, dict) or state.get('chat_format') != CHAT_FORMAT_VERSION:
+        raise ValueError('Expected a chat checkpoint created by model.chat_training.')
+    if state.get('model_config') != MODEL_CONFIG:
+        raise ValueError('The checkpoint architecture differs from model/model.py.')
+    tokenizer = ChatTokenizer(state.get('characters'))
+    return state['model_state_dict'], tokenizer
