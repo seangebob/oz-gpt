@@ -1,33 +1,152 @@
 {"messages":[{"role":"user","content":"Hello"},{"role":"assistant","content":"Hello! Ask me about Oz."}]}
-{"messages":[{"role":"user","content":"Hi"},{"role":"assistant","content":"Hi! Ask me about Oz."}]}
+{"messages":[{"role":"user","content":"Hi"},{"role":"assistant","content":"Hello! Ask me about Oz."}]}
+{"messages":[{"role":"user","content":"Hey"},{"role":"assistant","content":"Hello! Ask me about Oz."}]}
 {"messages":[{"role":"user","content":"Hey there"},{"role":"assistant","content":"Hello! Ask me about Oz."}]}
-{"messages":[{"role":"user","content":"Good morning"},{"role":"assistant","content":"Good morning! Ask me about Oz."}]}
-{"messages":[{"role":"user","content":"How are you?"},{"role":"assistant","content":"I'm ready to talk about Oz."}]}
-{"messages":[{"role":"user","content":"Can you help me?"},{"role":"assistant","content":"Yes. Ask me a question about Oz."}]}
+{"messages":[{"role":"user","content":"Hi there"},{"role":"assistant","content":"Hello! Ask me about Oz."}]}
+{"messages":[{"role":"user","content":"Good morning"},{"role":"assistant","content":"Hello! Ask me about Oz."}]}
+{"messages":[{"role":"user","content":"Good afternoon"},{"role":"assistant","content":"Hello! Ask me about Oz."}]}
+{"messages":[{"role":"user","content":"Greetings"},{"role":"assistant","content":"Hello! Ask me about Oz."}]}
+{"messages":[{"role":"user","content":"Hello friend"},{"role":"assistant","content":"Hello! Ask me about Oz."}]}
+{"messages":[{"role":"user","content":"Hi friend"},{"role":"assistant","content":"Hello! Ask me about Oz."}]}
+{"messages":[{"role":"user","content":"Hey friend"},{"role":"assistant","content":"Hello! Ask me about Oz."}]}
+{"messages":[{"role":"user","content":"Hello Oz bot"},{"role":"assistant","content":"Hello! Ask me about Oz."}]}
+{"messages":[{"role":"user","content":"Hi bot"},{"role":"assistant","content":"Hello! Ask me about Oz."}]}
+{"messages":[{"role":"user","content":"Hello to you"},{"role":"assistant","content":"Hello! Ask me about Oz."}]}
+{"messages":[{"role":"user","content":"Nice to meet you"},{"role":"assistant","content":"Hello! Ask me about Oz."}]}
+{"messages":[{"role":"user","content":"How are you?"},{"role":"assistant","content":"Hello! Ask me about Oz."}]}
 {"messages":[{"role":"user","content":"What can I ask you?"},{"role":"assistant","content":"Ask me about Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"Can you help me?"},{"role":"assistant","content":"Ask me about Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"What can you do?"},{"role":"assistant","content":"Ask me about Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"What do you know?"},{"role":"assistant","content":"Ask me about Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"Can I ask a question?"},{"role":"assistant","content":"Ask me about Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"Can we talk about Oz?"},{"role":"assistant","content":"Ask me about Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"What do you talk about?"},{"role":"assistant","content":"Ask me about Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"What can we talk about?"},{"role":"assistant","content":"Ask me about Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"Tell me what you know."},{"role":"assistant","content":"Ask me about Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"How can you help?"},{"role":"assistant","content":"Ask me about Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"Do you know Oz?"},{"role":"assistant","content":"Ask me about Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"Can I ask about Oz?"},{"role":"assistant","content":"Ask me about Dorothy and the Wizard in Oz."}]}
 {"messages":[{"role":"user","content":"What book do you know?"},{"role":"assistant","content":"Dorothy and the Wizard in Oz."}]}
 {"messages":[{"role":"user","content":"What is the title of the book?"},{"role":"assistant","content":"Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"Name the book."},{"role":"assistant","content":"Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"What is this book called?"},{"role":"assistant","content":"Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"Which Oz book is this?"},{"role":"assistant","content":"Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"Which book are we discussing?"},{"role":"assistant","content":"Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"What is the book title?"},{"role":"assistant","content":"Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"Tell me the name of the book."},{"role":"assistant","content":"Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"What story is this about?"},{"role":"assistant","content":"Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"What is the Oz story called?"},{"role":"assistant","content":"Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"Which book did you read?"},{"role":"assistant","content":"Dorothy and the Wizard in Oz."}]}
+{"messages":[{"role":"user","content":"Which Oz story do you know?"},{"role":"assistant","content":"Dorothy and the Wizard in Oz."}]}
 {"messages":[{"role":"user","content":"Who wrote the Oz book?"},{"role":"assistant","content":"L. Frank Baum wrote it."}]}
-{"messages":[{"role":"user","content":"Who is the author?"},{"role":"assistant","content":"The author is L. Frank Baum."}]}
-{"messages":[{"role":"user","content":"Name Dorothy's cat."},{"role":"assistant","content":"Dorothy's cat is Eureka."}]}
+{"messages":[{"role":"user","content":"Who is the author?"},{"role":"assistant","content":"L. Frank Baum wrote it."}]}
+{"messages":[{"role":"user","content":"Name the author."},{"role":"assistant","content":"L. Frank Baum wrote it."}]}
+{"messages":[{"role":"user","content":"Who wrote this book?"},{"role":"assistant","content":"L. Frank Baum wrote it."}]}
+{"messages":[{"role":"user","content":"Who wrote this story?"},{"role":"assistant","content":"L. Frank Baum wrote it."}]}
+{"messages":[{"role":"user","content":"Who is the book by?"},{"role":"assistant","content":"L. Frank Baum wrote it."}]}
+{"messages":[{"role":"user","content":"Who is the story by?"},{"role":"assistant","content":"L. Frank Baum wrote it."}]}
+{"messages":[{"role":"user","content":"Who wrote the Oz story?"},{"role":"assistant","content":"L. Frank Baum wrote it."}]}
+{"messages":[{"role":"user","content":"Who is the author of this book?"},{"role":"assistant","content":"L. Frank Baum wrote it."}]}
+{"messages":[{"role":"user","content":"Who is the author of the Oz book?"},{"role":"assistant","content":"L. Frank Baum wrote it."}]}
+{"messages":[{"role":"user","content":"Tell me who wrote it."},{"role":"assistant","content":"L. Frank Baum wrote it."}]}
+{"messages":[{"role":"user","content":"Do you know the author?"},{"role":"assistant","content":"L. Frank Baum wrote it."}]}
 {"messages":[{"role":"user","content":"Who is Eureka?"},{"role":"assistant","content":"Eureka is Dorothy's kitten."}]}
-{"messages":[{"role":"user","content":"Does Dorothy have a kitten?"},{"role":"assistant","content":"Yes. Her kitten is Eureka."}]}
+{"messages":[{"role":"user","content":"Name Dorothy's cat."},{"role":"assistant","content":"Eureka is Dorothy's kitten."}]}
+{"messages":[{"role":"user","content":"Does Dorothy have a kitten?"},{"role":"assistant","content":"Eureka is Dorothy's kitten."}]}
+{"messages":[{"role":"user","content":"Who is Dorothy's kitten?"},{"role":"assistant","content":"Eureka is Dorothy's kitten."}]}
+{"messages":[{"role":"user","content":"What is Dorothy's cat called?"},{"role":"assistant","content":"Eureka is Dorothy's kitten."}]}
+{"messages":[{"role":"user","content":"What is Eureka?"},{"role":"assistant","content":"Eureka is Dorothy's kitten."}]}
+{"messages":[{"role":"user","content":"Tell me about the kitten."},{"role":"assistant","content":"Eureka is Dorothy's kitten."}]}
+{"messages":[{"role":"user","content":"What is the cat's name?"},{"role":"assistant","content":"Eureka is Dorothy's kitten."}]}
+{"messages":[{"role":"user","content":"Which cat belongs to Dorothy?"},{"role":"assistant","content":"Eureka is Dorothy's kitten."}]}
+{"messages":[{"role":"user","content":"What animal is Eureka?"},{"role":"assistant","content":"Eureka is Dorothy's kitten."}]}
+{"messages":[{"role":"user","content":"Who owns Eureka the kitten?"},{"role":"assistant","content":"Eureka is Dorothy's kitten."}]}
+{"messages":[{"role":"user","content":"Is Eureka a horse or a kitten?"},{"role":"assistant","content":"Eureka is Dorothy's kitten."}]}
+{"messages":[{"role":"user","content":"Tell me about Eureka."},{"role":"assistant","content":"Eureka is Dorothy's kitten."}]}
 {"messages":[{"role":"user","content":"Who is Jim?"},{"role":"assistant","content":"Jim is the cab-horse."}]}
-{"messages":[{"role":"user","content":"What is the horse called?"},{"role":"assistant","content":"The horse is called Jim."}]}
-{"messages":[{"role":"user","content":"What kind of animal is Jim?"},{"role":"assistant","content":"Jim is a horse."}]}
-{"messages":[{"role":"user","content":"What is Zeb's full name?"},{"role":"assistant","content":"His full name is Zebediah."}]}
-{"messages":[{"role":"user","content":"Who is Zebediah?"},{"role":"assistant","content":"Zebediah is the boy called Zeb."}]}
+{"messages":[{"role":"user","content":"What is the horse called?"},{"role":"assistant","content":"Jim is the cab-horse."}]}
+{"messages":[{"role":"user","content":"What kind of animal is Jim?"},{"role":"assistant","content":"Jim is the cab-horse."}]}
+{"messages":[{"role":"user","content":"Can you tell me about Jim?"},{"role":"assistant","content":"Jim is the cab-horse."}]}
+{"messages":[{"role":"user","content":"Tell me about Jim."},{"role":"assistant","content":"Jim is the cab-horse."}]}
+{"messages":[{"role":"user","content":"Do you know the name of the horse?"},{"role":"assistant","content":"Jim is the cab-horse."}]}
+{"messages":[{"role":"user","content":"What animal is Jim?"},{"role":"assistant","content":"Jim is the cab-horse."}]}
+{"messages":[{"role":"user","content":"Give the name of the horse."},{"role":"assistant","content":"Jim is the cab-horse."}]}
+{"messages":[{"role":"user","content":"Is Jim a horse?"},{"role":"assistant","content":"Jim is the cab-horse."}]}
+{"messages":[{"role":"user","content":"Which horse is in the book?"},{"role":"assistant","content":"Jim is the cab-horse."}]}
+{"messages":[{"role":"user","content":"What kind of horse is Jim?"},{"role":"assistant","content":"Jim is the cab-horse."}]}
+{"messages":[{"role":"user","content":"Is the cab-horse called Jim?"},{"role":"assistant","content":"Jim is the cab-horse."}]}
+{"messages":[{"role":"user","content":"What is Zeb's full name?"},{"role":"assistant","content":"Zeb is short for Zebediah."}]}
+{"messages":[{"role":"user","content":"Who is Zebediah?"},{"role":"assistant","content":"Zeb is short for Zebediah."}]}
+{"messages":[{"role":"user","content":"What does Zeb stand for?"},{"role":"assistant","content":"Zeb is short for Zebediah."}]}
+{"messages":[{"role":"user","content":"Tell me Zeb's full name."},{"role":"assistant","content":"Zeb is short for Zebediah."}]}
+{"messages":[{"role":"user","content":"Is Zeb short for anything?"},{"role":"assistant","content":"Zeb is short for Zebediah."}]}
+{"messages":[{"role":"user","content":"What is Zeb's real name?"},{"role":"assistant","content":"Zeb is short for Zebediah."}]}
+{"messages":[{"role":"user","content":"How does Zeb introduce himself?"},{"role":"assistant","content":"Zeb is short for Zebediah."}]}
+{"messages":[{"role":"user","content":"Who goes by Zeb?"},{"role":"assistant","content":"Zeb is short for Zebediah."}]}
+{"messages":[{"role":"user","content":"What is the boy Zeb called?"},{"role":"assistant","content":"Zeb is short for Zebediah."}]}
+{"messages":[{"role":"user","content":"Is his full name Zebediah?"},{"role":"assistant","content":"Zeb is short for Zebediah."}]}
+{"messages":[{"role":"user","content":"Why is Zeb called Zeb?"},{"role":"assistant","content":"Zeb is short for Zebediah."}]}
+{"messages":[{"role":"user","content":"Give me Zeb's full name."},{"role":"assistant","content":"Zeb is short for Zebediah."}]}
 {"messages":[{"role":"user","content":"What happens at the start?"},{"role":"assistant","content":"An earthquake opens a crack in the ground."}]}
-{"messages":[{"role":"user","content":"Why do Dorothy and Zeb fall underground?"},{"role":"assistant","content":"An earthquake opens the ground beneath them."}]}
-{"messages":[{"role":"user","content":"How do they get underground?"},{"role":"assistant","content":"They fall through a crack opened by an earthquake."}]}
+{"messages":[{"role":"user","content":"Why do Dorothy and Zeb fall underground?"},{"role":"assistant","content":"An earthquake opens a crack in the ground."}]}
+{"messages":[{"role":"user","content":"How do they get underground?"},{"role":"assistant","content":"An earthquake opens a crack in the ground."}]}
+{"messages":[{"role":"user","content":"What opens the ground?"},{"role":"assistant","content":"An earthquake opens a crack in the ground."}]}
+{"messages":[{"role":"user","content":"Why do Dorothy and Zeb fall?"},{"role":"assistant","content":"An earthquake opens a crack in the ground."}]}
+{"messages":[{"role":"user","content":"What makes the ground shake?"},{"role":"assistant","content":"An earthquake opens a crack in the ground."}]}
+{"messages":[{"role":"user","content":"What disaster happens in California?"},{"role":"assistant","content":"An earthquake opens a crack in the ground."}]}
+{"messages":[{"role":"user","content":"Why does the ground crack?"},{"role":"assistant","content":"An earthquake opens a crack in the ground."}]}
+{"messages":[{"role":"user","content":"What causes the ground to open?"},{"role":"assistant","content":"An earthquake opens a crack in the ground."}]}
+{"messages":[{"role":"user","content":"What sends them underground?"},{"role":"assistant","content":"An earthquake opens a crack in the ground."}]}
+{"messages":[{"role":"user","content":"How do they fall below the ground?"},{"role":"assistant","content":"An earthquake opens a crack in the ground."}]}
+{"messages":[{"role":"user","content":"What happens when the ground shakes?"},{"role":"assistant","content":"An earthquake opens a crack in the ground."}]}
 {"messages":[{"role":"user","content":"Who are the Mangaboos?"},{"role":"assistant","content":"The Mangaboos are vegetable people."}]}
-{"messages":[{"role":"user","content":"Are Mangaboos plants?"},{"role":"assistant","content":"Yes. They are vegetable people."}]}
+{"messages":[{"role":"user","content":"Are Mangaboos plants?"},{"role":"assistant","content":"The Mangaboos are vegetable people."}]}
+{"messages":[{"role":"user","content":"Tell me about the Mangaboos."},{"role":"assistant","content":"The Mangaboos are vegetable people."}]}
+{"messages":[{"role":"user","content":"What are the Mangaboos made of?"},{"role":"assistant","content":"The Mangaboos are vegetable people."}]}
+{"messages":[{"role":"user","content":"What kind of people are the Mangaboos?"},{"role":"assistant","content":"The Mangaboos are vegetable people."}]}
+{"messages":[{"role":"user","content":"Are the Mangaboos vegetable people?"},{"role":"assistant","content":"The Mangaboos are vegetable people."}]}
+{"messages":[{"role":"user","content":"Do the Mangaboos grow like plants?"},{"role":"assistant","content":"The Mangaboos are vegetable people."}]}
+{"messages":[{"role":"user","content":"Who are the vegetable people?"},{"role":"assistant","content":"The Mangaboos are vegetable people."}]}
+{"messages":[{"role":"user","content":"Name the vegetable people."},{"role":"assistant","content":"The Mangaboos are vegetable people."}]}
+{"messages":[{"role":"user","content":"Which people grow like plants?"},{"role":"assistant","content":"The Mangaboos are vegetable people."}]}
+{"messages":[{"role":"user","content":"What makes the Mangaboos unusual?"},{"role":"assistant","content":"The Mangaboos are vegetable people."}]}
+{"messages":[{"role":"user","content":"What sort of creatures are Mangaboos?"},{"role":"assistant","content":"The Mangaboos are vegetable people."}]}
 {"messages":[{"role":"user","content":"Thanks"},{"role":"assistant","content":"You're welcome!"}]}
+{"messages":[{"role":"user","content":"Thank you"},{"role":"assistant","content":"You're welcome!"}]}
 {"messages":[{"role":"user","content":"Thank you for helping"},{"role":"assistant","content":"You're welcome!"}]}
+{"messages":[{"role":"user","content":"Thanks a lot"},{"role":"assistant","content":"You're welcome!"}]}
+{"messages":[{"role":"user","content":"Many thanks"},{"role":"assistant","content":"You're welcome!"}]}
+{"messages":[{"role":"user","content":"Thank you so much"},{"role":"assistant","content":"You're welcome!"}]}
+{"messages":[{"role":"user","content":"Thanks very much"},{"role":"assistant","content":"You're welcome!"}]}
+{"messages":[{"role":"user","content":"I appreciate your help."},{"role":"assistant","content":"You're welcome!"}]}
+{"messages":[{"role":"user","content":"Thanks for your help."},{"role":"assistant","content":"You're welcome!"}]}
+{"messages":[{"role":"user","content":"Thanks, that helps."},{"role":"assistant","content":"You're welcome!"}]}
+{"messages":[{"role":"user","content":"That's helpful, thanks."},{"role":"assistant","content":"You're welcome!"}]}
+{"messages":[{"role":"user","content":"Thank you for the help."},{"role":"assistant","content":"You're welcome!"}]}
 {"messages":[{"role":"user","content":"Bye"},{"role":"assistant","content":"Goodbye!"}]}
 {"messages":[{"role":"user","content":"See you later"},{"role":"assistant","content":"Goodbye!"}]}
+{"messages":[{"role":"user","content":"Goodbye"},{"role":"assistant","content":"Goodbye!"}]}
+{"messages":[{"role":"user","content":"See you"},{"role":"assistant","content":"Goodbye!"}]}
+{"messages":[{"role":"user","content":"Bye bye"},{"role":"assistant","content":"Goodbye!"}]}
+{"messages":[{"role":"user","content":"Good night"},{"role":"assistant","content":"Goodbye!"}]}
+{"messages":[{"role":"user","content":"Talk to you later"},{"role":"assistant","content":"Goodbye!"}]}
+{"messages":[{"role":"user","content":"I have to go now."},{"role":"assistant","content":"Goodbye!"}]}
+{"messages":[{"role":"user","content":"See you soon"},{"role":"assistant","content":"Goodbye!"}]}
+{"messages":[{"role":"user","content":"Till next time"},{"role":"assistant","content":"Goodbye!"}]}
+{"messages":[{"role":"user","content":"Take care"},{"role":"assistant","content":"Goodbye!"}]}
+{"messages":[{"role":"user","content":"Catch you later"},{"role":"assistant","content":"Goodbye!"}]}
 {"messages":[{"role":"user","content":"What is the weather today?"},{"role":"assistant","content":"I can help with questions about Oz."}]}
 {"messages":[{"role":"user","content":"Can you tell me the time?"},{"role":"assistant","content":"I can help with questions about Oz."}]}
+{"messages":[{"role":"user","content":"How do I cook dinner?"},{"role":"assistant","content":"I can help with questions about Oz."}]}
+{"messages":[{"role":"user","content":"What is the capital of France?"},{"role":"assistant","content":"I can help with questions about Oz."}]}
+{"messages":[{"role":"user","content":"Can you check the news?"},{"role":"assistant","content":"I can help with questions about Oz."}]}
+{"messages":[{"role":"user","content":"What day is it?"},{"role":"assistant","content":"I can help with questions about Oz."}]}
+{"messages":[{"role":"user","content":"Can you give me directions?"},{"role":"assistant","content":"I can help with questions about Oz."}]}
+{"messages":[{"role":"user","content":"Tell me about basketball."},{"role":"assistant","content":"I can help with questions about Oz."}]}
+{"messages":[{"role":"user","content":"Who won the game?"},{"role":"assistant","content":"I can help with questions about Oz."}]}
+{"messages":[{"role":"user","content":"Tell me a recipe."},{"role":"assistant","content":"I can help with questions about Oz."}]}
+{"messages":[{"role":"user","content":"Can you predict the weather?"},{"role":"assistant","content":"I can help with questions about Oz."}]}
+{"messages":[{"role":"user","content":"What time is it now?"},{"role":"assistant","content":"I can help with questions about Oz."}]}
 {"messages":[{"role":"user","content":"Hi there"},{"role":"assistant","content":"Hi! Ask me about Oz."},{"role":"user","content":"Who is the author?"},{"role":"assistant","content":"L. Frank Baum wrote it."}]}
 {"messages":[{"role":"user","content":"Tell me about Jim."},{"role":"assistant","content":"Jim is a horse."},{"role":"user","content":"What kind?"},{"role":"assistant","content":"A cab-horse."}]}
 {"messages":[{"role":"user","content":"Tell me about Eureka."},{"role":"assistant","content":"Eureka is a kitten."},{"role":"user","content":"Whose?"},{"role":"assistant","content":"Dorothy's."}]}

@@ -158,8 +158,8 @@ class GPTLanguageModel(nn.Module):
 
         return logits, loss
 
-    def generate(self, index, max_new_tokens, *, stop_ids=()):
-        """Sample new tokens, optionally stopping at a token sequence for one prompt."""
+    def generate(self, index, max_new_tokens, *, stop_ids=(), sample=True):
+        """Generate new tokens, optionally stopping at a token sequence for one prompt."""
         if stop_ids and index.size(0) != 1:
             raise ValueError('A stop sequence requires a single prompt.')
         stop_ids = list(stop_ids)
@@ -170,8 +170,11 @@ class GPTLanguageModel(nn.Module):
             index_cond = index[:, -block_size:]
             logits, _loss = self.forward(index_cond)
             logits = logits[:, -1, :]             # (B, C)
-            probs = F.softmax(logits, dim=-1)     # (B, C)
-            index_next = torch.multinomial(probs, num_samples=1)  # (B, 1)
+            if sample:
+                probs = F.softmax(logits, dim=-1)
+                index_next = torch.multinomial(probs, num_samples=1)
+            else:
+                index_next = logits.argmax(dim=-1, keepdim=True)
             index = torch.cat((index, index_next), dim=1)         # (B, T+1)
             if stop_length and step + 1 >= stop_length:
                 if index[0, -stop_length:].tolist() == stop_ids:

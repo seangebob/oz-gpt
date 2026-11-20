@@ -78,7 +78,7 @@ while True:
                 continue
             context = torch.tensor([token_ids], dtype=torch.long, device=device)
             with torch.inference_mode():
-                generated = model.generate(context, min(args.max_tokens, remaining), stop_ids=stop_ids)
+                generated = model.generate(context, min(args.max_tokens, remaining), stop_ids=stop_ids, sample=False)
             reply = tokenizer.decode(generated[0, len(token_ids):].tolist())
             print(f"\nAssistant: {reply.removesuffix(END_OF_TURN)}\n")
             continue

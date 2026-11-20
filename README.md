@@ -110,7 +110,7 @@ Loads the model and generates 100 tokens from the prompt `"Dorothy"` — useful 
 
 ## Fine-tune the model for chat
 
-From the repo root, fine-tune the bundled book checkpoint and open the chat demo:
+Run these commands from the repo root to fine-tune the bundled checkpoint and open the chat demo.
 
 ```bash
 python -m model.chat_training
@@ -127,7 +127,7 @@ Each line in the training and validation files is a complete conversation in JSO
 
 The trainer formats each turn with `User:` and `Assistant:` labels and appends `[END]` to the reply. It uses the prompt and any recent complete turns that fit as context. Only the current assistant reply and its end marker contribute to the loss. Keep each formatted turn short enough for the model's 128-character context and use characters from the base vocabulary.
 
-Training starts from `model/model-01.pth` and saves the weights with the lowest validation reply loss, the model settings, and the ordered character vocabulary to `model/model-chat.pth`. Pass `--train-data` and `--val-data` to use your own files, `--steps` to control training duration, or `--output` to save to a different path. Load a custom output with `python -m model.chatbot --chat path/to/checkpoint.pth`. Chat training automatically selects CUDA, Apple MPS, or CPU, and `--device` can override that choice.
+Training starts from `model/model-01.pth` and saves the weights with the lowest validation reply loss, the model settings, and the ordered character vocabulary to `model/model-chat.pth`. The generated chat checkpoint is ignored by Git. Pass `--train-data` and `--val-data` to use your own files, `--steps` to change the default 700 training steps, or `--output` to save to a different path. Load a custom output with `python -m model.chatbot --chat path/to/checkpoint.pth`. Chat training automatically selects CUDA, Apple MPS, or CPU, and `--device` can override that choice.
 
 ---
 
