@@ -20,6 +20,8 @@ PASSAGE_STEP = 100
 PASSAGE_CONTEXT_WORDS = 24
 SEARCH_LIMIT = 8
 MIN_ANSWER_MARGIN = 2.0
+MIN_SINGLE_PASSAGE_MARGIN = 3.25
+ANSWER_AGREEMENT_BONUS = 0.5
 CHAPTER_HEADING_WEIGHT = 0.28
 
 CHAPTER_HEADING = re.compile(r'CHAPTER (\d+)\.', re.IGNORECASE)
@@ -333,6 +335,32 @@ class ExtractiveReader:
         return answers
 
 
+def _select_answer(candidates, spans):
+    strongest_search_score = candidates[0][1]
+    answers = {}
+    for (passage, score), span in zip(candidates, spans):
+        if not (span.margin >= MIN_ANSWER_MARGIN and span.text and span.text in passage.text[:span.context_end]):
+            continue
+        key = ' '.join(span.text.casefold().split()).strip(' .!?,')
+        key = re.sub(r'^(?:a|an|the) ', '', key)
+        if key:
+            strength = span.margin + 2 * score / strongest_search_score
+            answers.setdefault(key, []).append((strength, span, passage))
+
+    ranked = []
+    for matches in answers.values():
+        strength, span, passage = max(matches, key=lambda match: match[0])
+        agrees = any(other_passage != passage for _, _, other_passage in matches)
+        if agrees:
+            strength += ANSWER_AGREEMENT_BONUS
+        elif span.margin < MIN_SINGLE_PASSAGE_MARGIN:
+            continue
+        ranked.append((strength, span.text, passage))
+
+    _, text, source = max(ranked, key=lambda match: match[0], default=(0.0, NO_ANSWER, None))
+    return text, source
+
+
 class BookSession:
     def __init__(self, index, reader, *, trace_passages=False):
         self.index = index
@@ -371,14 +399,7 @@ class BookSession:
         spans = []
         if candidates:
             spans = self.reader.read(reader_question, [passage for passage, _ in candidates])
-            strongest_search_score = candidates[0][1]
-            ranked = [
-                (span.margin + 2 * score / strongest_search_score, span.text, passage)
-                for (passage, score), span in zip(candidates, spans)
-                if span.margin >= MIN_ANSWER_MARGIN and span.text and span.text in passage.text
-            ]
-            if ranked:
-                _, text, source = max(ranked, key=lambda item: item[0])
+            text, source = _select_answer(candidates, spans)
         trace = None
         if self.trace_passages:
             trace = PassageTrace(reader_question, earlier_question, earlier_answer, tuple(candidates), tuple(spans))

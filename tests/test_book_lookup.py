@@ -72,6 +72,37 @@ The Wizard was born in Omaha.
         reader.read.return_value = [AnswerSpan('Zeb', 0)]
         self.assertIsNone(session.reply('Who drives the buggy?').source)
 
+    def test_answer_agreement_breaks_close_ties_and_keeps_the_best_citation(self):
+        passages = [
+            Passage('Chapter 1', 1, 2, 'An owl answered during rehearsal.'),
+            Passage('Chapter 1', 3, 4, 'The fox answered for the council.'),
+            Passage('Chapter 1', 4, 5, 'When it convened, a fox answered for the council.'),
+        ]
+        index = Mock()
+        index.search.return_value = [(passage, 2.0) for passage in passages]
+        reader = Mock()
+        reader.read.return_value = [AnswerSpan('An owl', 8.3), AnswerSpan('The fox', 8.2), AnswerSpan('a fox', 7.5)]
+        session = BookSession(index, reader)
+
+        reply = session.reply('Who answered for the council?')
+        self.assertEqual(reply.text, 'The fox')
+        self.assertEqual(reply.source, passages[1])
+        reader.read.return_value[0] = AnswerSpan('An owl', 10)
+        self.assertEqual(session.reply('Who answered for the council?').source, passages[0])
+
+    def test_a_weak_single_passage_answer_requires_agreement(self):
+        first = Passage('Chapter 1', 1, 2, 'The fox answered.')
+        second = Passage('Chapter 1', 2, 3, 'At noon the fox answered.')
+        index = Mock()
+        reader = Mock()
+        reader.read.return_value = [AnswerSpan('fox', 2.8), AnswerSpan('fox', 2.9)]
+        session = BookSession(index, reader)
+
+        index.search.return_value = [(first, 2.0), (first, 2.0)]
+        self.assertEqual(session.reply('Who answered?').text, NO_ANSWER)
+        index.search.return_value = [(first, 2.0), (second, 2.0)]
+        self.assertEqual(session.reply('Who answered?').text, 'fox')
+
     def test_trace_keeps_search_order_and_marks_the_selected_passage(self):
         index = Mock()
         index.search.return_value = [(self.passages[1], 3.0), (self.passages[2], 1.0)]
