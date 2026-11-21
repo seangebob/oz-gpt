@@ -19,6 +19,9 @@ PASSAGE_WORDS = 165
 PASSAGE_STEP = 100
 PASSAGE_CONTEXT_WORDS = 24
 SEARCH_LIMIT = 8
+EXPANDED_SEARCH_LIMIT = 24
+FOLLOWUP_RECHECK_MARGIN = 5.0
+EXPANDED_MATCH_FRACTION = 0.75
 MIN_ANSWER_MARGIN = 2.0
 MIN_SINGLE_PASSAGE_MARGIN = 3.25
 ANSWER_AGREEMENT_BONUS = 0.5
@@ -304,7 +307,7 @@ class BookIndex:
             passage.heading,
         )
 
-    def search(self, question, previous_question=''):
+    def search(self, question, previous_question='', *, limit=SEARCH_LIMIT):
         query = dict.fromkeys(search_terms(question), 1.0)
         question_terms = set(query)
         for word in dict.fromkeys(search_terms(previous_question)):
@@ -325,7 +328,7 @@ class BookIndex:
             )
             if score > 0:
                 scores.append((passage, score + heading_scores.get(passage.section, 0.0)))
-        ranked = sorted(scores, key=lambda item: item[1], reverse=True)[:SEARCH_LIMIT]
+        ranked = sorted(scores, key=lambda item: item[1], reverse=True)[:limit]
         return [(self._with_sentence_context(passage, question_terms), score) for passage, score in ranked]
 
 
@@ -398,6 +401,29 @@ def _select_answer(candidates, spans):
     return text, source
 
 
+def _select_expanded_answer(question, candidates, spans, initial_count):
+    question_terms = set(search_terms(question))
+    eligible = candidates[:initial_count]
+    eligible_spans = spans[:initial_count]
+    initial_texts = [
+        passage.text[:span.context_end].casefold()
+        for (passage, _), span in zip(eligible, eligible_spans)
+    ]
+    for candidate, span in zip(candidates[initial_count:], spans[initial_count:]):
+        passage, _ = candidate
+        matched = len(question_terms.intersection(search_terms(passage.text[:span.context_end])))
+        enough_terms = matched >= EXPANDED_MATCH_FRACTION * len(question_terms)
+        # Allow a specific phrase already mentioned in the original shortlist.
+        repeated_phrase = (
+            matched >= 2 and len(set(search_terms(span.text))) >= 2
+            and any(span.text.casefold() in text for text in initial_texts)
+        )
+        if enough_terms or repeated_phrase:
+            eligible.append(candidate)
+            eligible_spans.append(span)
+    return _select_answer(eligible, eligible_spans)
+
+
 class BookSession:
     def __init__(self, index, reader, *, trace_passages=False):
         self.index = index
@@ -437,6 +463,18 @@ class BookSession:
         if candidates:
             spans = self.reader.read(reader_question, [passage for passage, _ in candidates])
             text, source = _select_answer(candidates, spans)
+            weak_followup = history_used and any(
+                passage == source and span.margin < FOLLOWUP_RECHECK_MARGIN
+                for (passage, _), span in zip(candidates, spans)
+            )
+            if source is None or weak_followup:
+                expanded = self.index.search(reader_question, earlier_question, limit=EXPANDED_SEARCH_LIMIT)
+                initial_count = len(candidates)
+                extra_passages = [passage for passage, _ in expanded[initial_count:]]
+                if extra_passages:
+                    spans += self.reader.read(reader_question, extra_passages)
+                    candidates = expanded
+                    text, source = _select_expanded_answer(reader_question, candidates, spans, initial_count)
         trace = None
         if self.trace_passages:
             trace = PassageTrace(reader_question, earlier_question, earlier_answer, tuple(candidates), tuple(spans))

@@ -103,6 +103,45 @@ The Wizard was born in Omaha.
         index.search.return_value = [(first, 2.0), (second, 2.0)]
         self.assertEqual(session.reply('Who answered?').text, 'fox')
 
+    def test_wider_search_reads_extra_passages_and_checks_their_topic(self):
+        initial = Passage('Chapter 1', 1, 2, 'Iris promised her ferret a silver bell.')
+        actual = Passage('Chapter 2', 3, 4, 'Iris found the ferret wearing a silver bell.')
+        unrelated = Passage('Chapter 3', 5, 6, 'Iris wore her own ribbon.')
+        index = Mock()
+        index.search.side_effect = [[(initial, 5.0)], [(initial, 5.0), (unrelated, 4.0), (actual, 3.0)]]
+        reader = Mock()
+        reader.read.side_effect = [
+            [AnswerSpan('ferret', 0)],
+            [AnswerSpan('ribbon', 12), AnswerSpan('silver bell', 4)],
+        ]
+        session = BookSession(index, reader, trace_passages=True)
+        question = "What marked Iris's own ferret?"
+
+        reply = session.reply(question)
+
+        self.assertEqual(reply.text, 'silver bell')
+        self.assertEqual(reply.source, actual)
+        index.search.assert_called_with(question, '', limit=24)
+        reader.read.assert_called_with(question, [unrelated, actual])
+        self.assertEqual(len(reply.passage_trace.candidates), 3)
+        self.assertEqual(reply.passage_trace.spans[1].text, 'ribbon')
+
+    def test_wider_search_can_recheck_a_weak_followup(self):
+        first = Passage('Chapter 1', 1, 2, 'Dana returned with a scout.')
+        actual = Passage('Chapter 2', 3, 4, 'Dana went with a guide when she returned.')
+        index = Mock()
+        index.search.side_effect = [[(first, 5.0)], [(first, 5.0), (actual, 4.0)]]
+        reader = Mock()
+        reader.read.side_effect = [[AnswerSpan('a scout', 4.5)], [AnswerSpan('a guide', 8)]]
+        session = BookSession(index, reader)
+        session.remember('Where does Dana return?', '')
+
+        reply = session.reply('Who went too?')
+
+        self.assertTrue(reply.history_used)
+        self.assertEqual(reply.source, actual)
+        reader.read.assert_called_with('Who went with Dana when Dana returned?', [actual])
+
     def test_trace_keeps_search_order_and_marks_the_selected_passage(self):
         index = Mock()
         index.search.return_value = [(self.passages[1], 3.0), (self.passages[2], 1.0)]
