@@ -141,7 +141,7 @@ python -m pip install 'transformers>=4.45,<6'
 python -m model.chatbot --book
 ```
 
-Try `Where was the Wizard born?`. Book lookup searches the bundled text and uses chapter headings to help rank relevant passages. When a passage cuts through a paragraph that matches the question, lookup can include the rest of the sentence and extends the citation to cover it. For short follow-ups, it looks for the person, object, or event in the previous question. Each extracted answer cites the chapter and source lines. When two passages suggest the same answer, it can win a close choice. The reader needs higher confidence to answer based on a single passage. It can still select a passage that answers the question poorly, so check the citation for unfamiliar facts.
+Try `Where was the Wizard born?`. Book lookup searches the bundled text and uses chapter headings to help rank relevant passages. When a passage cuts through a paragraph that matches the question, lookup can include the rest of the sentence and extends the citation to cover it. To interpret a short follow-up, book lookup restates the question using the earlier action and the people or objects involved. Each extracted answer cites the chapter and source lines. When two passages suggest the same answer, it can win a close choice. The reader needs higher confidence to answer based on a single passage. It can still select a passage that answers the question poorly, so check the citation for unfamiliar facts.
 
 The first run downloads the [MiniLM extractive answer reader](https://huggingface.co/deepset/minilm-uncased-squad2). The reader runs locally on CPU. `--chat` continues to use the Oz checkpoint trained in this project.
 

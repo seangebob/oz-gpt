@@ -1,0 +1,186 @@
+{
+  "baseline_code_commit": "bc6e14f17f1b14e2cae8229dee34135f21e508be",
+  "test_file": "data/oz_chat_test.jsonl",
+  "test_sha256": "1c29194de5fcf79db46c2097ba1fd8e150c205cddd22e33a9b1b0d96052755ea",
+  "book_sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9",
+  "reader_model": "deepset/minilm-uncased-squad2",
+  "reader_revision": "934656cdda79824eabf503ed56e15c01ddbdbe3f",
+  "first_replies": 24,
+  "followups": 8,
+  "scoring": "A correct reply answers the question and cites a supporting passage. The generated run uses the chatbot’s previous answers. The reference run supplies the expected previous answers.",
+  "scores": {
+    "generated": {
+      "before": {
+        "first_replies_supported": 14,
+        "followups_supported": 3,
+        "followups_incorrect": 3,
+        "followups_abstained": 2
+      },
+      "after": {
+        "first_replies_supported": 14,
+        "followups_supported": 4,
+        "followups_incorrect": 1,
+        "followups_abstained": 3
+      }
+    },
+    "reference": {
+      "before": {
+        "first_replies_supported": 14,
+        "followups_supported": 3,
+        "followups_incorrect": 3,
+        "followups_abstained": 2
+      },
+      "after": {
+        "first_replies_supported": 14,
+        "followups_supported": 5,
+        "followups_incorrect": 1,
+        "followups_abstained": 2
+      }
+    }
+  },
+  "changed_followups": [
+    {
+      "history": "generated",
+      "conversation": 20,
+      "previous_question": "How did Zeb reach Oz?",
+      "prompt": "Who used it?",
+      "expected": "Dorothy.",
+      "before": {
+        "query": "Who used it (context: did Zeb reach Oz)?",
+        "reply": "Princess Ozma",
+        "citation": {
+          "section": "Chapter 14",
+          "start_line": 3794,
+          "end_line": 3812
+        }
+      },
+      "after": {
+        "query": "Who brought Zeb to Oz?",
+        "reply": "I couldn't find an answer supported by the book.",
+        "citation": null
+      },
+      "review_note": "The follow-up now asks who brought Zeb to Oz. The reader abstains where it previously answered from a passage about Dorothy traveling to Australia."
+    },
+    {
+      "history": "generated",
+      "conversation": 22,
+      "previous_question": "Which pet went missing?",
+      "prompt": "Where was it?",
+      "expected": "Inside a vase.",
+      "before": {
+        "query": "Where was the pet that went missing?",
+        "reply": "In a room of the palace",
+        "citation": {
+          "section": "Chapter 19",
+          "start_line": 5235,
+          "end_line": 5258
+        }
+      },
+      "after": {
+        "query": "Where did the pet really end up?",
+        "reply": "a big vase that was standing on the floor",
+        "citation": {
+          "section": "Chapter 19",
+          "start_line": 5280,
+          "end_line": 5296
+        }
+      },
+      "review_note": "Eureka’s account says the original piglet fell into a vase. The previous reply described where Nick said he found the substitute."
+    },
+    {
+      "history": "reference",
+      "conversation": 19,
+      "previous_question": "What rescued Dorothy?",
+      "prompt": "Who used it?",
+      "expected": "Ozma.",
+      "before": {
+        "query": "Who used the thing that rescued Dorothy?",
+        "reply": "I couldn't find an answer supported by the book.",
+        "citation": null
+      },
+      "after": {
+        "query": "Who used the Magic Belt to rescue Dorothy?",
+        "reply": "Ozma",
+        "citation": {
+          "section": "Chapter 14",
+          "start_line": 3917,
+          "end_line": 3941
+        }
+      },
+      "review_note": "With the reference answer in history, the rewrite names the Magic Belt. The cited scene shows Dorothy signaling Ozma and saying that Ozma has to put on the Belt."
+    }
+  ],
+  "additional_followup_check": {
+    "source": "evaluations/oz_chat_followup_comparison.json",
+    "history": "generated",
+    "followups": 5,
+    "supported_before": 1,
+    "supported_after": 4,
+    "changed_followups": [
+      {
+        "conversation": 1,
+        "previous_question": "Which witch once owned the magic silver shoes?",
+        "prompt": "Where did Dorothy lose them?",
+        "expected": "Somewhere in the air.",
+        "before": {
+          "query": "Where did Dorothy lose the magic silver shoes?",
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null
+        },
+        "after": {
+          "query": "Where did the magic silver shoes go when Dorothy lost them?",
+          "reply": "somewhere in the air",
+          "citation": {
+            "section": "Chapter 14",
+            "start_line": 3782,
+            "end_line": 3802
+          }
+        }
+      },
+      {
+        "conversation": 3,
+        "previous_question": "Who hid under a chair in Ozma's room?",
+        "prompt": "Why was she hiding?",
+        "expected": "She planned to eat the piglet.",
+        "before": {
+          "query": "Why was she hiding (context: hid under a chair in Ozma's room)?",
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null
+        },
+        "after": {
+          "query": "Why was someone hiding under a chair in Ozma's room?",
+          "reply": "intended to eat the little pig for my breakfast",
+          "citation": {
+            "section": "Chapter 19",
+            "start_line": 5280,
+            "end_line": 5296
+          }
+        }
+      },
+      {
+        "conversation": 5,
+        "previous_question": "What did the Wizard pretend to take out of Ozma's hair?",
+        "prompt": "Where was it really?",
+        "expected": "In his inside pocket.",
+        "before": {
+          "query": "Where was the item the Wizard pretended to take out of Ozma's hair really?",
+          "reply": "PIGLET",
+          "citation": {
+            "section": "Chapter 17",
+            "start_line": 4797,
+            "end_line": 4818
+          }
+        },
+        "after": {
+          "query": "Where did the Wizard really take the item from?",
+          "reply": "his inside pocket",
+          "citation": {
+            "section": "Chapter 17",
+            "start_line": 4698,
+            "end_line": 4715
+          }
+        }
+      }
+    ]
+  }
+}

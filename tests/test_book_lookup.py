@@ -181,11 +181,29 @@ The Wizard was born in Omaha.
             ('What did he fix?', 'What did the Tin Woodman use at the palace?', 'a branch',
              'What did the Tin Woodman fix?'),
             ('Where was it?', 'Which little dog went missing?', 'a neighbor',
-             'Where was the little dog that went missing?'),
-            ('Where is it?', 'Which red dog was lost?', 'a neighbor', 'Where is the red dog that was lost?'),
+             'Where did the little dog really end up?'),
+            ('Where is it?', 'Which red dog was lost?', 'a neighbor', 'Where did the red dog really end up?'),
+            ('Where was it?', 'Which crate was delivered?', 'a neighbor', 'Where was the crate that was delivered?'),
             ('Why that name?', 'Who is in the stable?', 'Comet', 'Why was Comet given that name?'),
             ('Where did she lose them?', 'Which witch owned the silver shoes?', 'the Wicked Witch',
              'Where did she lose the silver shoes?'),
+        ]
+        for question, previous, answer, expected in cases:
+            with self.subTest(question=question, previous=previous):
+                self.assertEqual(followup_question(question, previous, answer), expected)
+
+    def test_followups_keep_the_earlier_action_and_location(self):
+        cases = [
+            ('Who operated it?', 'What freed Clara?', 'A winch.', 'Who used a winch to free Clara?'),
+            ('Who used it?', 'What saved Clara?', '', 'Who saved Clara?'),
+            ('who used it?', 'what saved clara?', '', 'Who saved clara?'),
+            ('Who used it?', 'How did Clara get to the island?', 'a compass', 'Who brought Clara to the island?'),
+            ('Why was she hiding?', 'Who hid under the stairs?', '', 'Why was someone hiding under the stairs?'),
+            ('Why was he studying?', 'Who studied in the hall?', '', 'Why was someone studying in the hall?'),
+            ('Where was it actually?', 'What did Clara pretend to pull out of a hat?', 'a note',
+             'Where did Clara really pull the item from?'),
+            ('Where did Clara lose them?', 'Which sailor carried the blue flags?', 'the captain',
+             'Where did the blue flags go when Clara lost them?'),
         ]
         for question, previous, answer, expected in cases:
             with self.subTest(question=question, previous=previous):

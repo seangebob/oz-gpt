@@ -37,11 +37,20 @@ NAMED_SUBJECT = re.compile(rf'(?i:who|what) (?i:is|was) ({NAME})')
 NAME_ANSWER = re.compile(r"(?:(?i:the) )?[A-Z][a-z][\w'-]*(?: [A-Z][a-z][\w'-]*){0,3}")
 PAST_ACTION = re.compile(rf'(?i:what did) (?P<actor>{NAME}) (?P<verb>[a-z]+)(?P<rest> .*)?')
 CHOICE_SUBJECT = re.compile(
-    r"which ((?!of\b)[\w'-]+(?: [\w'-]+){0,3}?) ((?:was|were|went|fell|came|had|[\w-]{3,}ed)\b.*)",
+    r"which ((?!of\b)[\w'-]+(?: [\w'-]+){0,3}?) ((?:was|were|went|fell|came|had|got|[\w-]{3,}ed)\b.*)",
     re.IGNORECASE,
 )
 PLURAL_OBJECT = re.compile(r"\b(?i:the|these|those) ((?:[a-z][\w'-]* ){0,4}[a-z][\w'-]*s)$")
 RETURN_QUESTION = re.compile(rf'(?i:where (?:did|does)) ({NAME}) (?i:return)')
+ITEM_LOCATION = re.compile(r'where (?:is|was) (?:it|that)(?: (really|actually))?\W*', re.IGNORECASE)
+MISSING_EVENT = re.compile(r'went missing|(?:was|were) (?:lost|missing)|got lost|disappeared', re.IGNORECASE)
+PRETENDED_SOURCE = re.compile(r' to (take|pull|get|bring)\b.*\b(?:out of|from) .+', re.IGNORECASE)
+RESCUE_QUESTION = re.compile(rf'what (rescued|saved|freed) ({NAME})', re.IGNORECASE)
+TRAVEL_QUESTION = re.compile(rf'(?i:how did) ({NAME}) (?i:reach|get to|arrive in) (.+)')
+MEANS_ANSWER = re.compile(r"(?i:a|an|the) [\w'-]+(?: [\w'-]+){0,5}|[A-Z][\w'-]+(?: [A-Z][\w'-]+){1,4}")
+ACTION_ACTOR = re.compile(r'who ([a-z]+)( .+)?', re.IGNORECASE)
+ACTION_REASON = re.compile(r'why (?:was|were) (?:he|she|they) ([a-z]+)ing\W*', re.IGNORECASE)
+LOST_ITEMS = re.compile(rf'(?i:where did) ({NAME}) (?i:lose them)\W*')
 PAST_TENSE = {
     'bring': 'brought', 'buy': 'bought', 'do': 'did', 'find': 'found', 'get': 'got', 'give': 'gave',
     'hide': 'hid', 'leave': 'left', 'make': 'made', 'put': 'put', 'take': 'took', 'wear': 'wore',
@@ -64,6 +73,10 @@ def search_terms(text):
         yield word
 
 
+def _past_tense(verb):
+    return PAST_TENSE.get(verb, re.sub(r'([^aeiou])y$', r'\1i', verb) + ('d' if verb.endswith('e') else 'ed'))
+
+
 def followup_question(question, previous_question, previous_answer):
     previous_question = previous_question.rstrip('?.!')
     named = NAMED_SUBJECT.fullmatch(previous_question)
@@ -79,17 +92,39 @@ def followup_question(question, previous_question, previous_answer):
         actor = returning[1]
         return f'Who went with {actor} when {actor} returned?'
 
+    if re.fullmatch(r'who (?:used|operated|wielded) (?:it|that)\W*', question, re.IGNORECASE):
+        rescue = RESCUE_QUESTION.fullmatch(previous_question)
+        if rescue:
+            verb, person = rescue[1].lower(), rescue[2]
+            if MEANS_ANSWER.fullmatch(name):
+                means = re.sub(r'^(A|An|The) ', lambda match: match[0].lower(), name)
+                return f'Who used {means} to {verb[:-1]} {person}?'
+            return f'Who {verb} {person}?'
+        travel = TRAVEL_QUESTION.fullmatch(previous_question)
+        if travel:
+            return f'Who brought {travel[1]} to {travel[2]}?'
+
+    reason = ACTION_REASON.fullmatch(question)
+    if reason and (prior_action := ACTION_ACTOR.fullmatch(previous_question)):
+        stem = reason[1].lower()
+        if prior_action[1].lower() in {_past_tense(stem), _past_tense(stem + 'e')}:
+            return f"Why was someone {stem}ing{prior_action[2] or ''}?"
+
     item = ''
     action = PAST_ACTION.fullmatch(previous_question)
     choice = CHOICE_SUBJECT.fullmatch(previous_question)
+    location = ITEM_LOCATION.fullmatch(question)
     if action:
         actor, verb, rest = action.group('actor', 'verb', 'rest')
+        verb = verb.lower()
+        if location and location[1] and verb == 'pretend' and (source := PRETENDED_SOURCE.fullmatch(rest or '')):
+            return f'Where did {actor} really {source[1].lower()} the item from?'
         if verb in {'show', 'reveal', 'display', 'produce'} and re.fullmatch(r'where was it\W*', question, re.IGNORECASE):
             return f'Where did {actor} produce the item from?'
-        regular_past = re.sub(r'([^aeiou])y$', r'\1i', verb) + ('d' if verb.endswith('e') else 'ed')
-        past = PAST_TENSE.get(verb, regular_past)
-        item = f'the item {actor} {past}{rest or ""}'
+        item = f'the item {actor} {_past_tense(verb)}{rest or ""}'
     elif choice:
+        if location and MISSING_EVENT.fullmatch(choice[2]):
+            return f'Where did the {choice[1]} really end up?'
         item = f'the {choice[1]} that {choice[2]}'
     elif re.match(r'what\b', previous_question, re.IGNORECASE) and not re.match(
         r'what (?:do|did|does|is|are|was|were|can|could)\b', previous_question, re.IGNORECASE,
@@ -98,6 +133,8 @@ def followup_question(question, previous_question, previous_answer):
 
     plural = PLURAL_OBJECT.search(previous_question)
     plural_item = plural[1] if plural else ''
+    if plural_item and (lost := LOST_ITEMS.fullmatch(question)):
+        return f'Where did the {plural_item} go when {lost[1]} lost them?'
     if (item or actor) and re.fullmatch(r'what kind\W*', question, re.IGNORECASE):
         return f'What kind of thing is {item or actor}?'
     if plural_item and re.fullmatch(r'how many\W*', question, re.IGNORECASE):
