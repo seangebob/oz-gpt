@@ -5,8 +5,8 @@ import torch
 
 from model.chat_data import END_OF_TURN, ChatTokenizer, format_prompt, format_turn
 from model.chat_evaluation import correctness, generate_predictions, reference_matches
-from model.chat_session import DEFAULT_MAX_TOKENS
-from model.model import chars
+from model.chat_session import ChatSession, DEFAULT_MAX_TOKENS, REPLY_RESERVE
+from model.model import block_size, chars
 
 
 class ChatEvaluationTests(unittest.TestCase):
@@ -49,8 +49,35 @@ class ChatEvaluationTests(unittest.TestCase):
                 ])
                 self.assertEqual([(row['conversation'], row['turn']) for row in rows], [(1, 1), (1, 2), (3, 1)])
                 self.assertEqual(rows[1]['history_used'], bool(history))
+                self.assertFalse(any(row['history_compacted'] for row in rows))
                 self.assertEqual([row['correct'] for row in rows], [None, True, None])
                 self.assertEqual([row['clean_stop'] for row in rows], [True, True, False])
+
+    def test_long_reply_is_shortened_when_including_the_latest_turn(self):
+        tokenizer = ChatTokenizer(chars)
+        first_prompt = 'Who is Jim?'
+        first_reply = 'Jim is a horse. He pulls the buggy and travels with Dorothy and Zeb.'
+        followup = 'What kind of animal?'
+        contexts = []
+        responses = iter((first_reply, 'A horse.'))
+
+        def generate(context, max_tokens, **_options):
+            contexts.append((tokenizer.decode(context[0].tolist()), max_tokens))
+            return torch.cat((context, torch.tensor([tokenizer.encode(next(responses) + END_OF_TURN)])), dim=1)
+
+        model = Mock()
+        model.generate.side_effect = generate
+        session = ChatSession(model, tokenizer)
+        self.assertEqual(session.reply(first_prompt).text, first_reply)
+        reply = session.reply(followup)
+
+        self.assertTrue(reply.history_used)
+        self.assertTrue(reply.history_compacted)
+        self.assertEqual(reply.text, 'A horse.')
+        prompt, remaining = contexts[1]
+        self.assertEqual(prompt, format_turn(first_prompt, 'Jim is a horse. He') + format_prompt(followup))
+        self.assertGreaterEqual(remaining, REPLY_RESERVE)
+        self.assertEqual(len(prompt) + remaining, block_size + 1)
 
     def test_reviewed_correctness_is_distinct_from_reference_matches(self):
         self.assertTrue(reference_matches('  THE   Magic Belt! ', 'The Magic Belt.'))

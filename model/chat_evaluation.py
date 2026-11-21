@@ -10,7 +10,7 @@ import torch
 from model.chat_data import (
     CHAT_CHECKPOINT, ChatTokenizer, encode_conversations, load_chat_checkpoint, read_conversations,
 )
-from model.chat_session import ChatSession, DEFAULT_MAX_TOKENS, REPLY_RESERVE
+from model.chat_session import ChatSession, DEFAULT_MAX_TOKENS, HISTORY_PACKING, REPLY_RESERVE
 from model.chat_training import DATA_DIR, evaluate
 from model.model import GPTLanguageModel, MODEL_PATH, block_size, chars
 
@@ -48,6 +48,7 @@ def generate_predictions(model, tokenizer, conversations, history_mode, max_toke
                 'expected': expected,
                 'reply': reply.text,
                 'history_used': reply.history_used,
+                'history_compacted': reply.history_compacted,
                 'ended_with_marker': reply.ended_with_marker,
                 'clean_stop': reply.ended_with_marker and 'END]' not in reply.text,
                 'reference_match': matched,
@@ -74,6 +75,8 @@ def print_summary(path, report):
     print(f'{path} | {report["conversations"]} conversations | test SHA-256 {report["test_sha256"][:12]}')
     print(f'  Context: {report["block_size"]} | max new tokens: {report["max_tokens"]} '
           f'| reply reserve: {report["reply_reserve"]}')
+    packing = report.get('history_packing', 'complete_turns').replace('_', ' ')
+    print(f'  History packing:      {packing}')
     for run in report['runs']:
         rows = run['predictions']
         first = [row for row in rows if row['turn'] == 1]
@@ -84,6 +87,8 @@ def print_summary(path, report):
         print(f'  Reference matches:     {sum(row["reference_match"] for row in first)}/{len(first)} first replies, '
               f'{sum(row["reference_match"] for row in followups)}/{len(followups)} follow-ups')
         print(f'  Follow-ups with history: {sum(row["history_used"] for row in followups)}/{len(followups)}')
+        if followups and 'history_compacted' in followups[0]:
+            print(f'  Compacted history:     {sum(row["history_compacted"] for row in followups)}/{len(followups)} follow-ups')
         print(f'  Clean stops:           {sum(row["clean_stop"] for row in rows)}/{len(rows)}')
         print(f'  Reference reply loss:  {run["reference_reply_loss"]:.4f} (lower is better)')
 
@@ -110,6 +115,7 @@ def run_evaluation(args):
         'block_size': block_size,
         'max_tokens': args.max_tokens,
         'reply_reserve': REPLY_RESERVE,
+        'history_packing': HISTORY_PACKING,
         'runs': [],
     }
     for path in checkpoints:

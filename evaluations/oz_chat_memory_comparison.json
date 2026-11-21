@@ -1,0 +1,355 @@
+{
+  "test_file": "data/oz_chat_test.jsonl",
+  "settings": {
+    "test_sha256": "1c29194de5fcf79db46c2097ba1fd8e150c205cddd22e33a9b1b0d96052755ea",
+    "block_size": 128,
+    "max_tokens": 150,
+    "reply_reserve": 32,
+    "torch_version": "2.13.0",
+    "cpu_threads": 4,
+    "decoding": "greedy",
+    "device": "cpu"
+  },
+  "before_code_commit": "b9c5f1eae6c11f0d8c02e24218024b07d7db149a",
+  "before_history_packing": "complete_turns",
+  "after_history_packing": "shorten_latest_reply_if_needed",
+  "protocol": "Same checkpoint, prompts, and greedy decoder before and after. Reset before each conversation.",
+  "scoring": "Manually reviewed factual accuracy. Clean stops and retention use the chat evaluator rules.",
+  "controls": {
+    "first_turn_replies_unchanged": true,
+    "no_history_replies_unchanged": true,
+    "reference_history_replies_unchanged": true
+  },
+  "checkpoints": [
+    {
+      "id": "active_chat",
+      "checkpoint_sha256": "6acca5975a83efd2c4fb131b25cb6ebc0ff3a6c2dc90c772854753b12cf7a7e1",
+      "reference_reply_loss": 5.009014,
+      "before": {
+        "correct_first_replies": "0/24",
+        "correct_followups": "0/8",
+        "followups_with_history": "1/8",
+        "followups_with_shortened_history": "0/8",
+        "clean_stops": "31/32"
+      },
+      "after": {
+        "correct_first_replies": "0/24",
+        "correct_followups": "0/8",
+        "followups_with_history": "8/8",
+        "followups_with_shortened_history": "7/8",
+        "clean_stops": "30/32"
+      },
+      "followups": [
+        {
+          "conversation": 17,
+          "prompt": "Why that name?",
+          "expected": "Dorothy found her.",
+          "before": {
+            "reply": "Frank Baum wrotte ite it.",
+            "history_used": true,
+            "clean_stop": true,
+            "ended_with_marker": true
+          },
+          "after": {
+            "reply": "Frank Baum wrotte ite it.",
+            "history_used": true,
+            "clean_stop": true,
+            "ended_with_marker": true,
+            "history_compacted": false
+          }
+        },
+        {
+          "conversation": 18,
+          "prompt": "Why that name?",
+          "expected": "His first two initials are O. Z.",
+          "before": {
+            "reply": "Eureka is Dorothy's kitten.",
+            "history_used": false,
+            "clean_stop": true,
+            "ended_with_marker": true
+          },
+          "after": {
+            "reply": "Zebediah.",
+            "history_used": true,
+            "clean_stop": true,
+            "ended_with_marker": true,
+            "history_compacted": true
+          }
+        },
+        {
+          "conversation": 19,
+          "prompt": "Who used it?",
+          "expected": "Ozma.",
+          "before": {
+            "reply": "Hello! Ask me about Oz.",
+            "history_used": false,
+            "clean_stop": true,
+            "ended_with_marker": true
+          },
+          "after": {
+            "reply": "A kitten.",
+            "history_used": true,
+            "clean_stop": true,
+            "ended_with_marker": true,
+            "history_compacted": true
+          }
+        },
+        {
+          "conversation": 20,
+          "prompt": "Who used it?",
+          "expected": "Dorothy.",
+          "before": {
+            "reply": "Hello! Ask me about Oz.",
+            "history_used": false,
+            "clean_stop": true,
+            "ended_with_marker": true
+          },
+          "after": {
+            "reply": "horank Baum wrotthe ithe itte ithe ind",
+            "history_used": true,
+            "clean_stop": false,
+            "ended_with_marker": false,
+            "history_compacted": true
+          }
+        },
+        {
+          "conversation": 21,
+          "prompt": "Where was it?",
+          "expected": "Under his funnel hat.",
+          "before": {
+            "reply": "Go! Ask me about Oz.",
+            "history_used": false,
+            "clean_stop": true,
+            "ended_with_marker": true
+          },
+          "after": {
+            "reply": "ittte A A kitthen.",
+            "history_used": true,
+            "clean_stop": true,
+            "ended_with_marker": true,
+            "history_compacted": true
+          }
+        },
+        {
+          "conversation": 22,
+          "prompt": "Where was it?",
+          "expected": "Inside a vase.",
+          "before": {
+            "reply": "Go! Ask me about Oz.",
+            "history_used": false,
+            "clean_stop": true,
+            "ended_with_marker": true
+          },
+          "after": {
+            "reply": "hound.",
+            "history_used": true,
+            "clean_stop": true,
+            "ended_with_marker": true,
+            "history_compacted": true
+          }
+        },
+        {
+          "conversation": 23,
+          "prompt": "Who went too?",
+          "expected": "Eureka.",
+          "before": {
+            "reply": "Helo! Ask me about Oz.",
+            "history_used": false,
+            "clean_stop": true,
+            "ended_with_marker": true
+          },
+          "after": {
+            "reply": "A horse.",
+            "history_used": true,
+            "clean_stop": true,
+            "ended_with_marker": true,
+            "history_compacted": true
+          }
+        },
+        {
+          "conversation": 24,
+          "prompt": "Who went too?",
+          "expected": "Jim.",
+          "before": {
+            "reply": "Helo! Ask me about Oz.",
+            "history_used": false,
+            "clean_stop": true,
+            "ended_with_marker": true
+          },
+          "after": {
+            "reply": "A horse.",
+            "history_used": true,
+            "clean_stop": true,
+            "ended_with_marker": true,
+            "history_compacted": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "expanded_data_experiment",
+      "checkpoint_sha256": "3a35769154bae5535ef3737abe8d9000ddbb0ecc31d46622cc4c5ea62f2cb99a",
+      "reference_reply_loss": 3.929159,
+      "before": {
+        "correct_first_replies": "0/24",
+        "correct_followups": "0/8",
+        "followups_with_history": "2/8",
+        "followups_with_shortened_history": "0/8",
+        "clean_stops": "32/32"
+      },
+      "after": {
+        "correct_first_replies": "0/24",
+        "correct_followups": "0/8",
+        "followups_with_history": "8/8",
+        "followups_with_shortened_history": "6/8",
+        "clean_stops": "32/32"
+      },
+      "followups": [
+        {
+          "conversation": 17,
+          "prompt": "Why that name?",
+          "expected": "Dorothy found her.",
+          "before": {
+            "reply": "Zebediah.",
+            "history_used": true,
+            "clean_stop": true,
+            "ended_with_marker": true
+          },
+          "after": {
+            "reply": "Zebediah.",
+            "history_used": true,
+            "clean_stop": true,
+            "ended_with_marker": true,
+            "history_compacted": false
+          }
+        },
+        {
+          "conversation": 18,
+          "prompt": "Why that name?",
+          "expected": "His first two initials are O. Z.",
+          "before": {
+            "reply": "Gooodbye!",
+            "history_used": false,
+            "clean_stop": true,
+            "ended_with_marker": true
+          },
+          "after": {
+            "reply": "Eat A oramithen.",
+            "history_used": true,
+            "clean_stop": true,
+            "ended_with_marker": true,
+            "history_compacted": true
+          }
+        },
+        {
+          "conversation": 19,
+          "prompt": "Who used it?",
+          "expected": "Ozma.",
+          "before": {
+            "reply": "Gwig is the Mangaboos' sorcerer.",
+            "history_used": false,
+            "clean_stop": true,
+            "ended_with_marker": true
+          },
+          "after": {
+            "reply": "Eat makite hem iglet.",
+            "history_used": true,
+            "clean_stop": true,
+            "ended_with_marker": true,
+            "history_compacted": true
+          }
+        },
+        {
+          "conversation": 20,
+          "prompt": "Who used it?",
+          "expected": "Dorothy.",
+          "before": {
+            "reply": "Gwig is the Mangaboos' sorcerer.",
+            "history_used": false,
+            "clean_stop": true,
+            "ended_with_marker": true
+          },
+          "after": {
+            "reply": "glas Ozmid Mountain.",
+            "history_used": true,
+            "clean_stop": true,
+            "ended_with_marker": true,
+            "history_compacted": true
+          }
+        },
+        {
+          "conversation": 21,
+          "prompt": "Where was it?",
+          "expected": "Under his funnel hat.",
+          "before": {
+            "reply": "Goooodbye!",
+            "history_used": false,
+            "clean_stop": true,
+            "ended_with_marker": true
+          },
+          "after": {
+            "reply": "Yes Ozmid Mooden.",
+            "history_used": true,
+            "clean_stop": true,
+            "ended_with_marker": true,
+            "history_compacted": true
+          }
+        },
+        {
+          "conversation": 22,
+          "prompt": "Where was it?",
+          "expected": "Inside a vase.",
+          "before": {
+            "reply": "Goooodbye!",
+            "history_used": false,
+            "clean_stop": true,
+            "ended_with_marker": true
+          },
+          "after": {
+            "reply": "made of ght.",
+            "history_used": true,
+            "clean_stop": true,
+            "ended_with_marker": true,
+            "history_compacted": true
+          }
+        },
+        {
+          "conversation": 23,
+          "prompt": "Who went too?",
+          "expected": "Eureka.",
+          "before": {
+            "reply": "Goooodbye!",
+            "history_used": false,
+            "clean_stop": true,
+            "ended_with_marker": true
+          },
+          "after": {
+            "reply": "Ond of a heam tricks.",
+            "history_used": true,
+            "clean_stop": true,
+            "ended_with_marker": true,
+            "history_compacted": true
+          }
+        },
+        {
+          "conversation": 24,
+          "prompt": "Who went too?",
+          "expected": "Jim.",
+          "before": {
+            "reply": "L. Frank Baum wrotem kitt.",
+            "history_used": true,
+            "clean_stop": true,
+            "ended_with_marker": true
+          },
+          "after": {
+            "reply": "L. Frank Baum wrotem kitt.",
+            "history_used": true,
+            "clean_stop": true,
+            "ended_with_marker": true,
+            "history_compacted": false
+          }
+        }
+      ]
+    }
+  ]
+}

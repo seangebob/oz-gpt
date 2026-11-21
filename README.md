@@ -119,7 +119,7 @@ python -m model.chat_training
 python -m model.chatbot --chat
 ```
 
-Try `Who is Jim?` followed by `What kind?` in the same session. Chat uses the newest complete turns that fit in its 128-character context and leaves room for a reply. Type `/reset` to clear the conversation. Retrain an existing chat checkpoint to learn the new follow-up examples. The starter dataset focuses on short exchanges about Oz.
+Try `Who is Jim?` followed by `What kind?` in the same session. Chat keeps the newest turns that fit in its 128-character context. If the latest turn is too long, it keeps the previous question and uses the start of the previous answer when they fit with room for a new reply. Type `/reset` to clear the conversation. Rerun chat training after adding new follow-up examples. The starter dataset focuses on short exchanges about Oz.
 
 Each line in the training and validation files is a complete conversation in JSONL format. Messages alternate between `user` and `assistant`. Keep whole conversations in separate files for training and validation.
 
@@ -147,7 +147,7 @@ python -m model.chat_evaluation run \
   --history generated --output oz-training-comparison.json
 ```
 
-The evaluator defaults to [the held-out conversations](data/oz_chat_test.jsonl), resets between conversations, and uses greedy decoding on CPU. The report records the data and checkpoint hashes, every reply, history use, clean stops, and reply loss computed with reference history. Add `--history reference` to diagnose follow-ups with the expected earlier replies in context.
+The evaluator defaults to [the held-out conversations](data/oz_chat_test.jsonl), resets between conversations, and uses greedy decoding on CPU. The report records the data and checkpoint hashes, every reply, history use, cases where a previous answer was shortened, clean stops, and reply loss computed with reference history. Add `--history reference` to diagnose follow-ups with the expected earlier replies in context.
 
 Case, spacing, and final punctuation variations of the reference answer are accepted automatically. For each remaining `"correct": null` in the JSON report, set `correct` to `true` if the reply conveys the expected fact, including valid paraphrases and unambiguous spelling errors. Set it to `false` for an incorrect, contradictory, or missing answer. The summary shows how many replies are pending review.
 
