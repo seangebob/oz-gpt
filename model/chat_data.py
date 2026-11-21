@@ -71,20 +71,22 @@ def _message_text(message, role):
     return text.strip()
 
 
-def _conversation_examples(conversation, tokenizer):
+def conversation_turns(conversation):
     messages = conversation.get('messages') if isinstance(conversation, dict) else None
     if not isinstance(messages, list) or not messages or len(messages) % 2:
         raise ValueError('Expected one or more complete user/assistant pairs in messages.')
-
-    history = []
     for index in range(0, len(messages), 2):
-        user_text = _message_text(messages[index], 'user')
-        assistant_text = _message_text(messages[index + 1], 'assistant')
+        yield _message_text(messages[index], 'user'), _message_text(messages[index + 1], 'assistant')
+
+
+def _conversation_examples(conversation, tokenizer):
+    history = []
+    for turn, (user_text, assistant_text) in enumerate(conversation_turns(conversation), start=1):
         reply = assistant_text + END_OF_TURN
         prompt = format_prompt(user_text)
         # Shifting by one yields at most block_size inputs and targets.
         if len(prompt) + len(reply) > block_size + 1:
-            raise ValueError(f'Turn {index // 2 + 1} exceeds the {block_size}-character context. Shorten the prompt or reply.')
+            raise ValueError(f'Turn {turn} exceeds the {block_size}-character context. Shorten the prompt or reply.')
         prompt = with_history(prompt, history, block_size + 1 - len(reply))
 
         tokens = tokenizer.encode(prompt + reply)

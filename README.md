@@ -27,6 +27,7 @@ A character-level language model built from scratch using PyTorch. The base Tran
 │   ├── model.py          # Model architecture & shared config (hyperparameters, vocab, paths)
 │   ├── training.py       # Training loop — trains and saves model weights to model-01.pth
 │   ├── chatbot.py        # Interactive CLI for book completions and chat replies
+│   ├── book_lookup.py    # Searches the Oz book and extracts answers with citations
 │   ├── chat_session.py   # Chat history and generation shared by the CLI and evaluator
 │   ├── chat_training.py  # Fine-tunes the book checkpoint on user/assistant examples
 │   ├── chat_evaluation.py # Compares checkpoints on held-out conversations
@@ -131,7 +132,20 @@ The trainer formats each turn with `User:` and `Assistant:` labels and appends `
 
 Training starts from `model/model-01.pth` and saves the weights with the lowest validation reply loss, the model settings, and the ordered character vocabulary to `model/model-chat.pth`. The generated chat checkpoint is ignored by Git. Pass `--train-data` and `--val-data` to use your own files, `--steps` to change the default 1,600 training steps, or `--output` to save to a different path. Load a custom output with `python -m model.chatbot --chat path/to/checkpoint.pth`. Chat training automatically selects CUDA, Apple MPS, or CPU, and `--device` can override that choice.
 
-### Evaluate chat checkpoints
+### Look up answers in the Oz book
+
+Install the optional answer reader dependency and start book lookup mode.
+
+```bash
+python -m pip install 'transformers>=4.45,<6'
+python -m model.chatbot --book
+```
+
+Try `Where was the Wizard born?`. Book lookup searches the bundled text, uses the previous exchange for short follow-ups, and cites the chapter and source lines for each extracted answer. The reader abstains when it cannot find a sufficiently confident span. It can still select a passage that answers the question poorly, so check the citation for unfamiliar facts.
+
+The first run downloads the [MiniLM extractive answer reader](https://huggingface.co/deepset/minilm-uncased-squad2). The reader runs locally on CPU. `--chat` continues to use the Oz checkpoint trained in this project.
+
+### Evaluate chat checkpoints and book lookup
 
 Run the same checkpoint with ordinary chat history and with history disabled to measure the effect of memory.
 
@@ -156,6 +170,12 @@ python -m model.chat_evaluation summarize oz-memory.json
 ```
 
 Use reviewed correct first replies and correct follow-ups as the main scores. Reference matches give a quick check, and reply loss is a separate diagnostic where lower is better. Pass multiple reports to `summarize` to compare runs saved separately on the same test file and maximum reply length.
+
+Use `--book` to evaluate book lookup against the same conversations. Add `--checkpoint` to include a chat model in the report. Book lookup reports citations and abstentions. Set `"source_supports_reply"` to `true` only when the cited passage supports the answer to that specific question. The summary counts answers that are both correct and supported.
+
+```bash
+python -m model.chat_evaluation run --book --checkpoint model/model-chat.pth --output oz-book-comparison.json
+```
 
 ---
 

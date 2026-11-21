@@ -1,4 +1,5 @@
 import argparse
+from dataclasses import asdict
 import hashlib
 import io
 import json
@@ -7,8 +8,9 @@ import pickle
 
 import torch
 
+from model.book_lookup import BOOK_PATH, READER_MODEL, READER_REVISION, BookReply, BookSession
 from model.chat_data import (
-    CHAT_CHECKPOINT, ChatTokenizer, encode_conversations, load_chat_checkpoint, read_conversations,
+    CHAT_CHECKPOINT, ChatTokenizer, conversation_turns, encode_conversations, load_chat_checkpoint, read_conversations,
 )
 from model.chat_session import ChatSession, DEFAULT_MAX_TOKENS, HISTORY_PACKING, REPLY_RESERVE
 from model.chat_training import DATA_DIR, evaluate
@@ -27,40 +29,47 @@ def reference_matches(reply, expected):
 
 def generate_predictions(model, tokenizer, conversations, history_mode, max_tokens):
     session = ChatSession(model, tokenizer, max_tokens=max_tokens)
+    return generate_session_predictions(session, conversations, history_mode)
+
+
+def generate_session_predictions(session, conversations, history_mode):
     predictions = []
     for line_number, conversation in conversations:
         session.reset()
-        messages = conversation['messages']
-        for index in range(0, len(messages), 2):
-            prompt = messages[index]['content'].strip()
-            expected = messages[index + 1]['content'].strip()
-            try:
+        try:
+            for turn, (prompt, expected) in enumerate(conversation_turns(conversation), start=1):
                 reply = session.reply(prompt, remember=history_mode == 'generated')
-            except ValueError as error:
-                raise ValueError(f'Conversation {line_number}, turn {index // 2 + 1}: {error}') from error
-            if history_mode == 'reference':
-                session.remember(prompt, expected)
-            matched = reference_matches(reply.text, expected)
-            predictions.append({
-                'conversation': line_number,
-                'turn': index // 2 + 1,
-                'prompt': prompt,
-                'expected': expected,
-                'reply': reply.text,
-                'history_used': reply.history_used,
-                'history_compacted': reply.history_compacted,
-                'ended_with_marker': reply.ended_with_marker,
-                'clean_stop': reply.ended_with_marker and 'END]' not in reply.text,
-                'reference_match': matched,
-                'correct': True if matched else None,
-            })
+                if history_mode == 'reference':
+                    session.remember(prompt, expected)
+                matched = reference_matches(reply.text, expected)
+                row = {
+                    'conversation': line_number,
+                    'turn': turn,
+                    'prompt': prompt,
+                    'expected': expected,
+                    'reply': reply.text,
+                    'history_used': reply.history_used,
+                    'reference_match': matched,
+                    'correct': True if matched else None,
+                }
+                if isinstance(reply, BookReply):
+                    row['source'] = asdict(reply.source) if reply.source else None
+                    row['source_supports_reply'] = None if reply.source else False
+                else:
+                    row.update(
+                        history_compacted=reply.history_compacted,
+                        ended_with_marker=reply.ended_with_marker,
+                        clean_stop=reply.ended_with_marker and 'END]' not in reply.text,
+                    )
+                predictions.append(row)
+        except ValueError as error:
+            raise ValueError(f'Conversation {line_number}: {error}') from error
     return predictions
 
 
-def correctness(predictions):
-    judgments = [row['correct'] for row in predictions]
+def reviewed_score(judgments):
     if any(value is not None and type(value) is not bool for value in judgments):
-        raise ValueError('Each correct field must be true, false, or null.')
+        raise ValueError('Each review field must be true, false, or null.')
     correct = sum(value is True for value in judgments)
     reviewed = sum(value is not None for value in judgments)
     total = len(judgments)
@@ -71,26 +80,58 @@ def correctness(predictions):
     return f'{correct}/{reviewed} reviewed ({total - reviewed} pending)'
 
 
+def correctness(predictions):
+    return reviewed_score([row['correct'] for row in predictions])
+
+
+def grounded_correctness(predictions):
+    judgments = []
+    for row in predictions:
+        support = row.get('source_supports_reply')
+        if support is not None and type(support) is not bool:
+            raise ValueError('Each source_supports_reply field must be true, false, or null.')
+        correct = row['correct']
+        if correct is False or support is False:
+            judgments.append(False)
+        elif correct is True and support is True:
+            judgments.append(True)
+        else:
+            judgments.append(None)
+    return reviewed_score(judgments)
+
+
 def print_summary(path, report):
     print(f'{path} | {report["conversations"]} conversations | test SHA-256 {report["test_sha256"][:12]}')
-    print(f'  Context: {report["block_size"]} | max new tokens: {report["max_tokens"]} '
-          f'| reply reserve: {report["reply_reserve"]}')
-    packing = report.get('history_packing', 'complete_turns').replace('_', ' ')
-    print(f'  History packing:      {packing}')
+    if any(run.get('mode') != 'book' for run in report['runs']):
+        print(f'  Chat context: {report["block_size"]} | max new tokens: {report["max_tokens"]} '
+              f'| reply reserve: {report["reply_reserve"]}')
+        packing = report.get('history_packing', 'complete_turns').replace('_', ' ')
+        print(f'  History packing:      {packing}')
     for run in report['runs']:
         rows = run['predictions']
         first = [row for row in rows if row['turn'] == 1]
         followups = [row for row in rows if row['turn'] > 1]
-        print(f'\n{run["checkpoint"]} ({run["checkpoint_sha256"][:12]}) | history: {run["history"]}')
+        book_mode = run.get('mode') == 'book'
+        if book_mode:
+            print(f'\nBook lookup ({run["reader_model"]}) | history: {run["history"]}')
+        else:
+            print(f'\n{run["checkpoint"]} ({run["checkpoint_sha256"][:12]}) | history: {run["history"]}')
         print(f'  Correct first replies: {correctness(first)}')
         print(f'  Correct follow-ups:    {correctness(followups)}')
         print(f'  Reference matches:     {sum(row["reference_match"] for row in first)}/{len(first)} first replies, '
               f'{sum(row["reference_match"] for row in followups)}/{len(followups)} follow-ups')
         print(f'  Follow-ups with history: {sum(row["history_used"] for row in followups)}/{len(followups)}')
-        if followups and 'history_compacted' in followups[0]:
-            print(f'  Compacted history:     {sum(row["history_compacted"] for row in followups)}/{len(followups)} follow-ups')
-        print(f'  Clean stops:           {sum(row["clean_stop"] for row in rows)}/{len(rows)}')
-        print(f'  Reference reply loss:  {run["reference_reply_loss"]:.4f} (lower is better)')
+        if book_mode:
+            sourced = sum(row['source'] is not None for row in rows)
+            print(f'  Correct first replies with support: {grounded_correctness(first)}')
+            print(f'  Correct follow-ups with support:    {grounded_correctness(followups)}')
+            print(f'  Replies with a source:  {sourced}/{len(rows)}')
+            print(f'  Abstentions:           {len(rows) - sourced}/{len(rows)}')
+        else:
+            if followups and 'history_compacted' in followups[0]:
+                print(f'  Compacted history:     {sum(row["history_compacted"] for row in followups)}/{len(followups)} follow-ups')
+            print(f'  Clean stops:           {sum(row["clean_stop"] for row in rows)}/{len(rows)}')
+            print(f'  Reference reply loss:  {run["reference_reply_loss"]:.4f} (lower is better)')
 
 
 def run_evaluation(args):
@@ -98,11 +139,13 @@ def run_evaluation(args):
         raise ValueError('--max-tokens must be positive.')
     if args.output.exists():
         raise FileExistsError(f'Report already exists: {args.output}')
-    checkpoints = args.checkpoint or [CHAT_CHECKPOINT]
+    checkpoints = args.checkpoint or ([] if args.book else [CHAT_CHECKPOINT])
     history_modes = list(dict.fromkeys(args.history or ['generated']))
     test_bytes = args.test_data.read_bytes()
     with io.StringIO(test_bytes.decode('utf-8'), newline=None) as source:
         conversations = list(read_conversations(source, args.test_data))
+    if not conversations:
+        raise ValueError(f'{args.test_data} contains no usable conversations.')
     report = {
         'schema_version': REPORT_VERSION,
         'test_file': str(args.test_data),
@@ -138,6 +181,18 @@ def run_evaluation(args):
                 'reference_reply_loss': round(loss, 6),
                 'predictions': generate_predictions(model, tokenizer, conversations, history, args.max_tokens),
             })
+    if args.book:
+        session = BookSession.from_book()
+        for history in history_modes:
+            report['runs'].append({
+                'mode': 'book',
+                'book': BOOK_PATH.name,
+                'book_sha256': session.book_sha256,
+                'reader_model': READER_MODEL,
+                'reader_revision': READER_REVISION,
+                'history': history,
+                'predictions': generate_session_predictions(session, conversations, history),
+            })
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open('x', encoding='utf-8') as destination:
         json.dump(report, destination, indent=2)
@@ -161,6 +216,7 @@ def main():
     commands = parser.add_subparsers(dest='command', required=True)
     run = commands.add_parser('run', help='Generate replies and save an evaluation report.')
     run.add_argument('--checkpoint', action='append', type=Path, help='Checkpoint to evaluate. Repeat to compare checkpoints.')
+    run.add_argument('--book', action='store_true', help='Evaluate book lookup. Combine with --checkpoint for a comparison.')
     run.add_argument('--test-data', type=Path, default=DATA_DIR / 'oz_chat_test.jsonl', help='Held-out JSONL conversations.')
     run.add_argument('--history', action='append', choices=HISTORY_MODES, help='History mode. Repeat to compare modes (default: generated).')
     run.add_argument('--max-tokens', type=int, default=DEFAULT_MAX_TOKENS, help='Maximum new tokens per reply.')

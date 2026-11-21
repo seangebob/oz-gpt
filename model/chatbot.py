@@ -3,6 +3,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from model.book_lookup import BookSession
 from model.chat_data import CHAT_CHECKPOINT, load_chat_checkpoint
 from model.chat_session import ChatSession, DEFAULT_MAX_TOKENS
 from model.model import (
@@ -14,49 +15,58 @@ from model.model import (
 parser = argparse.ArgumentParser(description='Chat with the trained GPT language model')
 parser.add_argument('--max_tokens', type=int, default=DEFAULT_MAX_TOKENS,
                     help=f'Number of tokens to generate per prompt (default: {DEFAULT_MAX_TOKENS})')
-parser.add_argument('--chat', nargs='?', const=CHAT_CHECKPOINT, type=Path, metavar='CHECKPOINT',
-                    help='Use an Oz chat checkpoint (default path: model/model-chat.pth)')
+modes = parser.add_mutually_exclusive_group()
+modes.add_argument('--chat', nargs='?', const=CHAT_CHECKPOINT, type=Path, metavar='CHECKPOINT',
+                   help='Use an Oz chat checkpoint (default path: model/model-chat.pth)')
+modes.add_argument('--book', action='store_true', help='Look up answers in the bundled Oz book')
 args = parser.parse_args()
 if args.chat and args.max_tokens < 1:
     parser.error('--max_tokens must be positive in chat mode.')
 
-device = get_device(allow_mps=args.chat is not None)
-checkpoint = args.chat or Path(MODEL_PATH)
-train_command = 'python -m model.chat_training' if args.chat else 'python -m model.training -batch_size 32'
+if args.book:
+    print('Loading the Oz book and its answer reader...')
+    try:
+        session = BookSession.from_book()
+    except (OSError, ValueError, RuntimeError) as error:
+        parser.exit(1, f'Book lookup error: {error}\n')
+    device = 'cpu'
+else:
+    device = get_device(allow_mps=args.chat is not None)
+    checkpoint = args.chat or Path(MODEL_PATH)
+    train_command = 'python -m model.chat_training' if args.chat else 'python -m model.training -batch_size 32'
+    if not checkpoint.is_file():
+        print(f"ERROR: No model file found at {checkpoint}")
+        print(f"Train a model with {train_command}")
+        sys.exit(1)
 
-# Load model
-if not checkpoint.is_file():
-    print(f"ERROR: No model file found at {checkpoint}")
-    print(f"Train a model with {train_command}")
-    sys.exit(1)
+    print("Loading model parameters...")
+    try:
+        if args.chat:
+            state, tokenizer = load_chat_checkpoint(checkpoint)
+            model = GPTLanguageModel(len(tokenizer.characters))
+        else:
+            state = torch.load(checkpoint, map_location='cpu', weights_only=True)
+            model = GPTLanguageModel(vocab_size)
+        model.load_state_dict(state)
+        model.to(device)
+    except Exception as e:
+        print(f"ERROR: Failed to load model — {e}")
+        print(f"Train a model with {train_command}")
+        sys.exit(1)
 
-print("Loading model parameters...")
-try:
+    model.eval()
     if args.chat:
-        state, tokenizer = load_chat_checkpoint(checkpoint)
-        model = GPTLanguageModel(len(tokenizer.characters))
-    else:
-        state = torch.load(checkpoint, map_location='cpu', weights_only=True)
-        model = GPTLanguageModel(vocab_size)
-    model.load_state_dict(state)
-    model.to(device)
-except Exception as e:
-    print(f"ERROR: Failed to load model — {e}")
-    print(f"Train a model with {train_command}")
-    sys.exit(1)
-
-model.eval()
-if args.chat:
-    session = ChatSession(model, tokenizer, device=device, max_tokens=args.max_tokens)
-print("Model loaded successfully!\n")
+        session = ChatSession(model, tokenizer, device=device, max_tokens=args.max_tokens)
+    print("Model loaded successfully!\n")
 
 # Interactive chat loop
 print("=" * 50)
-print("  GPT Language Model — Interactive Chat")
+print("  Oz Book Lookup" if args.book else "  GPT Language Model — Interactive Chat")
 print("=" * 50)
 print(f"  Device : {device}")
-print(f"  Tokens : {args.max_tokens} per response")
-if args.chat:
+if not args.book:
+    print(f"  Tokens : {args.max_tokens} per response")
+if args.chat or args.book:
     print("  Type '/reset' to start a new conversation.")
 print("  Type 'quit' or 'exit' to stop.")
 print("=" * 50)
@@ -72,7 +82,7 @@ while True:
             print("(Empty prompt — please enter text)\n")
             continue
 
-        if args.chat:
+        if args.chat or args.book:
             if prompt.strip().lower() == '/reset':
                 session.reset()
                 print("(Started a new conversation.)")
@@ -82,7 +92,11 @@ while True:
             except ValueError as error:
                 print(f"({error})")
                 continue
-            print(f"\nAssistant: {reply.text}\n")
+            print(f"\nAssistant: {reply.text}")
+            if args.book and reply.source:
+                source = reply.source
+                print(f'Source: {source.section}, lines {source.start_line}–{source.end_line}')
+            print()
             continue
 
         context = torch.tensor(encode(prompt), dtype=torch.long, device=device)

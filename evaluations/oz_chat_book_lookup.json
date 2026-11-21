@@ -1,0 +1,1126 @@
+{
+  "schema_version": 1,
+  "test_file": "data/oz_chat_test.jsonl",
+  "test_sha256": "1c29194de5fcf79db46c2097ba1fd8e150c205cddd22e33a9b1b0d96052755ea",
+  "conversations": 24,
+  "device": "cpu",
+  "torch_version": "2.13.0",
+  "cpu_threads": 4,
+  "decoding": "greedy",
+  "block_size": 128,
+  "max_tokens": 150,
+  "reply_reserve": 32,
+  "history_packing": "shorten_latest_reply_if_needed",
+  "runs": [
+    {
+      "checkpoint": "model/model-chat.pth",
+      "checkpoint_sha256": "6acca5975a83efd2c4fb131b25cb6ebc0ff3a6c2dc90c772854753b12cf7a7e1",
+      "history": "generated",
+      "reference_reply_loss": 5.009014,
+      "predictions": [
+        {
+          "conversation": 1,
+          "turn": 1,
+          "prompt": "When did the train reach Hugson's Siding?",
+          "expected": "At five in the morning.",
+          "reply": "the Wizard in Oz.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 2,
+          "turn": 1,
+          "prompt": "How did Dorothy wake the boy in the buggy?",
+          "expected": "She poked him with her parasol.",
+          "reply": "os arons ard Oz.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 3,
+          "turn": 1,
+          "prompt": "Who drew the royal chariot in the parade?",
+          "expected": "The Cowardly Lion and the Hungry Tiger.",
+          "reply": "earthqua opens ck the ground.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 4,
+          "turn": 1,
+          "prompt": "Which artist illustrated the book?",
+          "expected": "John R. Neill.",
+          "reply": "Jim is the cab-horse.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 5,
+          "turn": 1,
+          "prompt": "Who spoke for the jury at Eureka's trial?",
+          "expected": "The Hungry Tiger.",
+          "reply": "END]",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": false
+        },
+        {
+          "conversation": 6,
+          "turn": 1,
+          "prompt": "Who repaired the Sawhorse after Jim kicked it?",
+          "expected": "The Tin Woodman.",
+          "reply": "iza Oz.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 7,
+          "turn": 1,
+          "prompt": "Who started the race between Jim and the Sawhorse?",
+          "expected": "Zeb.",
+          "reply": "in in in in Oz.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 8,
+          "turn": 1,
+          "prompt": "Which maid was sent to fetch Ozma's piglet?",
+          "expected": "Jellia Jamb.",
+          "reply": "about Oz.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 9,
+          "turn": 1,
+          "prompt": "Why was the train from San Francisco late?",
+          "expected": "Earthquakes made the engineer drive slowly.",
+          "reply": "othe arote in Oz.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 10,
+          "turn": 1,
+          "prompt": "What did the Mangaboos use to block the cave?",
+          "expected": "Large glass rocks.",
+          "reply": "out Oz.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 11,
+          "turn": 1,
+          "prompt": "Which animals could the people of Voe see in the brooks?",
+          "expected": "Fish.",
+          "reply": "Oz.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 12,
+          "turn": 1,
+          "prompt": "What kind of ribbon did the Braided Man want?",
+          "expected": "A blue hair ribbon.",
+          "reply": "e arthe Oz.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 13,
+          "turn": 1,
+          "prompt": "What color were the dragonettes' eyes?",
+          "expected": "Yellow.",
+          "reply": "Mangabos ve peopleopleopleople.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 14,
+          "turn": 1,
+          "prompt": "Why were Dorothy's aunt and uncle in mourning?",
+          "expected": "They thought she had died in the earthquake.",
+          "reply": "ake opens a crack ind.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 15,
+          "turn": 1,
+          "prompt": "What marked Ozma's own piglet?",
+          "expected": "An emerald collar.",
+          "reply": "I can help with ques about Oz.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 16,
+          "turn": 1,
+          "prompt": "What title did Ozma give the Sawhorse after the race?",
+          "expected": "Prince of Horses.",
+          "reply": "in in in Oz.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 17,
+          "turn": 1,
+          "prompt": "Who is in the birdcage?",
+          "expected": "Eureka.",
+          "reply": "He about Oz.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 17,
+          "turn": 2,
+          "prompt": "Why that name?",
+          "expected": "Dorothy found her.",
+          "reply": "Frank Baum wrotte ite it.",
+          "history_used": true,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 18,
+          "turn": 1,
+          "prompt": "What name does the Wizard use?",
+          "expected": "Oz.",
+          "reply": "I can help with ques about Oz.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 18,
+          "turn": 2,
+          "prompt": "Why that name?",
+          "expected": "His first two initials are O. Z.",
+          "reply": "Zebediah.",
+          "history_used": true,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": true,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 19,
+          "turn": 1,
+          "prompt": "What rescued Dorothy?",
+          "expected": "The Magic Belt.",
+          "reply": "Eureka is Dorothy's kitten.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 19,
+          "turn": 2,
+          "prompt": "Who used it?",
+          "expected": "Ozma.",
+          "reply": "A kitten.",
+          "history_used": true,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": true,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 20,
+          "turn": 1,
+          "prompt": "How did Zeb reach Oz?",
+          "expected": "The Magic Belt.",
+          "reply": "I can help with questions about Oz.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 20,
+          "turn": 2,
+          "prompt": "Who used it?",
+          "expected": "Dorothy.",
+          "reply": "horank Baum wrotthe ithe itte ithe ind",
+          "history_used": true,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": true,
+          "ended_with_marker": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 21,
+          "turn": 1,
+          "prompt": "What did Nick show at trial?",
+          "expected": "A piglet.",
+          "reply": "An earthquake opens a crack in the ground.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 21,
+          "turn": 2,
+          "prompt": "Where was it?",
+          "expected": "Under his funnel hat.",
+          "reply": "ittte A A kitthen.",
+          "history_used": true,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": true,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 22,
+          "turn": 1,
+          "prompt": "Which pet went missing?",
+          "expected": "Ozma's piglet.",
+          "reply": "I can help with questions about Oz.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 22,
+          "turn": 2,
+          "prompt": "Where was it?",
+          "expected": "Inside a vase.",
+          "reply": "hound.",
+          "history_used": true,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": true,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 23,
+          "turn": 1,
+          "prompt": "Where does Dorothy return?",
+          "expected": "Kansas.",
+          "reply": "Jim is the cab-horse.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 23,
+          "turn": 2,
+          "prompt": "Who went too?",
+          "expected": "Eureka.",
+          "reply": "A horse.",
+          "history_used": true,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": true,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 24,
+          "turn": 1,
+          "prompt": "Where does Zeb return?",
+          "expected": "Hugson's Ranch.",
+          "reply": "Zeb is s short for Zebediah.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": false,
+          "ended_with_marker": true,
+          "clean_stop": true
+        },
+        {
+          "conversation": 24,
+          "turn": 2,
+          "prompt": "Who went too?",
+          "expected": "Jim.",
+          "reply": "A horse.",
+          "history_used": true,
+          "reference_match": false,
+          "correct": false,
+          "history_compacted": true,
+          "ended_with_marker": true,
+          "clean_stop": true
+        }
+      ]
+    },
+    {
+      "mode": "book",
+      "book": "wizard_of_oz.txt",
+      "book_sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9",
+      "reader_model": "deepset/minilm-uncased-squad2",
+      "reader_revision": "934656cdda79824eabf503ed56e15c01ddbdbe3f",
+      "history": "generated",
+      "predictions": [
+        {
+          "conversation": 1,
+          "turn": 1,
+          "prompt": "When did the train reach Hugson's Siding?",
+          "expected": "At five in the morning.",
+          "reply": "midnight",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "source": {
+            "section": "Chapter 1",
+            "start_line": 154,
+            "end_line": 174,
+            "text": "CHAPTER 1. THE EARTHQUAKE The train from 'Frisco was very late. It should have arrived at Hugson's siding at midnight, but it was already five o'clock and the gray dawn was breaking in the east when the little train slowly rumbled up to the open shed that served for the station-house. As it came to a stop the conductor called out in a loud voice: \"Hugson's Siding!\" At once a little girl rose from her seat and walked to the door of the car, carrying a wicker suit-case in one hand and a round bird-cage covered up with newspapers in the other, while a parasol was tucked under her arm. The conductor helped her off the car and then the engineer started his train again, so that it puffed and groaned and moved slowly away up the track. The reason he was so late was because all through the night there were times when the solid earth shook and trembled under him, and the engineer"
+          },
+          "source_supports_reply": false
+        },
+        {
+          "conversation": 2,
+          "turn": 1,
+          "prompt": "How did Dorothy wake the boy in the buggy?",
+          "expected": "She poked him with her parasol.",
+          "reply": "I couldn't find an answer supported by the book.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "source": null,
+          "source_supports_reply": false
+        },
+        {
+          "conversation": 3,
+          "turn": 1,
+          "prompt": "Who drew the royal chariot in the parade?",
+          "expected": "The Cowardly Lion and the Hungry Tiger.",
+          "reply": "the Cowardly Lion and the Hungry Tiger",
+          "history_used": false,
+          "reference_match": true,
+          "correct": true,
+          "source": {
+            "section": "Chapter 17",
+            "start_line": 4648,
+            "end_line": 4665,
+            "text": "Oz, and the green star the Emerald City. Just behind the royal standard-bearers came the Princess Ozma in her royal chariot, which was of gold encrusted with emeralds and diamonds set in exquisite designs. The chariot was drawn on this occasion by the Cowardly Lion and the Hungry Tiger, who were decorated with immense pink and blue bows. In the chariot rode Ozma and Dorothy, the former in splendid raiment and wearing her royal coronet, while the little Kansas girl wore around her waist the Magic Belt she had once captured from the Nome King. Following the chariot came the Scarecrow mounted on the Sawhorse, and the people cheered him almost as loudly as they did their lovely Ruler. Behind him stalked with regular, jerky steps, the famous machine-man called Tik-tok, who had been wound up by Dorothy for the occasion. Tik-tok moved by clockwork, and was made all of burnished copper. He really belonged to the Kansas girl, who had much respect for his"
+          },
+          "source_supports_reply": true
+        },
+        {
+          "conversation": 4,
+          "turn": 1,
+          "prompt": "Which artist illustrated the book?",
+          "expected": "John R. Neill.",
+          "reply": "JOHN R. NEILL",
+          "history_used": false,
+          "reference_match": true,
+          "correct": true,
+          "source": {
+            "section": "Title page",
+            "start_line": 1,
+            "end_line": 31,
+            "text": "DOROTHY AND THE WIZARD IN OZ BY L. FRANK BAUM AUTHOR OF THE WIZARD OF OZ, THE LAND OF OZ, OZMA OF OZ, ETC. ILLUSTRATED BY JOHN R. NEILL BOOKS OF WONDER WILLIAM MORROW & CO., INC. NEW YORK [Illustration] COPYRIGHT 1908 BY L. FRANK BAUM ALL RIGHTS RESERVED * * * * * [Illustration] DEDICATED TO HARRIET A. B. NEAL. * * * * *"
+          },
+          "source_supports_reply": true
+        },
+        {
+          "conversation": 5,
+          "turn": 1,
+          "prompt": "Who spoke for the jury at Eureka's trial?",
+          "expected": "The Hungry Tiger.",
+          "reply": "the Woggle-Bug",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "source": {
+            "section": "Chapter 19",
+            "start_line": 5088,
+            "end_line": 5110,
+            "text": "CHAPTER 19. THE WIZARD PERFORMS ANOTHER TRICK At three o'clock the Throne Room was crowded with citizens, men, women and children being eager to witness the great trial. Princess Ozma, dressed in her most splendid robes of state, sat in the magnificent emerald throne, with her jewelled sceptre in her hand and her sparkling coronet upon her fair brow. Behind her throne stood the twenty-eight officers of her army and many officials of the royal household. At her right sat the queerly assorted Jury--animals, animated dummies and people--all gravely prepared to listen to what was said. The kitten had been placed in a large cage just before the throne, where she sat upon her haunches and gazed through the bars at the crowds around her, with seeming unconcern. And now, at a signal from Ozma, the Woggle-Bug arose and addressed the jury. His tone was pompous and he strutted up and down in an absurd attempt to appear dignified. \"Your Royal Highness and Fellow Citizens,\""
+          },
+          "source_supports_reply": false
+        },
+        {
+          "conversation": 6,
+          "turn": 1,
+          "prompt": "Who repaired the Sawhorse after Jim kicked it?",
+          "expected": "The Tin Woodman.",
+          "reply": "Tin Woodman",
+          "history_used": false,
+          "reference_match": false,
+          "correct": true,
+          "source": {
+            "section": "Chapter 17",
+            "start_line": 4841,
+            "end_line": 4858,
+            "text": "him and the Hungry Tiger on the other, and their eyes were glowing like balls of fire. \"I beg your pardon, I'm sure,\" said Jim, meekly. \"I was wrong to kick the Sawhorse, and I am sorry I became angry at him. He has won the race, and won it fairly; but what can a horse of flesh do against a tireless beast of wood?\" Hearing this apology the Tiger and the Lion stopped lashing their tails and retreated with dignified steps to the side of the Princess. \"No one must injure one of our friends in our presence,\" growled the Lion; and Zeb ran to Jim and whispered that unless he controlled his temper in the future he would probably be torn to pieces. Then the Tin Woodman cut a straight and strong limb from a tree with his gleaming axe and made a new leg and a new ear for the Sawhorse; and when they had been securely fastened in place Princess Ozma"
+          },
+          "source_supports_reply": true
+        },
+        {
+          "conversation": 7,
+          "turn": 1,
+          "prompt": "Who started the race between Jim and the Sawhorse?",
+          "expected": "Zeb.",
+          "reply": "the two horses",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "source": {
+            "section": "Chapter 17",
+            "start_line": 4810,
+            "end_line": 4828,
+            "text": "and at the word the two horses leaped forward and the race was begun. [Illustration: THE WIZARD TOOK A PIGLET FROM OZMA'S HAIR.] Jim's big hoofs pounded away at a great rate, and although he did not look very graceful he ran in a way to do credit to his Kentucky breeding. But the Sawhorse was swifter than the wind. Its wooden legs moved so fast that their twinkling could scarcely be seen, and although so much smaller than the cab-horse it covered the ground much faster. Before they had reached the trees the Sawhorse was far ahead, and the wooden animal returned to the starting place and was being lustily cheered by the Ozites before Jim came panting up to the canopy where the Princess and her friends were seated. [Illustration: THE HUNGRY TIGER TEACHES JIM A LESSON.] I am sorry to record the fact that Jim was not only ashamed of his defeat but for a moment lost control of his temper. As"
+          },
+          "source_supports_reply": false
+        },
+        {
+          "conversation": 8,
+          "turn": 1,
+          "prompt": "Which maid was sent to fetch Ozma's piglet?",
+          "expected": "Jellia Jamb.",
+          "reply": "Jellia",
+          "history_used": false,
+          "reference_match": false,
+          "correct": true,
+          "source": {
+            "section": "Chapter 18",
+            "start_line": 4883,
+            "end_line": 4906,
+            "text": "CHAPTER 18. THE TRIAL OF EUREKA THE KITTEN Several days of festivity and merry-making followed, for such old friends did not often meet and there was much to be told and talked over between them, and many amusements to be enjoyed in this delightful country. Ozma was happy to have Dorothy beside her, for girls of her own age with whom it was proper for the Princess to associate were very few, and often the youthful Ruler of Oz was lonely for lack of companionship. It was the third morning after Dorothy's arrival, and she was sitting with Ozma and their friends in a reception room, talking over old times, when the Princess said to her maid: \"Please go to my boudoir, Jellia, and get the white piglet I left on the dressing-table. I want to play with it.\" Jellia at once departed on the errand, and she was gone so long that they had almost forgotten her mission when the green robed maiden returned"
+          },
+          "source_supports_reply": true
+        },
+        {
+          "conversation": 9,
+          "turn": 1,
+          "prompt": "Why was the train from San Francisco late?",
+          "expected": "Earthquakes made the engineer drive slowly.",
+          "reply": "because all through the night there were times when the solid earth shook and trembled under him",
+          "history_used": false,
+          "reference_match": false,
+          "correct": true,
+          "source": {
+            "section": "Chapter 1",
+            "start_line": 169,
+            "end_line": 184,
+            "text": "the other, while a parasol was tucked under her arm. The conductor helped her off the car and then the engineer started his train again, so that it puffed and groaned and moved slowly away up the track. The reason he was so late was because all through the night there were times when the solid earth shook and trembled under him, and the engineer was afraid that at any moment the rails might spread apart and an accident happen to his passengers. So he moved the cars slowly and with caution. The little girl stood still to watch until the train had disappeared around a curve; then she turned to see where she was. The shed at Hugson's Siding was bare save for an old wooden bench, and did not look very inviting. As she peered through the soft gray light not a house of any sort was visible near the station, nor was any person in sight; but after a while the child"
+          },
+          "source_supports_reply": true
+        },
+        {
+          "conversation": 10,
+          "turn": 1,
+          "prompt": "What did the Mangaboos use to block the cave?",
+          "expected": "Large glass rocks.",
+          "reply": "glass rocks",
+          "history_used": false,
+          "reference_match": false,
+          "correct": true,
+          "source": {
+            "section": "Chapter 7",
+            "start_line": 1903,
+            "end_line": 1923,
+            "text": "Mangaboos, headed by their Princess, was engaged in piling up glass rocks before the entrance. \"Stop, I command you!\" cried the Wizard, in an angry tone, and at once began pulling down the rocks to liberate Jim and the piglets. Instead of opposing him in this they stood back in silence until he had made a good-sized hole in the barrier, when by order of the Princess they all sprang forward and thrust out their sharp thorns. [Illustration: THROUGH THE BLACK PIT.] Dorothy hopped inside the opening to escape being pricked, and Zeb and the Wizard, after enduring a few stabs from the thorns, were glad to follow her. At once the Mangaboos began piling up the rocks of glass again, and as the little man realized that they were all about to be entombed in the mountain he said to the children: \"My dears, what shall we do? Jump out and fight?\" \"What's the use?\" replied Dorothy. \"I'd as soon die here as live"
+          },
+          "source_supports_reply": true
+        },
+        {
+          "conversation": 11,
+          "turn": 1,
+          "prompt": "Which animals could the people of Voe see in the brooks?",
+          "expected": "Fish.",
+          "reply": "the fishes",
+          "history_used": false,
+          "reference_match": false,
+          "correct": true,
+          "source": {
+            "section": "Chapter 9",
+            "start_line": 2297,
+            "end_line": 2314,
+            "text": "to eat of the damas as much as we do; yet we hear their sweet songs and enjoy them. Neither can we see the cruel bears, for they also eat the fruit. But the fishes that swim in our brooks we can see, and often we catch them to eat.\" \"It occurs to me you have a great deal to make you happy, even while invisible,\" remarked the Wizard. \"Nevertheless, we prefer to remain visible while we are in your valley.\" Just then Eureka came in, for she had been until now wandering outside with Jim; and when the kitten saw the table set with food she cried out: \"Now you must feed me, Dorothy, for I'm half starved.\" The children were inclined to be frightened by the sight of the small animal, which reminded them of the bears; but Dorothy reassured them by explaining that Eureka was a pet and could do no harm even if she wished to. Then, as the others had"
+          },
+          "source_supports_reply": true
+        },
+        {
+          "conversation": 12,
+          "turn": 1,
+          "prompt": "What kind of ribbon did the Braided Man want?",
+          "expected": "A blue hair ribbon.",
+          "reply": "blue hair-ribbon",
+          "history_used": false,
+          "reference_match": false,
+          "correct": true,
+          "source": {
+            "section": "Chapter 10",
+            "start_line": 2707,
+            "end_line": 2725,
+            "text": "flags flutter on a still day, when there is no wind. You, sir,\" turning to the Wizard, \"ought to have this assortment. Once you have tried my goods I am sure you will never be without them.\" \"I have no money with me,\" said the Wizard, evasively. \"I do not want money,\" returned the braided man, \"for I could not spend it in this deserted place if I had it. But I would like very much a blue hair-ribbon. You will notice my braids are tied with yellow, pink, brown, red, green, white and black; but I have no blue ribbons.\" \"I'll get you one!\" cried Dorothy, who was sorry for the poor man; so she ran back to the buggy and took from her suit-case a pretty blue ribbon. It did her good to see how the braided man's eyes sparkled when he received this treasure. \"You have made me very, very happy, my dear!\" he exclaimed; and then he insisted on the Wizard"
+          },
+          "source_supports_reply": true
+        },
+        {
+          "conversation": 13,
+          "turn": 1,
+          "prompt": "What color were the dragonettes' eyes?",
+          "expected": "Yellow.",
+          "reply": "yellow",
+          "history_used": false,
+          "reference_match": true,
+          "correct": true,
+          "source": {
+            "section": "Chapter 13",
+            "start_line": 3574,
+            "end_line": 3590,
+            "text": "living in a cave with your tail tied to a rock. If it isn't I'll have to stand it, that's all.\" \"Tastes differ,\" murmured the dragonette, slowly drooping its scaley eyelids over its yellow eyes, until they looked like half-moons. Being reassured by the fact that the creatures could not crawl out of their rock-pockets, the children and the Wizard now took time to examine them more closely. The heads of the dragonettes were as big as barrels and covered with hard, greenish scales that glittered brightly under the light of the lanterns. Their front legs, which grew just back of their heads, were also strong and big; but their bodies were smaller around than their heads, and dwindled away in a long line until their tails were slim as a shoe-string. Dorothy thought, if it had taken them sixty-six years to grow to this size, that it would be fully a hundred years more before they could hope to call themselves dragons, and that"
+          },
+          "source_supports_reply": true
+        },
+        {
+          "conversation": 14,
+          "turn": 1,
+          "prompt": "Why were Dorothy's aunt and uncle in mourning?",
+          "expected": "They thought she had died in the earthquake.",
+          "reply": "they thought their little niece had been killed by the earthquake",
+          "history_used": false,
+          "reference_match": false,
+          "correct": true,
+          "source": {
+            "section": "Chapter 20",
+            "start_line": 5338,
+            "end_line": 5357,
+            "text": "she could enjoy herself better. Dorothy was herself anxious to get home, so she promised Eureka they would not stay in the Land of Oz much longer. The next evening after the trial the little girl begged Ozma to allow her to look in the enchanted picture, and the Princess readily consented. She took the child to her room and said: \"Make your wish, dear, and the picture will show the scene you desire to behold.\" Then Dorothy found, with the aid of the enchanted picture, that Uncle Henry had returned to the farm in Kansas, and she also saw that both he and Aunt Em were dressed in mourning, because they thought their little niece had been killed by the earthquake. \"Really,\" said the girl, anxiously, \"I must get back as soon as poss'ble to my own folks.\" Zeb also wanted to see his home, and although he did not find anyone mourning for him, the sight of Hugson's Ranch in the picture made"
+          },
+          "source_supports_reply": true
+        },
+        {
+          "conversation": 15,
+          "turn": 1,
+          "prompt": "What marked Ozma's own piglet?",
+          "expected": "An emerald collar.",
+          "reply": "Gwig",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "source": {
+            "section": "Chapter 6",
+            "start_line": 1696,
+            "end_line": 1713,
+            "text": "acknowledged the Princess, \"but I am informed that one of our own will be ready to pick in a few days, to take the place of Gwig, whom you cut in two before it was time for him to be planted. Let us see your arts, and the sorceries you are able to perform. Then I will decide whether to destroy you with the others or not.\" At this the Wizard made a bow to the people and repeated his trick of producing the nine tiny piglets and making them disappear again. He did it very cleverly, indeed, and the Princess looked at the strange piglets as if she were as truly astonished as any vegetable person could be. But afterward she said: \"I have heard of this wonderful magic. But it accomplishes nothing of value. What else can you do?\" The Wizard tried to think. Then he jointed together the blades of his sword and balanced it very skillfully upon the end of his"
+          },
+          "source_supports_reply": false
+        },
+        {
+          "conversation": 16,
+          "turn": 1,
+          "prompt": "What title did Ozma give the Sawhorse after the race?",
+          "expected": "Prince of Horses.",
+          "reply": "Prince of Horses",
+          "history_used": false,
+          "reference_match": true,
+          "correct": true,
+          "source": {
+            "section": "Chapter 17",
+            "start_line": 4852,
+            "end_line": 4871,
+            "text": "the Lion; and Zeb ran to Jim and whispered that unless he controlled his temper in the future he would probably be torn to pieces. Then the Tin Woodman cut a straight and strong limb from a tree with his gleaming axe and made a new leg and a new ear for the Sawhorse; and when they had been securely fastened in place Princess Ozma took the coronet from her own head and placed it upon that of the winner of the race. Said she: \"My friend, I reward you for your swiftness by proclaiming you Prince of Horses, whether of wood or of flesh; and hereafter all other horses--in the Land of Oz, at least--must be considered imitations, and you the real Champion of your race.\" There was more applause at this, and then Ozma had the jewelled saddle replaced upon the Sawhorse and herself rode the victor back to the city at the head of the grand procession. \"I ought to be a"
+          },
+          "source_supports_reply": true
+        },
+        {
+          "conversation": 17,
+          "turn": 1,
+          "prompt": "Who is in the birdcage?",
+          "expected": "Eureka.",
+          "reply": "Eureka",
+          "history_used": false,
+          "reference_match": true,
+          "correct": true,
+          "source": {
+            "section": "Chapter 2",
+            "start_line": 501,
+            "end_line": 525,
+            "text": "the roof, and he was so awkward and hasty that he kicked over Dorothy's birdcage, which rolled out upon the roof so that the bottom came off. At once a pink kitten crept out of the upset cage, sat down upon the glass roof, and yawned and blinked its round eyes. \"Oh,\" said Dorothy. \"There's Eureka.\" \"First time I ever saw a pink cat,\" said Zeb. \"Eureka isn't pink; she's white. It's this queer light that gives her that color.\" \"Where's my milk?\" asked the kitten, looking up into Dorothy's face. \"I'm 'most starved to death.\" \"Oh, Eureka! Can you talk?\" \"Talk! Am I talking? Good gracious, I believe I am. Isn't it funny?\" asked the kitten. \"It's all wrong,\" said Zeb, gravely. \"Animals ought not to talk. But even old Jim has been saying things since we had our accident.\" \"I can't see that it's wrong,\" remarked Jim, in his gruff tones. \"At least, it isn't as wrong as some other things. What's going"
+          },
+          "source_supports_reply": true
+        },
+        {
+          "conversation": 17,
+          "turn": 2,
+          "prompt": "Why that name?",
+          "expected": "Dorothy found her.",
+          "reply": "Eureka",
+          "history_used": true,
+          "reference_match": false,
+          "correct": false,
+          "source": {
+            "section": "Chapter 1",
+            "start_line": 194,
+            "end_line": 223,
+            "text": "look inside, the girl saw a boy curled up on the seat, fast asleep. She set down the bird-cage and poked the boy with her parasol. Presently he woke up, rose to a sitting position and rubbed his eyes briskly. \"Hello!\" he said, seeing her, \"are you Dorothy Gale?\" \"Yes,\" she answered, looking gravely at his tousled hair and blinking gray eyes. \"Have you come to take me to Hugson's Ranch?\" \"Of course,\" he answered. \"Train in?\" \"I couldn't be here if it wasn't,\" she said. He laughed at that, and his laugh was merry and frank. Jumping out of the buggy he put Dorothy's suit-case under the seat and her bird-cage on the floor in front. \"Canary-birds?\" he asked. \"Oh, no; it's just Eureka, my kitten. I thought that was the best way to carry her.\" The boy nodded. \"Eureka's a funny name for a cat,\" he remarked. \"I named my kitten that because I found it,\" she explained. \"Uncle Henry says 'Eureka' means"
+          },
+          "source_supports_reply": false
+        },
+        {
+          "conversation": 18,
+          "turn": 1,
+          "prompt": "What name does the Wizard use?",
+          "expected": "Oz.",
+          "reply": "I couldn't find an answer supported by the book.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "source": null,
+          "source_supports_reply": false
+        },
+        {
+          "conversation": 18,
+          "turn": 2,
+          "prompt": "Why that name?",
+          "expected": "His first two initials are O. Z.",
+          "reply": "Mangaboos",
+          "history_used": true,
+          "reference_match": false,
+          "correct": false,
+          "source": {
+            "section": "Chapter 3",
+            "start_line": 944,
+            "end_line": 971,
+            "text": "chance to see your Land of the Gabazoos.\" \"Mangaboos,\" said the Sorcerer, correcting him. \"If you are a Wizard you ought to be able to call people by their right names.\" \"Oh, I'm a Wizard; you may be sure of that. Just as good a Wizard as you are a Sorcerer.\" \"That remains to be seen,\" said the other. \"If you are able to prove that you are better,\" said the Prince to the little man, \"I will make you the Chief Wizard of this domain. Otherwise--\" \"What will happen otherwise?\" asked the Wizard. \"I will stop you from living, and forbid you to be planted,\" returned the Prince. \"That does not sound especially pleasant,\" said the little man, looking at the one with the star uneasily. \"But never mind. I'll beat Old Prickly, all right.\" \"My name is Gwig,\" said the Sorcerer, turning his heartless, cruel eyes upon his rival. \"Let me see you equal the sorcery I am about to perform.\" He waved"
+          },
+          "source_supports_reply": false
+        },
+        {
+          "conversation": 19,
+          "turn": 1,
+          "prompt": "What rescued Dorothy?",
+          "expected": "The Magic Belt.",
+          "reply": "I couldn't find an answer supported by the book.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "source": null,
+          "source_supports_reply": false
+        },
+        {
+          "conversation": 19,
+          "turn": 2,
+          "prompt": "Who used it?",
+          "expected": "Ozma.",
+          "reply": "DOROTHY POKED THE BOY WITH HER PARASOL",
+          "history_used": true,
+          "reference_match": false,
+          "correct": false,
+          "source": {
+            "section": "Chapter 1",
+            "start_line": 247,
+            "end_line": 274,
+            "text": "visible in the dim light. \"Thought that train would never come,\" observed the boy. \"I've waited at that station for five hours.\" \"We had a lot of earthquakes,\" said Dorothy. \"Didn't you feel the ground shake?\" \"Yes; but we're used to such things in California,\" he replied. \"They don't scare us much.\" [Illustration: DOROTHY POKED THE BOY WITH HER PARASOL.] \"The conductor said it was the worst quake he ever knew.\" \"Did he? Then it must have happened while I was asleep,\" he said, thoughtfully. \"How is Uncle Henry?\" she enquired, after a pause during which the horse continued to trot with long, regular strides. \"He's pretty well. He and Uncle Hugson have been having a fine visit.\" \"Is Mr. Hugson your uncle?\" she asked. \"Yes. Uncle Bill Hugson married your Uncle Henry's wife's sister; so we must be second cousins,\" said the boy, in an amused tone. \"I work for Uncle Bill on his ranch, and he pays me six dollars a month and"
+          },
+          "source_supports_reply": false
+        },
+        {
+          "conversation": 20,
+          "turn": 1,
+          "prompt": "How did Zeb reach Oz?",
+          "expected": "The Magic Belt.",
+          "reply": "I couldn't find an answer supported by the book.",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "source": null,
+          "source_supports_reply": false
+        },
+        {
+          "conversation": 20,
+          "turn": 2,
+          "prompt": "Who used it?",
+          "expected": "Dorothy.",
+          "reply": "Princess Ozma",
+          "history_used": true,
+          "reference_match": false,
+          "correct": false,
+          "source": {
+            "section": "Chapter 14",
+            "start_line": 3794,
+            "end_line": 3812,
+            "text": "Magic Belt, which is much more powerful than were the Silver Shoes.\" \"Where is that Magic Belt?\" enquired the Wizard, who had listened with great interest. \"Ozma has it; for its powers won't work in a common, ordinary country like the United States. Anyone in a fairy country like the Land of Oz can do anything with it; so I left it with my friend the Princess Ozma, who used it to wish me in Australia with Uncle Henry.\" \"And were you?\" asked Zeb, astonished at what he heard. \"Of course; in just a jiffy. And Ozma has an enchanted picture hanging in her room that shows her the exact scene where any of her friends may be, at any time she chooses. All she has to do is to say: 'I wonder what So-and-so is doing,' and at once the picture shows where her friend is and what the friend is doing. That's _real_ magic, Mr. Wizard; isn't it? Well, every day at four"
+          },
+          "source_supports_reply": false
+        },
+        {
+          "conversation": 21,
+          "turn": 1,
+          "prompt": "What did Nick show at trial?",
+          "expected": "A piglet.",
+          "reply": "innocent",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "source": {
+            "section": "Chapter 19",
+            "start_line": 5235,
+            "end_line": 5258,
+            "text": "chopped off with the Tin Woodman's axe when that brilliant personage once more arose and addressed her. \"Your Highness,\" said he, \"see how easy it is for a jury to be mistaken. The kitten could not have eaten your piglet--for here it is!\" He took off his funnel hat and from beneath it produced a tiny white piglet, which he held aloft that all might see it clearly. Ozma was delighted and exclaimed, eagerly: \"Give me my pet, Nick Chopper!\" And all the people cheered and clapped their hands, rejoicing that the prisoner had escaped death and been proved to be innocent. As the Princess held the white piglet in her arms and stroked its soft hair she said: \"Let Eureka out of the cage, for she is no longer a prisoner, but our good friend. Where did you find my missing pet, Nick Chopper?\" \"In a room of the palace,\" he answered. \"Justice,\" remarked the Scarecrow, with a sigh, \"is a dangerous thing to"
+          },
+          "source_supports_reply": false
+        },
+        {
+          "conversation": 21,
+          "turn": 2,
+          "prompt": "Where was it?",
+          "expected": "Under his funnel hat.",
+          "reply": "In a room of the palace",
+          "history_used": true,
+          "reference_match": false,
+          "correct": false,
+          "source": {
+            "section": "Chapter 19",
+            "start_line": 5235,
+            "end_line": 5258,
+            "text": "chopped off with the Tin Woodman's axe when that brilliant personage once more arose and addressed her. \"Your Highness,\" said he, \"see how easy it is for a jury to be mistaken. The kitten could not have eaten your piglet--for here it is!\" He took off his funnel hat and from beneath it produced a tiny white piglet, which he held aloft that all might see it clearly. Ozma was delighted and exclaimed, eagerly: \"Give me my pet, Nick Chopper!\" And all the people cheered and clapped their hands, rejoicing that the prisoner had escaped death and been proved to be innocent. As the Princess held the white piglet in her arms and stroked its soft hair she said: \"Let Eureka out of the cage, for she is no longer a prisoner, but our good friend. Where did you find my missing pet, Nick Chopper?\" \"In a room of the palace,\" he answered. \"Justice,\" remarked the Scarecrow, with a sigh, \"is a dangerous thing to"
+          },
+          "source_supports_reply": false
+        },
+        {
+          "conversation": 22,
+          "turn": 1,
+          "prompt": "Which pet went missing?",
+          "expected": "Ozma's piglet.",
+          "reply": "Nick Chopper",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "source": {
+            "section": "Chapter 19",
+            "start_line": 5249,
+            "end_line": 5274,
+            "text": "be innocent. As the Princess held the white piglet in her arms and stroked its soft hair she said: \"Let Eureka out of the cage, for she is no longer a prisoner, but our good friend. Where did you find my missing pet, Nick Chopper?\" \"In a room of the palace,\" he answered. \"Justice,\" remarked the Scarecrow, with a sigh, \"is a dangerous thing to meddle with. If you hadn't happened to find the piglet, Eureka would surely have been executed.\" \"But justice prevailed at the last,\" said Ozma, \"for here is my pet, and Eureka is once more free.\" \"I refuse to be free,\" cried the kitten, in a sharp voice, \"unless the Wizard can do his trick with eight piglets. If he can produce but seven, then this it not the piglet that was lost, but another one.\" \"Hush, Eureka!\" warned the Wizard. \"Don't be foolish,\" advised the Tin Woodman, \"or you may be sorry for it.\" \"The piglet that belonged to the"
+          },
+          "source_supports_reply": false
+        },
+        {
+          "conversation": 22,
+          "turn": 2,
+          "prompt": "Where was it?",
+          "expected": "Inside a vase.",
+          "reply": "In a room of the palace",
+          "history_used": true,
+          "reference_match": false,
+          "correct": false,
+          "source": {
+            "section": "Chapter 19",
+            "start_line": 5235,
+            "end_line": 5258,
+            "text": "chopped off with the Tin Woodman's axe when that brilliant personage once more arose and addressed her. \"Your Highness,\" said he, \"see how easy it is for a jury to be mistaken. The kitten could not have eaten your piglet--for here it is!\" He took off his funnel hat and from beneath it produced a tiny white piglet, which he held aloft that all might see it clearly. Ozma was delighted and exclaimed, eagerly: \"Give me my pet, Nick Chopper!\" And all the people cheered and clapped their hands, rejoicing that the prisoner had escaped death and been proved to be innocent. As the Princess held the white piglet in her arms and stroked its soft hair she said: \"Let Eureka out of the cage, for she is no longer a prisoner, but our good friend. Where did you find my missing pet, Nick Chopper?\" \"In a room of the palace,\" he answered. \"Justice,\" remarked the Scarecrow, with a sigh, \"is a dangerous thing to"
+          },
+          "source_supports_reply": false
+        },
+        {
+          "conversation": 23,
+          "turn": 1,
+          "prompt": "Where does Dorothy return?",
+          "expected": "Kansas.",
+          "reply": "Under the bed in your own room",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "source": {
+            "section": "Chapter 18",
+            "start_line": 4928,
+            "end_line": 4956,
+            "text": "But not a trace could they find of the tiny creature they sought. Dorothy was nearly weeping, by this time, while Ozma was angry and indignant. When they returned to the others the Princess said: \"There is little doubt that my pretty piglet has been eaten by that horrid kitten, and if that is true the offender must be punished.\" \"I don't b'lieve Eureka would do such a dreadful thing!\" cried Dorothy, much distressed. \"Go and get my kitten, please, Jellia, and we'll hear what she has to say about it.\" The green maiden hastened away, but presently returned and said: \"The kitten will not come. She threatened to scratch my eyes out if I touched her.\" \"Where is she?\" asked Dorothy. \"Under the bed in your own room,\" was the reply. So Dorothy ran to her room and found the kitten under the bed. \"Come here, Eureka!\" she said. \"I won't,\" answered the kitten, in a surly voice. \"Oh, Eureka! Why are you so"
+          },
+          "source_supports_reply": false
+        },
+        {
+          "conversation": 23,
+          "turn": 2,
+          "prompt": "Who went too?",
+          "expected": "Eureka.",
+          "reply": "The green maiden",
+          "history_used": true,
+          "reference_match": false,
+          "correct": false,
+          "source": {
+            "section": "Chapter 18",
+            "start_line": 4928,
+            "end_line": 4956,
+            "text": "But not a trace could they find of the tiny creature they sought. Dorothy was nearly weeping, by this time, while Ozma was angry and indignant. When they returned to the others the Princess said: \"There is little doubt that my pretty piglet has been eaten by that horrid kitten, and if that is true the offender must be punished.\" \"I don't b'lieve Eureka would do such a dreadful thing!\" cried Dorothy, much distressed. \"Go and get my kitten, please, Jellia, and we'll hear what she has to say about it.\" The green maiden hastened away, but presently returned and said: \"The kitten will not come. She threatened to scratch my eyes out if I touched her.\" \"Where is she?\" asked Dorothy. \"Under the bed in your own room,\" was the reply. So Dorothy ran to her room and found the kitten under the bed. \"Come here, Eureka!\" she said. \"I won't,\" answered the kitten, in a surly voice. \"Oh, Eureka! Why are you so"
+          },
+          "source_supports_reply": false
+        },
+        {
+          "conversation": 24,
+          "turn": 1,
+          "prompt": "Where does Zeb return?",
+          "expected": "Hugson's Ranch.",
+          "reply": "one of the upper rooms",
+          "history_used": false,
+          "reference_match": false,
+          "correct": false,
+          "source": {
+            "section": "Chapter 5",
+            "start_line": 1609,
+            "end_line": 1624,
+            "text": "and if there is no sunset there can be no night.\" \"Very true,\" agreed the Wizard. \"But it is a long time since I have had any sleep, and I'm tired. So I think I shall lie down upon one of these hard glass benches and take a nap.\" \"I will, too,\" said Dorothy, and chose a little room at the end of the hall. Zeb walked down again to unharness Jim, who, when he found himself free, rolled over a few times and then settled down to sleep, with Eureka nestling comfortably beside his big, boney body. Then the boy returned to one of the upper rooms, and in spite of the hardness of the glass bench was soon deep in slumberland. [Illustration]"
+          },
+          "source_supports_reply": false
+        },
+        {
+          "conversation": 24,
+          "turn": 2,
+          "prompt": "Who went too?",
+          "expected": "Jim.",
+          "reply": "Jim",
+          "history_used": true,
+          "reference_match": true,
+          "correct": true,
+          "source": {
+            "section": "Chapter 5",
+            "start_line": 1609,
+            "end_line": 1624,
+            "text": "and if there is no sunset there can be no night.\" \"Very true,\" agreed the Wizard. \"But it is a long time since I have had any sleep, and I'm tired. So I think I shall lie down upon one of these hard glass benches and take a nap.\" \"I will, too,\" said Dorothy, and chose a little room at the end of the hall. Zeb walked down again to unharness Jim, who, when he found himself free, rolled over a few times and then settled down to sleep, with Eureka nestling comfortably beside his big, boney body. Then the boy returned to one of the upper rooms, and in spite of the hardness of the glass bench was soon deep in slumberland. [Illustration]"
+          },
+          "source_supports_reply": false
+        }
+      ]
+    }
+  ],
+  "review_notes": "Correctness accepts equivalent wording. Citation support requires that the cited passage answer the specific question in context. Conversation 24 follow-up matches Jim, but its Chapter 5 passage describes a different event and does not support the answer about Zeb returning home.",
+  "fresh_check": {
+    "conversations": 8,
+    "test_sha256": "b5fcbf1670bc30bf3677e69323ecc346a01097a4401de4ac26c0612e0865a01e",
+    "predictions": [
+      {
+        "conversation": 1,
+        "turn": 1,
+        "prompt": "How much does Uncle Bill pay Zeb per month?",
+        "expected": "Six dollars.",
+        "reply": "six dollars",
+        "history_used": false,
+        "reference_match": true,
+        "correct": true,
+        "source": {
+          "section": "Chapter 1",
+          "start_line": 247,
+          "end_line": 274,
+          "text": "visible in the dim light. \"Thought that train would never come,\" observed the boy. \"I've waited at that station for five hours.\" \"We had a lot of earthquakes,\" said Dorothy. \"Didn't you feel the ground shake?\" \"Yes; but we're used to such things in California,\" he replied. \"They don't scare us much.\" [Illustration: DOROTHY POKED THE BOY WITH HER PARASOL.] \"The conductor said it was the worst quake he ever knew.\" \"Did he? Then it must have happened while I was asleep,\" he said, thoughtfully. \"How is Uncle Henry?\" she enquired, after a pause during which the horse continued to trot with long, regular strides. \"He's pretty well. He and Uncle Hugson have been having a fine visit.\" \"Is Mr. Hugson your uncle?\" she asked. \"Yes. Uncle Bill Hugson married your Uncle Henry's wife's sister; so we must be second cousins,\" said the boy, in an amused tone. \"I work for Uncle Bill on his ranch, and he pays me six dollars a month and"
+        },
+        "source_supports_reply": true
+      },
+      {
+        "conversation": 2,
+        "turn": 1,
+        "prompt": "How long did the boy wait at the siding?",
+        "expected": "Five hours.",
+        "reply": "five hours",
+        "history_used": false,
+        "reference_match": true,
+        "correct": true,
+        "source": {
+          "section": "Chapter 1",
+          "start_line": 230,
+          "end_line": 260,
+          "text": "thought he just wiggled one of his drooping ears, but that was all. \"Gid-dap!\" called the boy, again. The horse stood still. \"Perhaps,\" said Dorothy, \"if you untied him, he would go.\" The boy laughed cheerfully and jumped out. \"Guess I'm half asleep yet,\" he said, untying the horse. \"But Jim knows his business all right--don't you, Jim?\" patting the long nose of the animal. Then he got into the buggy again and took the reins, and the horse at once backed away from the tree, turned slowly around, and began to trot down the sandy road which was just visible in the dim light. \"Thought that train would never come,\" observed the boy. \"I've waited at that station for five hours.\" \"We had a lot of earthquakes,\" said Dorothy. \"Didn't you feel the ground shake?\" \"Yes; but we're used to such things in California,\" he replied. \"They don't scare us much.\" [Illustration: DOROTHY POKED THE BOY WITH HER PARASOL.] \"The conductor said it was"
+        },
+        "source_supports_reply": true
+      },
+      {
+        "conversation": 3,
+        "turn": 1,
+        "prompt": "What color was the sorcerer Gwig dressed in?",
+        "expected": "Bright yellow.",
+        "reply": "I couldn't find an answer supported by the book.",
+        "history_used": false,
+        "reference_match": false,
+        "correct": false,
+        "source": null,
+        "source_supports_reply": false
+      },
+      {
+        "conversation": 4,
+        "turn": 1,
+        "prompt": "What did the Braided Man make for Swiss cheese?",
+        "expected": "Imported holes.",
+        "reply": "I couldn't find an answer supported by the book.",
+        "history_used": false,
+        "reference_match": false,
+        "correct": false,
+        "source": null,
+        "source_supports_reply": false
+      },
+      {
+        "conversation": 5,
+        "turn": 1,
+        "prompt": "What emblem is at the center of the royal flag?",
+        "expected": "An emerald-green star.",
+        "reply": "emerald-green star",
+        "history_used": false,
+        "reference_match": false,
+        "correct": true,
+        "source": {
+          "section": "Chapter 17",
+          "start_line": 4640,
+          "end_line": 4655,
+          "text": "The procession was very imposing. First came the Imperial Cornet Band of Oz, dressed in emerald velvet uniforms with slashes of pea-green satin and buttons of immense cut emeralds. They played the National air called \"The Oz Spangled Banner,\" and behind them were the standard bearers with the Royal flag. This flag was divided into four quarters, one being colored sky-blue, another pink, a third lavender and a fourth white. In the center was a large emerald-green star, and all over the four quarters were sewn spangles that glittered beautifully in the sunshine. The colors represented the four countries of Oz, and the green star the Emerald City. Just behind the royal standard-bearers came the Princess Ozma in her royal chariot, which was of gold encrusted with emeralds and diamonds set in exquisite designs. The chariot was drawn on this occasion by the Cowardly Lion and the Hungry Tiger, who were decorated with immense pink and blue bows. In the chariot rode Ozma and Dorothy,"
+        },
+        "source_supports_reply": true
+      },
+      {
+        "conversation": 6,
+        "turn": 1,
+        "prompt": "What material was the Sawhorse's saddle made from?",
+        "expected": "Red leather.",
+        "reply": "jewelled",
+        "history_used": false,
+        "reference_match": false,
+        "correct": false,
+        "source": {
+          "section": "Chapter 17",
+          "start_line": 4852,
+          "end_line": 4871,
+          "text": "the Lion; and Zeb ran to Jim and whispered that unless he controlled his temper in the future he would probably be torn to pieces. Then the Tin Woodman cut a straight and strong limb from a tree with his gleaming axe and made a new leg and a new ear for the Sawhorse; and when they had been securely fastened in place Princess Ozma took the coronet from her own head and placed it upon that of the winner of the race. Said she: \"My friend, I reward you for your swiftness by proclaiming you Prince of Horses, whether of wood or of flesh; and hereafter all other horses--in the Land of Oz, at least--must be considered imitations, and you the real Champion of your race.\" There was more applause at this, and then Ozma had the jewelled saddle replaced upon the Sawhorse and herself rode the victor back to the city at the head of the grand procession. \"I ought to be a"
+        },
+        "source_supports_reply": false
+      },
+      {
+        "conversation": 7,
+        "turn": 1,
+        "prompt": "What is the name of the Mangaboo sorcerer?",
+        "expected": "Gwig.",
+        "reply": "Gwig",
+        "history_used": false,
+        "reference_match": true,
+        "correct": true,
+        "source": {
+          "section": "Chapter 3",
+          "start_line": 960,
+          "end_line": 985,
+          "text": "and forbid you to be planted,\" returned the Prince. \"That does not sound especially pleasant,\" said the little man, looking at the one with the star uneasily. \"But never mind. I'll beat Old Prickly, all right.\" \"My name is Gwig,\" said the Sorcerer, turning his heartless, cruel eyes upon his rival. \"Let me see you equal the sorcery I am about to perform.\" He waved a thorny hand and at once the tinkling of bells was heard, playing sweet music. Yet, look where she would, Dorothy could discover no bells at all in the great glass hall. The Mangaboo people listened, but showed no great interest. It was one of the things Gwig usually did to prove he was a sorcerer. Now was the Wizard's turn, so he smiled upon the assemblage and asked: \"Will somebody kindly loan me a hat?\" No one did, because the Mangaboos did not wear hats, and Zeb had lost his, somehow, in his flight through the air. \"Ahem!\" said"
+        },
+        "source_supports_reply": true
+      },
+      {
+        "conversation": 7,
+        "turn": 2,
+        "prompt": "What covers his hands?",
+        "expected": "Sharp thorns.",
+        "reply": "I couldn't find an answer supported by the book.",
+        "history_used": true,
+        "reference_match": false,
+        "correct": false,
+        "source": null,
+        "source_supports_reply": false
+      },
+      {
+        "conversation": 8,
+        "turn": 1,
+        "prompt": "What are young dragons called in the book?",
+        "expected": "Dragonettes.",
+        "reply": "I couldn't find an answer supported by the book.",
+        "history_used": false,
+        "reference_match": false,
+        "correct": false,
+        "source": null,
+        "source_supports_reply": false
+      },
+      {
+        "conversation": 8,
+        "turn": 2,
+        "prompt": "How old are they?",
+        "expected": "Sixty-six years old.",
+        "reply": "I couldn't find an answer supported by the book.",
+        "history_used": true,
+        "reference_match": false,
+        "correct": false,
+        "source": null,
+        "source_supports_reply": false
+      }
+    ]
+  }
+}
