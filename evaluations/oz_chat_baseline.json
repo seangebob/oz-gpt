@@ -1,0 +1,860 @@
+{
+  "test_file": "data/oz_chat_test.jsonl",
+  "test_sha256": "1c29194de5fcf79db46c2097ba1fd8e150c205cddd22e33a9b1b0d96052755ea",
+  "validation_file": "data/oz_chat_val.jsonl",
+  "validation_sha256": "c171f1f70f8d39abd684ae51589ac4e957477de699e5d8cf1c9f630c21c06f41",
+  "device": "cpu",
+  "torch_version": "2.13.0",
+  "python_version": "3.14.6",
+  "decoding": "CLI chat mode, greedy decoding, default 150-token cap bounded by the 128-character context",
+  "checkpoints": [
+    {
+      "id": "base",
+      "path": "model/model-01.pth",
+      "sha256": "5ddbd40db69d7842d009766903c5d38bdbd690838b39de40f923611e425440f4",
+      "validation_reply_loss": 3.365506,
+      "test_reply_loss": 3.517569,
+      "predictions": [
+        {
+          "conversation": 1,
+          "turn": 1,
+          "prompt": "When did the train reach Hugson's Siding?",
+          "expected": "At five in the morning.",
+          "reply": "the the the the the the the the the the the the the the the the the th",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 2,
+          "turn": 1,
+          "prompt": "How did Dorothy wake the boy in the buggy?",
+          "expected": "She poked him with her parasol.",
+          "reply": "the the the the the the the the the the the the the the the the the t",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 3,
+          "turn": 1,
+          "prompt": "Who drew the royal chariot in the parade?",
+          "expected": "The Cowardly Lion and the Hungry Tiger.",
+          "reply": "the the the the the the the the the the the the the the the the the th",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 4,
+          "turn": 1,
+          "prompt": "Which artist illustrated the book?",
+          "expected": "John R. Neill.",
+          "reply": "the the the the the the the the the the the the the the the the the the the t",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 5,
+          "turn": 1,
+          "prompt": "Who spoke for the jury at Eureka's trial?",
+          "expected": "The Hungry Tiger.",
+          "reply": "the the the the the the the the the the the the the the the the the th",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 6,
+          "turn": 1,
+          "prompt": "Who repaired the Sawhorse after Jim kicked it?",
+          "expected": "The Tin Woodman.",
+          "reply": "the the the the the the the the the the the the the the the the t",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 7,
+          "turn": 1,
+          "prompt": "Who started the race between Jim and the Sawhorse?",
+          "expected": "Zeb.",
+          "reply": "the the the the the the the the the the the the the the the t",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 8,
+          "turn": 1,
+          "prompt": "Which maid was sent to fetch Ozma's piglet?",
+          "expected": "Jellia Jamb.",
+          "reply": "the the the the the the the the the the the the the the the the the",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 9,
+          "turn": 1,
+          "prompt": "Why was the train from San Francisco late?",
+          "expected": "Earthquakes made the engineer drive slowly.",
+          "reply": "the the the the the the the the the the the the the the the the the t",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 10,
+          "turn": 1,
+          "prompt": "What did the Mangaboos use to block the cave?",
+          "expected": "Large glass rocks.",
+          "reply": "the the the the the the the the the the the the the the the the th",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 11,
+          "turn": 1,
+          "prompt": "Which animals could the people of Voe see in the brooks?",
+          "expected": "Fish.",
+          "reply": "the the the the the the the the the the the the the the",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 12,
+          "turn": 1,
+          "prompt": "What kind of ribbon did the Braided Man want?",
+          "expected": "A blue hair ribbon.",
+          "reply": "the the the the the the the the the the the the the the the the th",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 13,
+          "turn": 1,
+          "prompt": "What color were the dragonettes' eyes?",
+          "expected": "Yellow.",
+          "reply": "the the the the the the the the the the the the the the the the the the t",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 14,
+          "turn": 1,
+          "prompt": "Why were Dorothy's aunt and uncle in mourning?",
+          "expected": "They thought she had died in the earthquake.",
+          "reply": "the the the the the the the the the the the the the the the the t",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 15,
+          "turn": 1,
+          "prompt": "What marked Ozma's own piglet?",
+          "expected": "An emerald collar.",
+          "reply": "the the the the the the the the the the the the the the the the the the the the t",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 16,
+          "turn": 1,
+          "prompt": "What title did Ozma give the Sawhorse after the race?",
+          "expected": "Prince of Horses.",
+          "reply": "the the the the the the the the the the the the the the th",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 17,
+          "turn": 1,
+          "prompt": "Who is in the birdcage?",
+          "expected": "Eureka.",
+          "reply": "the the the the the the the the the the the the the the the the the the the the the the",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 17,
+          "turn": 2,
+          "prompt": "Why that name?",
+          "expected": "Dorothy found her.",
+          "reply": "the the the the the the the the the the the the the the the the the the the the the the the the t",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 18,
+          "turn": 1,
+          "prompt": "What name does the Wizard use?",
+          "expected": "Oz.",
+          "reply": "the the the the the the the the the the the the the the the the the the the the t",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 18,
+          "turn": 2,
+          "prompt": "Why that name?",
+          "expected": "His first two initials are O. Z.",
+          "reply": "the the the the the the the the the the the the the the the the the the the the the the the the t",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 19,
+          "turn": 1,
+          "prompt": "What rescued Dorothy?",
+          "expected": "The Magic Belt.",
+          "reply": "the the the the the the the the the the the the the the the the the the the the the the th",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 19,
+          "turn": 2,
+          "prompt": "Who used it?",
+          "expected": "Ozma.",
+          "reply": "the the the the the the the the the the the the the the the the the the the the the the the the the",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 20,
+          "turn": 1,
+          "prompt": "How did Zeb reach Oz?",
+          "expected": "The Magic Belt.",
+          "reply": "the the the the the the the the the the the the the the the the the the the the the the th",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 20,
+          "turn": 2,
+          "prompt": "Who used it?",
+          "expected": "Dorothy.",
+          "reply": "the the the the the the the the the the the the the the the the the the the the the the the the the",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 21,
+          "turn": 1,
+          "prompt": "What did Nick show at trial?",
+          "expected": "A piglet.",
+          "reply": "the the the the the the the the the the the the the the the the the the the the the",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 21,
+          "turn": 2,
+          "prompt": "Where was it?",
+          "expected": "Under his funnel hat.",
+          "reply": "the the the the the the the the the the the the the the the the the the the the the the the the th",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 22,
+          "turn": 1,
+          "prompt": "Which pet went missing?",
+          "expected": "Ozma's piglet.",
+          "reply": "the the the the the the the the the the the the the the the the the the the the the the",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 22,
+          "turn": 2,
+          "prompt": "Where was it?",
+          "expected": "Inside a vase.",
+          "reply": "the the the the the the the the the the the the the the the the the the the the the the the the th",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 23,
+          "turn": 1,
+          "prompt": "Where does Dorothy return?",
+          "expected": "Kansas.",
+          "reply": "the the the the the the the the the the the the the the the the the the the the the t",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 23,
+          "turn": 2,
+          "prompt": "Who went too?",
+          "expected": "Eureka.",
+          "reply": "the the the the the the the the the the the the the the the the the the the the the the the the th",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 24,
+          "turn": 1,
+          "prompt": "Where does Zeb return?",
+          "expected": "Hugson's Ranch.",
+          "reply": "the the the the the the the the the the the the the the the the the the the the the the t",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 24,
+          "turn": 2,
+          "prompt": "Who went too?",
+          "expected": "Jim.",
+          "reply": "the the the the the the the the the the the the the the the the the the the the the the the the th",
+          "ended_with_marker": false,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        }
+      ],
+      "scores": {
+        "correct_first_replies": {
+          "passed": 0,
+          "total": 24
+        },
+        "correct_followups": {
+          "passed": 0,
+          "total": 8
+        },
+        "emitted_end_marker": {
+          "passed": 0,
+          "total": 32
+        },
+        "clean_stops": {
+          "passed": 0,
+          "total": 32
+        },
+        "followups_with_history": {
+          "passed": 0,
+          "total": 8
+        }
+      }
+    },
+    {
+      "id": "chat",
+      "path": "model/model-chat.pth",
+      "sha256": "6acca5975a83efd2c4fb131b25cb6ebc0ff3a6c2dc90c772854753b12cf7a7e1",
+      "validation_reply_loss": 0.416895,
+      "test_reply_loss": 5.009014,
+      "predictions": [
+        {
+          "conversation": 1,
+          "turn": 1,
+          "prompt": "When did the train reach Hugson's Siding?",
+          "expected": "At five in the morning.",
+          "reply": "the Wizard in Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 2,
+          "turn": 1,
+          "prompt": "How did Dorothy wake the boy in the buggy?",
+          "expected": "She poked him with her parasol.",
+          "reply": "os arons ard Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 3,
+          "turn": 1,
+          "prompt": "Who drew the royal chariot in the parade?",
+          "expected": "The Cowardly Lion and the Hungry Tiger.",
+          "reply": "earthqua opens ck the ground.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 4,
+          "turn": 1,
+          "prompt": "Which artist illustrated the book?",
+          "expected": "John R. Neill.",
+          "reply": "Jim is the cab-horse.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 5,
+          "turn": 1,
+          "prompt": "Who spoke for the jury at Eureka's trial?",
+          "expected": "The Hungry Tiger.",
+          "reply": "END]",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": false
+        },
+        {
+          "conversation": 6,
+          "turn": 1,
+          "prompt": "Who repaired the Sawhorse after Jim kicked it?",
+          "expected": "The Tin Woodman.",
+          "reply": "iza Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 7,
+          "turn": 1,
+          "prompt": "Who started the race between Jim and the Sawhorse?",
+          "expected": "Zeb.",
+          "reply": "in in in in Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 8,
+          "turn": 1,
+          "prompt": "Which maid was sent to fetch Ozma's piglet?",
+          "expected": "Jellia Jamb.",
+          "reply": "about Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 9,
+          "turn": 1,
+          "prompt": "Why was the train from San Francisco late?",
+          "expected": "Earthquakes made the engineer drive slowly.",
+          "reply": "othe arote in Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 10,
+          "turn": 1,
+          "prompt": "What did the Mangaboos use to block the cave?",
+          "expected": "Large glass rocks.",
+          "reply": "out Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 11,
+          "turn": 1,
+          "prompt": "Which animals could the people of Voe see in the brooks?",
+          "expected": "Fish.",
+          "reply": "Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 12,
+          "turn": 1,
+          "prompt": "What kind of ribbon did the Braided Man want?",
+          "expected": "A blue hair ribbon.",
+          "reply": "e arthe Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 13,
+          "turn": 1,
+          "prompt": "What color were the dragonettes' eyes?",
+          "expected": "Yellow.",
+          "reply": "Mangabos ve peopleopleopleople.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 14,
+          "turn": 1,
+          "prompt": "Why were Dorothy's aunt and uncle in mourning?",
+          "expected": "They thought she had died in the earthquake.",
+          "reply": "ake opens a crack ind.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 15,
+          "turn": 1,
+          "prompt": "What marked Ozma's own piglet?",
+          "expected": "An emerald collar.",
+          "reply": "I can help with ques about Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 16,
+          "turn": 1,
+          "prompt": "What title did Ozma give the Sawhorse after the race?",
+          "expected": "Prince of Horses.",
+          "reply": "in in in Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 17,
+          "turn": 1,
+          "prompt": "Who is in the birdcage?",
+          "expected": "Eureka.",
+          "reply": "He about Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 17,
+          "turn": 2,
+          "prompt": "Why that name?",
+          "expected": "Dorothy found her.",
+          "reply": "Frank Baum wrotte ite it.",
+          "ended_with_marker": true,
+          "history_used": true,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 18,
+          "turn": 1,
+          "prompt": "What name does the Wizard use?",
+          "expected": "Oz.",
+          "reply": "I can help with ques about Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 18,
+          "turn": 2,
+          "prompt": "Why that name?",
+          "expected": "His first two initials are O. Z.",
+          "reply": "Eureka is Dorothy's kitten.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 19,
+          "turn": 1,
+          "prompt": "What rescued Dorothy?",
+          "expected": "The Magic Belt.",
+          "reply": "Eureka is Dorothy's kitten.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 19,
+          "turn": 2,
+          "prompt": "Who used it?",
+          "expected": "Ozma.",
+          "reply": "Hello! Ask me about Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 20,
+          "turn": 1,
+          "prompt": "How did Zeb reach Oz?",
+          "expected": "The Magic Belt.",
+          "reply": "I can help with questions about Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 20,
+          "turn": 2,
+          "prompt": "Who used it?",
+          "expected": "Dorothy.",
+          "reply": "Hello! Ask me about Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 21,
+          "turn": 1,
+          "prompt": "What did Nick show at trial?",
+          "expected": "A piglet.",
+          "reply": "An earthquake opens a crack in the ground.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 21,
+          "turn": 2,
+          "prompt": "Where was it?",
+          "expected": "Under his funnel hat.",
+          "reply": "Go! Ask me about Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 22,
+          "turn": 1,
+          "prompt": "Which pet went missing?",
+          "expected": "Ozma's piglet.",
+          "reply": "I can help with questions about Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 22,
+          "turn": 2,
+          "prompt": "Where was it?",
+          "expected": "Inside a vase.",
+          "reply": "Go! Ask me about Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 23,
+          "turn": 1,
+          "prompt": "Where does Dorothy return?",
+          "expected": "Kansas.",
+          "reply": "Jim is the cab-horse.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 23,
+          "turn": 2,
+          "prompt": "Who went too?",
+          "expected": "Eureka.",
+          "reply": "Helo! Ask me about Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 24,
+          "turn": 1,
+          "prompt": "Where does Zeb return?",
+          "expected": "Hugson's Ranch.",
+          "reply": "Zeb is s short for Zebediah.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        },
+        {
+          "conversation": 24,
+          "turn": 2,
+          "prompt": "Who went too?",
+          "expected": "Jim.",
+          "reply": "Helo! Ask me about Oz.",
+          "ended_with_marker": true,
+          "history_used": false,
+          "correct": false,
+          "clean_stop": true
+        }
+      ],
+      "scores": {
+        "correct_first_replies": {
+          "passed": 0,
+          "total": 24
+        },
+        "correct_followups": {
+          "passed": 0,
+          "total": 8
+        },
+        "emitted_end_marker": {
+          "passed": 32,
+          "total": 32
+        },
+        "clean_stops": {
+          "passed": 31,
+          "total": 32
+        },
+        "followups_with_history": {
+          "passed": 1,
+          "total": 8
+        }
+      }
+    }
+  ],
+  "chat_followups_with_reference_history": {
+    "protocol": "Diagnostic. For each two-turn case, insert the expected first assistant reply into the prompt and evaluate only the generated follow-up.",
+    "correct_followups": {
+      "passed": 0,
+      "total": 8
+    },
+    "predictions": [
+      {
+        "conversation": 17,
+        "turn": 2,
+        "expected": "Dorothy found her.",
+        "reply": "horse A A horse.",
+        "ended_with_marker": true,
+        "correct": false
+      },
+      {
+        "conversation": 18,
+        "turn": 2,
+        "expected": "His first two initials are O. Z.",
+        "reply": "he A he Baum wrors it.",
+        "ended_with_marker": true,
+        "correct": false
+      },
+      {
+        "conversation": 19,
+        "turn": 2,
+        "expected": "Ozma.",
+        "reply": "horank Baum A A kittten.",
+        "ended_with_marker": true,
+        "correct": false
+      },
+      {
+        "conversation": 20,
+        "turn": 2,
+        "expected": "Dorothy.",
+        "reply": "horank Baum wrotte ite A itten.",
+        "ended_with_marker": true,
+        "correct": false
+      },
+      {
+        "conversation": 21,
+        "turn": 2,
+        "expected": "Under his funnel hat.",
+        "reply": "A hond.",
+        "ended_with_marker": true,
+        "correct": false
+      },
+      {
+        "conversation": 22,
+        "turn": 2,
+        "expected": "Inside a vase.",
+        "reply": "A A Ze.",
+        "ended_with_marker": true,
+        "correct": false
+      },
+      {
+        "conversation": 23,
+        "turn": 2,
+        "expected": "Eureka.",
+        "reply": "L. Frank Baum wrotte ite A ittten.",
+        "ended_with_marker": true,
+        "correct": false
+      },
+      {
+        "conversation": 24,
+        "turn": 2,
+        "expected": "Jim.",
+        "reply": "A A horse.",
+        "ended_with_marker": true,
+        "correct": false
+      }
+    ]
+  },
+  "evaluated_code_commit": "c29d90b677b10a07c79804a920be01f6b7b29eb7",
+  "protocol": "Reset before each conversation. Each follow-up receives the prior generated reply only if the chat CLI retains it. The book checkpoint uses its own vocabulary and the same chat prompt and decoder for comparison.",
+  "scoring": {
+    "correct": "Manual review. The reply must convey the reference answer without contradicting it. Equivalent wording and unambiguous spelling errors are allowed.",
+    "ended_with_marker": "Generation emitted the full end-of-turn marker before reaching or at the generation limit.",
+    "clean_stop": "Generation emitted the full end-of-turn marker and did not show a stray marker fragment in the reply.",
+    "history_used": "The previous exchange was present in the model input for a follow-up.",
+    "reply_loss": "Mean cross-entropy of reference reply characters and the end marker when supplied with the reference context."
+  }
+}
