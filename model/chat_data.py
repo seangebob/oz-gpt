@@ -94,19 +94,32 @@ def _conversation_examples(conversation, tokenizer):
         history.append(format_turn(user_text, assistant_text))
 
 
-def load_examples(path, tokenizer):
+def read_conversations(source, path):
+    for line_number, line in enumerate(source, start=1):
+        if not line.strip():
+            continue
+        try:
+            conversation = json.loads(line)
+        except ValueError as error:
+            raise ValueError(f'{path}:{line_number}: {error}') from error
+        yield line_number, conversation
+
+
+def encode_conversations(conversations, tokenizer, path):
     examples = []
-    with path.open(encoding='utf-8') as source:
-        for line_number, line in enumerate(source, start=1):
-            if not line.strip():
-                continue
-            try:
-                examples.extend(_conversation_examples(json.loads(line), tokenizer))
-            except ValueError as error:
-                raise ValueError(f'{path}:{line_number}: {error}') from error
+    for line_number, conversation in conversations:
+        try:
+            examples.extend(_conversation_examples(conversation, tokenizer))
+        except ValueError as error:
+            raise ValueError(f'{path}:{line_number}: {error}') from error
     if not examples:
-        raise ValueError(f'{path} contains no training examples.')
+        raise ValueError(f'{path} contains no usable conversations.')
     return examples
+
+
+def load_examples(path, tokenizer):
+    with path.open(encoding='utf-8') as source:
+        return encode_conversations(read_conversations(source, path), tokenizer, path)
 
 
 def collate_examples(examples):

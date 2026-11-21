@@ -27,13 +27,15 @@ A character-level language model built from scratch using PyTorch. The base Tran
 │   ├── model.py          # Model architecture & shared config (hyperparameters, vocab, paths)
 │   ├── training.py       # Training loop — trains and saves model weights to model-01.pth
 │   ├── chatbot.py        # Interactive CLI for book completions and chat replies
+│   ├── chat_session.py   # Chat history and generation shared by the CLI and evaluator
 │   ├── chat_training.py  # Fine-tunes the book checkpoint on user/assistant examples
+│   ├── chat_evaluation.py # Compares checkpoints on held-out conversations
 │   ├── chat_data.py      # Chat format, reply-only targets, and checkpoint loading
 │   ├── data_extract.py   # Utility to extract & split large .xz corpora into train/val text files
 │   ├── _test_model.py    # Non-interactive smoke-test: loads the model and generates sample text
 │   ├── wizard_of_oz.txt  # Training corpus (public domain)
 │   └── model-01.pth      # Bundled base model weights
-├── data/                 # Starter chat training and validation examples
+├── data/                 # Chat training, validation, and held-out conversations
 └── extra/                # Notebooks, experiments, and other supporting files
 ```
 
@@ -128,6 +130,32 @@ Each line in the training and validation files is a complete conversation in JSO
 The trainer formats each turn with `User:` and `Assistant:` labels and appends `[END]` to the reply. It uses the prompt and any recent complete turns that fit as context. Only the current assistant reply and its end marker contribute to the loss. Keep each formatted turn short enough for the model's 128-character context and use characters from the base vocabulary.
 
 Training starts from `model/model-01.pth` and saves the weights with the lowest validation reply loss, the model settings, and the ordered character vocabulary to `model/model-chat.pth`. The generated chat checkpoint is ignored by Git. Pass `--train-data` and `--val-data` to use your own files, `--steps` to change the default 1,600 training steps, or `--output` to save to a different path. Load a custom output with `python -m model.chatbot --chat path/to/checkpoint.pth`. Chat training automatically selects CUDA, Apple MPS, or CPU, and `--device` can override that choice.
+
+### Evaluate chat checkpoints
+
+Run the same checkpoint with ordinary chat history and with history disabled to measure the effect of memory.
+
+```bash
+python -m model.chat_evaluation run --history generated --history none --output oz-memory.json
+```
+
+To compare training datasets, save each trained checkpoint to a different path. Run both checkpoints with the same history mode and test file.
+
+```bash
+python -m model.chat_evaluation run \
+  --checkpoint model/model-chat.pth --checkpoint path/to/expanded-chat.pth \
+  --history generated --output oz-training-comparison.json
+```
+
+The evaluator defaults to [the held-out conversations](data/oz_chat_test.jsonl), resets between conversations, and uses greedy decoding on CPU. The report records the data and checkpoint hashes, every reply, history use, clean stops, and reply loss computed with reference history. Add `--history reference` to diagnose follow-ups with the expected earlier replies in context.
+
+Case, spacing, and final punctuation variations of the reference answer are accepted automatically. For each remaining `"correct": null` in the JSON report, set `correct` to `true` if the reply conveys the expected fact, including valid paraphrases and unambiguous spelling errors. Set it to `false` for an incorrect, contradictory, or missing answer. The summary shows how many replies are pending review.
+
+```bash
+python -m model.chat_evaluation summarize oz-memory.json
+```
+
+Use reviewed correct first replies and correct follow-ups as the main scores. Reference matches give a quick check, and reply loss is a separate diagnostic where lower is better. Pass multiple reports to `summarize` to compare runs saved separately on the same test file and maximum reply length.
 
 ---
 
