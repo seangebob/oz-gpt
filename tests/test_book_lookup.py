@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from model.book_lookup import AnswerSpan, BookIndex, BookSession, NO_ANSWER, Passage, book_passages, followup_question
 from model.chat_evaluation import generate_session_predictions, grounded_correctness, passage_review_counts
@@ -33,6 +33,34 @@ class BookLookupTests(unittest.TestCase):
         relevant = Passage('Chapter 2', 30, 32, 'Zeb stopped on the road.', 'ZEB RETURNS TO THE RANCH')
         index = BookIndex([unrelated, relevant])
         self.assertEqual(index.search('Where did Zeb return?')[0][0], relevant)
+
+    @patch('model.book_lookup.PASSAGE_WORDS', 10)
+    @patch('model.book_lookup.PASSAGE_STEP', 8)
+    def test_retrieval_completes_a_matching_sentence_at_either_edge(self):
+        book = '''CHAPTER 1.
+
+The little piglet hid where nobody could find it
+until it fell into a big vase.
+
+CHAPTER 2.
+
+The Wizard was born in Omaha.
+'''
+        plain_index = BookIndex(book_passages(book))
+        index = BookIndex.from_text(book)
+
+        for question, first_line in [('Where was the piglet?', 1), ('What was in the vase?', 3)]:
+            with self.subTest(question=question):
+                original, original_score = plain_index.search(question)[0]
+                extended, score = index.search(question)[0]
+                self.assertEqual(score, original_score)
+                self.assertIn(original.text, extended.text)
+                self.assertIn('The little piglet hid where nobody could find it until it fell into a big vase.', extended.text)
+                self.assertEqual((extended.start_line, extended.end_line), (first_line, 4))
+                self.assertEqual(extended.section, 'Chapter 1')
+
+        unrelated = 'Which chapter?'
+        self.assertEqual(index.search(unrelated), plain_index.search(unrelated))
 
     def test_session_abstains_without_a_supported_span(self):
         reader = Mock()

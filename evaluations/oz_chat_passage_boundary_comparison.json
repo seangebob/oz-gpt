@@ -1,0 +1,117 @@
+{
+  "baseline_code_commit": "4b10afdf8d317cbe52b707ac4cc4d7fdc410ee3d",
+  "test_file": "data/oz_chat_test.jsonl",
+  "test_sha256": "1c29194de5fcf79db46c2097ba1fd8e150c205cddd22e33a9b1b0d96052755ea",
+  "book_sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9",
+  "reader_model": "deepset/minilm-uncased-squad2",
+  "reader_revision": "934656cdda79824eabf503ed56e15c01ddbdbe3f",
+  "history": "generated",
+  "first_replies": 24,
+  "followups": 8,
+  "scoring": "A correct reply must be supported by its citation. Evidence coverage counts any passage visible to the reader that supports the expected answer.",
+  "before": {
+    "supported_first_replies": 12,
+    "supported_followups": 3,
+    "turns_with_evidence": 25,
+    "turns_without_evidence": 7,
+    "abstentions": 5
+  },
+  "after": {
+    "supported_first_replies": 13,
+    "supported_followups": 3,
+    "turns_with_evidence": 26,
+    "turns_without_evidence": 6,
+    "abstentions": 4
+  },
+  "new_evidence": {
+    "conversation": 22,
+    "turn": 2,
+    "rank": 3,
+    "section": "Chapter 19",
+    "start_line": 5280,
+    "end_line": 5296,
+    "review_note": "Completing the sentence at rank 3 exposes where the real piglet fell. The reader still selects the substitute piglet’s location."
+  },
+  "changed_replies": [
+    {
+      "conversation": 7,
+      "turn": 1,
+      "prompt": "Who started the race between Jim and the Sawhorse?",
+      "expected": "Zeb.",
+      "before": "the two horses",
+      "after": "Zeb",
+      "after_citation": {
+        "section": "Chapter 17",
+        "start_line": 4797,
+        "end_line": 4820
+      },
+      "review_note": "Zeb calls “Go!” and the horses start the race."
+    },
+    {
+      "conversation": 10,
+      "turn": 1,
+      "prompt": "What did the Mangaboos use to block the cave?",
+      "expected": "Large glass rocks.",
+      "before": "glass rocks",
+      "after": "big glass rocks",
+      "after_citation": {
+        "section": "Chapter 7",
+        "start_line": 1850,
+        "end_line": 1872
+      },
+      "review_note": "The new passage directly says the Mangaboos used big glass rocks."
+    },
+    {
+      "conversation": 11,
+      "turn": 1,
+      "prompt": "Which animals could the people of Voe see in the brooks?",
+      "expected": "Fish.",
+      "before": "the fishes",
+      "after": "fishes",
+      "after_citation": {
+        "section": "Chapter 9",
+        "start_line": 2297,
+        "end_line": 2314
+      },
+      "review_note": "The same passage confirms that the visible animals in the brooks are fish."
+    },
+    {
+      "conversation": 15,
+      "turn": 1,
+      "prompt": "What marked Ozma's own piglet?",
+      "expected": "An emerald collar.",
+      "before": "Gwig",
+      "after": "I couldn't find an answer supported by the book.",
+      "after_citation": null,
+      "review_note": "The collar is still outside the retrieved passages. The reader now abstains."
+    },
+    {
+      "conversation": 18,
+      "turn": 1,
+      "prompt": "What name does the Wizard use?",
+      "expected": "Oz.",
+      "before": "I couldn't find an answer supported by the book.",
+      "after": "Ozma",
+      "after_citation": {
+        "section": "Chapter 15",
+        "start_line": 4113,
+        "end_line": 4128
+      },
+      "review_note": "The name Oz appears in the retrieved passage. The reader selects Ozma."
+    },
+    {
+      "conversation": 19,
+      "turn": 1,
+      "prompt": "What rescued Dorothy?",
+      "expected": "The Magic Belt.",
+      "before": "I couldn't find an answer supported by the book.",
+      "after": "the Wizard",
+      "after_citation": {
+        "section": "Chapter 5",
+        "start_line": 1353,
+        "end_line": 1375
+      },
+      "review_note": "The answer refers to a different scene. The reader still lacks evidence about the Magic Belt."
+    }
+  ]
+}

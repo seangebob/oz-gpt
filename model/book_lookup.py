@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from bisect import bisect_left, bisect_right
 from collections import Counter
 from dataclasses import dataclass
 import hashlib
@@ -16,11 +17,14 @@ READER_REVISION = '934656cdda79824eabf503ed56e15c01ddbdbe3f'
 NO_ANSWER = "I couldn't find an answer supported by the book."
 PASSAGE_WORDS = 165
 PASSAGE_STEP = 100
+PASSAGE_CONTEXT_WORDS = 24
 SEARCH_LIMIT = 8
 MIN_ANSWER_MARGIN = 2.0
 CHAPTER_HEADING_WEIGHT = 0.28
 
 CHAPTER_HEADING = re.compile(r'CHAPTER (\d+)\.', re.IGNORECASE)
+SENTENCE_END = re.compile(r"""[.!?]["'’”_\])]*$""")
+ABBREVIATION = re.compile(r'(?:[A-Z]|Mr|Mrs|Ms|Dr|St)\.$')
 FOLLOW_UP = re.compile(
     r'\b(?:he|she|it|they|him|her|them|his|hers|its|their|there|that|those|too|else)\b'
     r'|^(?:how many|what kind|which one)\W*$', re.IGNORECASE,
@@ -126,6 +130,13 @@ class Passage:
 
 
 @dataclass(frozen=True)
+class PassageEdge:
+    text: str
+    line: int
+    paragraph_terms: frozenset[str]
+
+
+@dataclass(frozen=True)
 class AnswerSpan:
     text: str
     margin: float
@@ -150,6 +161,11 @@ class BookReply:
 
 
 def book_passages(text):
+    for passage, _, _ in _passage_windows(text):
+        yield passage
+
+
+def _passage_windows(text):
     lines = text.splitlines()
     chapters = []
     for index, line in enumerate(lines):
@@ -167,18 +183,50 @@ def book_passages(text):
 
     for start, end, label, heading in sections:
         words = [(word, number + 1) for number in range(start, end) for word in lines[number].split()]
+        sentences = [0]
+        paragraphs = [0]
+        for position, (word, line) in enumerate(words[:-1], start=1):
+            next_word, next_line = words[position]
+            if next_line > line + 1:
+                paragraphs.append(position)
+                sentences.append(position)
+            elif (SENTENCE_END.search(word) and not ABBREVIATION.fullmatch(word)
+                  and not next_word.lstrip("\"'`_“‘([")[:1].islower()):
+                sentences.append(position)
+        sentences.append(len(words))
+        paragraphs.append(len(words))
         for offset in range(0, len(words), PASSAGE_STEP):
-            window = words[offset:offset + PASSAGE_WORDS]
-            yield Passage(label, window[0][1], window[-1][1], ' '.join(word for word, _ in window), heading)
-            if offset + PASSAGE_WORDS >= len(words):
+            limit = min(offset + PASSAGE_WORDS, len(words))
+            window = words[offset:limit]
+            passage = Passage(label, window[0][1], window[-1][1], ' '.join(word for word, _ in window), heading)
+            first = sentences[bisect_right(sentences, offset) - 1]
+            last = sentences[bisect_left(sentences, limit)]
+            prefix = suffix = None
+            if 0 < offset - first <= PASSAGE_CONTEXT_WORDS:
+                paragraph_end = min(paragraphs[bisect_right(paragraphs, offset)], limit)
+                prefix = PassageEdge(
+                    ' '.join(word for word, _ in words[first:offset]),
+                    words[first][1],
+                    frozenset(search_terms(' '.join(word for word, _ in words[offset:paragraph_end]))),
+                )
+            if 0 < last - limit <= PASSAGE_CONTEXT_WORDS:
+                paragraph_start = max(offset, paragraphs[bisect_left(paragraphs, limit) - 1])
+                suffix = PassageEdge(
+                    ' '.join(word for word, _ in words[limit:last]),
+                    words[last - 1][1],
+                    frozenset(search_terms(' '.join(word for word, _ in words[paragraph_start:limit]))),
+                )
+            yield passage, prefix, suffix
+            if limit == len(words):
                 break
 
 
 class BookIndex:
-    def __init__(self, passages):
+    def __init__(self, passages, *, passage_edges=None):
         self.passages = list(passages)
         if not self.passages:
             raise ValueError('The book contains no searchable passages.')
+        self.passage_edges = passage_edges or {}
         self.frequencies = [Counter(search_terms(passage.text)) for passage in self.passages]
         self.span_lengths = [sum(terms.values()) for terms in self.frequencies]
         self.heading_terms = {
@@ -192,8 +240,34 @@ class BookIndex:
             for word, count in document_counts.items()
         }
 
+    @classmethod
+    def from_text(cls, text):
+        passages, edges = [], {}
+        for passage, prefix, suffix in _passage_windows(text):
+            passages.append(passage)
+            if prefix or suffix:
+                edges[passage] = (prefix, suffix)
+        return cls(passages, passage_edges=edges)
+
+    def _with_sentence_context(self, passage, question_terms):
+        prefix, suffix = self.passage_edges.get(passage, (None, None))
+        # Keep extra sentence text where the surrounding paragraph matches the question.
+        prefix = prefix if prefix and prefix.paragraph_terms & question_terms else None
+        suffix = suffix if suffix and suffix.paragraph_terms & question_terms else None
+        if not (prefix or suffix):
+            return passage
+        text = ' '.join(part for part in (prefix.text if prefix else '', passage.text, suffix.text if suffix else '') if part)
+        return Passage(
+            passage.section,
+            prefix.line if prefix else passage.start_line,
+            suffix.line if suffix else passage.end_line,
+            text,
+            passage.heading,
+        )
+
     def search(self, question, previous_question=''):
         query = dict.fromkeys(search_terms(question), 1.0)
+        question_terms = set(query)
         for word in dict.fromkeys(search_terms(previous_question)):
             query[word] = query.get(word, 0.0) + 0.6
 
@@ -212,7 +286,8 @@ class BookIndex:
             )
             if score > 0:
                 scores.append((passage, score + heading_scores.get(passage.section, 0.0)))
-        return sorted(scores, key=lambda item: item[1], reverse=True)[:SEARCH_LIMIT]
+        ranked = sorted(scores, key=lambda item: item[1], reverse=True)[:SEARCH_LIMIT]
+        return [(self._with_sentence_context(passage, question_terms), score) for passage, score in ranked]
 
 
 class ExtractiveReader:
@@ -268,7 +343,7 @@ class BookSession:
     @classmethod
     def from_book(cls, path=BOOK_PATH, *, trace_passages=False):
         book = path.read_bytes()
-        index = BookIndex(book_passages(book.decode('utf-8-sig')))
+        index = BookIndex.from_text(book.decode('utf-8-sig'))
         session = cls(index, ExtractiveReader(), trace_passages=trace_passages)
         session.book_sha256 = hashlib.sha256(book).hexdigest()
         return session
