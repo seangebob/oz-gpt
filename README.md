@@ -141,7 +141,7 @@ python -m pip install 'transformers>=4.45,<6'
 python -m model.chatbot --book
 ```
 
-Try `Where was the Wizard born?`. Book lookup searches the bundled text, uses the previous exchange for short follow-ups, and cites the chapter and source lines for each extracted answer. The reader abstains when it cannot find a sufficiently confident span. It can still select a passage that answers the question poorly, so check the citation for unfamiliar facts.
+Try `Where was the Wizard born?`. Book lookup searches the bundled text, uses chapter headings to help rank relevant passages, and uses the previous exchange for short follow-ups. Each extracted answer cites the chapter and source lines. The reader abstains when it cannot find a sufficiently confident span. It can still select a passage that answers the question poorly, so check the citation for unfamiliar facts.
 
 The first run downloads the [MiniLM extractive answer reader](https://huggingface.co/deepset/minilm-uncased-squad2). The reader runs locally on CPU. `--chat` continues to use the Oz checkpoint trained in this project.
 

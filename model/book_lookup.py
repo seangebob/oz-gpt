@@ -18,6 +18,7 @@ PASSAGE_WORDS = 165
 PASSAGE_STEP = 100
 SEARCH_LIMIT = 8
 MIN_ANSWER_MARGIN = 2.0
+CHAPTER_HEADING_WEIGHT = 0.28
 
 CHAPTER_HEADING = re.compile(r'CHAPTER (\d+)\.', re.IGNORECASE)
 FOLLOW_UP = re.compile(
@@ -70,6 +71,7 @@ class Passage:
     start_line: int
     end_line: int
     text: str
+    heading: str = ''
 
 
 @dataclass(frozen=True)
@@ -96,15 +98,16 @@ def book_passages(text):
     front_end = chapters[0][0] if chapters else len(lines)
     contents = next((i for i, line in enumerate(lines[:front_end]) if line.strip() == 'LIST OF CHAPTERS'), front_end)
     preface = next((i for i, line in enumerate(lines[:contents]) if line.strip() == 'To My Readers'), contents)
-    sections = [(0, preface, 'Title page'), (preface, contents, 'Preface')]
+    sections = [(0, preface, 'Title page', ''), (preface, contents, 'Preface', '')]
     for (start, label), (end, _) in zip(chapters, chapters[1:] + [(len(lines), '')]):
-        sections.append((start, end, label))
+        heading = next((line.strip() for line in lines[start + 1:end] if line.strip()), '')
+        sections.append((start, end, label, heading if heading.isupper() else ''))
 
-    for start, end, label in sections:
+    for start, end, label, heading in sections:
         words = [(word, number + 1) for number in range(start, end) for word in lines[number].split()]
         for offset in range(0, len(words), PASSAGE_STEP):
             window = words[offset:offset + PASSAGE_WORDS]
-            yield Passage(label, window[0][1], window[-1][1], ' '.join(word for word, _ in window))
+            yield Passage(label, window[0][1], window[-1][1], ' '.join(word for word, _ in window), heading)
             if offset + PASSAGE_WORDS >= len(words):
                 break
 
@@ -116,6 +119,9 @@ class BookIndex:
             raise ValueError('The book contains no searchable passages.')
         self.frequencies = [Counter(search_terms(passage.text)) for passage in self.passages]
         self.span_lengths = [sum(terms.values()) for terms in self.frequencies]
+        self.heading_terms = {
+            passage.section: set(search_terms(passage.heading)) for passage in self.passages if passage.heading
+        }
         self.average_length = max(sum(self.span_lengths) / len(self.span_lengths), 1)
         document_counts = Counter(word for terms in self.frequencies for word in terms)
         total = len(self.passages)
@@ -131,6 +137,12 @@ class BookIndex:
         for word in dict.fromkeys(search_terms(previous_answer)):
             query[word] = query.get(word, 0.0) + 0.6
 
+        heading_scores = {
+            section: CHAPTER_HEADING_WEIGHT * sum(
+                weight * self.weights.get(word, 0.0) for word, weight in query.items() if word in terms
+            )
+            for section, terms in self.heading_terms.items()
+        }
         scores = []
         for passage, terms, length in zip(self.passages, self.frequencies, self.span_lengths):
             adjustment = 1.2 * (0.25 + 0.75 * length / self.average_length)
@@ -139,7 +151,7 @@ class BookIndex:
                 for word, weight in query.items() if word in terms
             )
             if score > 0:
-                scores.append((passage, score))
+                scores.append((passage, score + heading_scores.get(passage.section, 0.0)))
         return sorted(scores, key=lambda item: item[1], reverse=True)[:SEARCH_LIMIT]
 
 

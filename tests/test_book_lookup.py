@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock
 
-from model.book_lookup import AnswerSpan, BookIndex, BookSession, NO_ANSWER, book_passages
+from model.book_lookup import AnswerSpan, BookIndex, BookSession, NO_ANSWER, Passage, book_passages
 from model.chat_evaluation import generate_session_predictions, grounded_correctness
 
 
@@ -27,6 +27,12 @@ class BookLookupTests(unittest.TestCase):
         self.assertEqual(self.passages[1].end_line, 6)
         self.assertNotIn('LIST OF CHAPTERS', ' '.join(passage.text for passage in self.passages))
         self.assertEqual(self.index.search('Who wrote the book by Baum?')[0][0].section, 'Title page')
+
+    def test_chapter_heading_helps_rank_passages_later_in_the_chapter(self):
+        unrelated = Passage('Chapter 1', 10, 12, 'Zeb stopped on the road.', 'THE EARTHQUAKE')
+        relevant = Passage('Chapter 2', 30, 32, 'Zeb stopped on the road.', 'ZEB RETURNS TO THE RANCH')
+        index = BookIndex([unrelated, relevant])
+        self.assertEqual(index.search('Where did Zeb return?')[0][0], relevant)
 
     def test_session_abstains_without_a_supported_span(self):
         reader = Mock()

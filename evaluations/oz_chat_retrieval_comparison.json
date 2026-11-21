@@ -1,0 +1,1678 @@
+{
+  "baseline_code_commit": "601618aa21fe89ecf3381cf6184b01c9349d8b20",
+  "book_sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9",
+  "heldout_sha256": "1c29194de5fcf79db46c2097ba1fd8e150c205cddd22e33a9b1b0d96052755ea",
+  "readers": {
+    "original_minilm": "MiniLM, eight lexical hits.",
+    "chapter_heading_minilm": "Same MiniLM and eight hits. Matching terms from chapter headings add weight to passage ranking.",
+    "ollama_prototype": "Local qwen3.5:9b at temperature zero, with previous citation when available and a verbatim-quote requirement."
+  },
+  "review": "Support is checked against the cited passage for the specific scene. Equivalent wording counts. On held-out case 24, the first answer THE RANCH is too vague to identify Hugson's Ranch. Chapter 20 supports Jim accompanying Zeb. The older Chapter 5 citation is about a different scene.",
+  "timing": "Median in-process wall time per reply for one run on the same machine, excluding model setup.",
+  "datasets": {
+    "heldout": {
+      "scores": {
+        "original_minilm": {
+          "correct_first_replies": {
+            "passed": 12,
+            "total": 24
+          },
+          "correct_followups": {
+            "passed": 1,
+            "total": 8
+          },
+          "correct_first_replies_with_support": {
+            "passed": 12,
+            "total": 24
+          },
+          "correct_followups_with_support": {
+            "passed": 0,
+            "total": 8
+          },
+          "replies_with_citations": {
+            "passed": 28,
+            "total": 32
+          },
+          "median_reply_seconds": 0.119
+        },
+        "chapter_heading_minilm": {
+          "correct_first_replies": {
+            "passed": 12,
+            "total": 24
+          },
+          "correct_followups": {
+            "passed": 1,
+            "total": 8
+          },
+          "correct_first_replies_with_support": {
+            "passed": 12,
+            "total": 24
+          },
+          "correct_followups_with_support": {
+            "passed": 1,
+            "total": 8
+          },
+          "replies_with_citations": {
+            "passed": 28,
+            "total": 32
+          },
+          "median_reply_seconds": 0.118
+        },
+        "ollama_prototype": {
+          "correct_first_replies": {
+            "passed": 13,
+            "total": 24
+          },
+          "correct_followups": {
+            "passed": 0,
+            "total": 8
+          },
+          "correct_first_replies_with_support": {
+            "passed": 13,
+            "total": 24
+          },
+          "correct_followups_with_support": {
+            "passed": 0,
+            "total": 8
+          },
+          "replies_with_citations": {
+            "passed": 21,
+            "total": 32
+          },
+          "median_reply_seconds": 4.487
+        }
+      },
+      "predictions": [
+        {
+          "conversation": 1,
+          "turn": 1,
+          "prompt": "When did the train reach Hugson's Siding?",
+          "expected": "At five in the morning.",
+          "results": {
+            "original_minilm": {
+              "reply": "midnight",
+              "source": {
+                "section": "Chapter 1",
+                "start_line": 154,
+                "end_line": 174
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "midnight",
+              "source": {
+                "section": "Chapter 1",
+                "start_line": 154,
+                "end_line": 174
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "5:00 AM",
+              "source": {
+                "section": "Chapter 1",
+                "start_line": 154,
+                "end_line": 174
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "It should have arrived at Hugson's siding at midnight, but it was already five o'clock and the gray dawn was breaking in the east when the little train slowly rumbled up to the open shed that served for the station-house."
+            }
+          }
+        },
+        {
+          "conversation": 2,
+          "turn": 1,
+          "prompt": "How did Dorothy wake the boy in the buggy?",
+          "expected": "She poked him with her parasol.",
+          "results": {
+            "original_minilm": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "Dorothy woke the boy by poking him with her parasol.",
+              "source": {
+                "section": "Chapter 1",
+                "start_line": 230,
+                "end_line": 260
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "[Illustration: DOROTHY POKED THE BOY WITH HER PARASOL.]"
+            }
+          }
+        },
+        {
+          "conversation": 3,
+          "turn": 1,
+          "prompt": "Who drew the royal chariot in the parade?",
+          "expected": "The Cowardly Lion and the Hungry Tiger.",
+          "results": {
+            "original_minilm": {
+              "reply": "the Cowardly Lion and the Hungry Tiger",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4648,
+                "end_line": 4665
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "chapter_heading_minilm": {
+              "reply": "the Cowardly Lion and the Hungry Tiger",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4648,
+                "end_line": 4665
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "ollama_prototype": {
+              "reply": "The Cowardly Lion and the Hungry Tiger",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4648,
+                "end_line": 4665
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "The chariot was drawn on this occasion by the Cowardly Lion and the Hungry Tiger, who were decorated with immense pink and blue bows."
+            }
+          }
+        },
+        {
+          "conversation": 4,
+          "turn": 1,
+          "prompt": "Which artist illustrated the book?",
+          "expected": "John R. Neill.",
+          "results": {
+            "original_minilm": {
+              "reply": "JOHN R. NEILL",
+              "source": {
+                "section": "Title page",
+                "start_line": 1,
+                "end_line": 31
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "chapter_heading_minilm": {
+              "reply": "JOHN R. NEILL",
+              "source": {
+                "section": "Title page",
+                "start_line": 1,
+                "end_line": 31
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "ollama_prototype": {
+              "reply": "John R. Neill",
+              "source": {
+                "section": "Title page",
+                "start_line": 1,
+                "end_line": 31
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "ILLUSTRATED BY JOHN R. NEILL"
+            }
+          }
+        },
+        {
+          "conversation": 5,
+          "turn": 1,
+          "prompt": "Who spoke for the jury at Eureka's trial?",
+          "expected": "The Hungry Tiger.",
+          "results": {
+            "original_minilm": {
+              "reply": "the Woggle-Bug",
+              "source": {
+                "section": "Chapter 19",
+                "start_line": 5088,
+                "end_line": 5110
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "the Woggle-Bug",
+              "source": {
+                "section": "Chapter 19",
+                "start_line": 5088,
+                "end_line": 5110
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            }
+          }
+        },
+        {
+          "conversation": 6,
+          "turn": 1,
+          "prompt": "Who repaired the Sawhorse after Jim kicked it?",
+          "expected": "The Tin Woodman.",
+          "results": {
+            "original_minilm": {
+              "reply": "Tin Woodman",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4841,
+                "end_line": 4858
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "chapter_heading_minilm": {
+              "reply": "Tin Woodman",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4841,
+                "end_line": 4858
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "ollama_prototype": {
+              "reply": "The Tin Woodman",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4841,
+                "end_line": 4858
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "Then the Tin Woodman cut a straight and strong limb from a tree with his gleaming axe and made a new leg and a new ear for the Sawhorse"
+            }
+          }
+        },
+        {
+          "conversation": 7,
+          "turn": 1,
+          "prompt": "Who started the race between Jim and the Sawhorse?",
+          "expected": "Zeb.",
+          "results": {
+            "original_minilm": {
+              "reply": "the two horses",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4810,
+                "end_line": 4828
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "the two horses",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4810,
+                "end_line": 4828
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            }
+          }
+        },
+        {
+          "conversation": 8,
+          "turn": 1,
+          "prompt": "Which maid was sent to fetch Ozma's piglet?",
+          "expected": "Jellia Jamb.",
+          "results": {
+            "original_minilm": {
+              "reply": "Jellia",
+              "source": {
+                "section": "Chapter 18",
+                "start_line": 4883,
+                "end_line": 4906
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "chapter_heading_minilm": {
+              "reply": "Jellia",
+              "source": {
+                "section": "Chapter 18",
+                "start_line": 4883,
+                "end_line": 4906
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "ollama_prototype": {
+              "reply": "Jellia",
+              "source": {
+                "section": "Chapter 18",
+                "start_line": 4898,
+                "end_line": 4923
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "Please go to my boudoir, Jellia, and get the white piglet I left on the dressing-table. I want to play with it."
+            }
+          }
+        },
+        {
+          "conversation": 9,
+          "turn": 1,
+          "prompt": "Why was the train from San Francisco late?",
+          "expected": "Earthquakes made the engineer drive slowly.",
+          "results": {
+            "original_minilm": {
+              "reply": "because all through the night there were times when the solid earth shook and trembled under him",
+              "source": {
+                "section": "Chapter 1",
+                "start_line": 169,
+                "end_line": 184
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "chapter_heading_minilm": {
+              "reply": "because all through the night there were times when the solid earth shook and trembled under him",
+              "source": {
+                "section": "Chapter 1",
+                "start_line": 169,
+                "end_line": 184
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "ollama_prototype": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            }
+          }
+        },
+        {
+          "conversation": 10,
+          "turn": 1,
+          "prompt": "What did the Mangaboos use to block the cave?",
+          "expected": "Large glass rocks.",
+          "results": {
+            "original_minilm": {
+              "reply": "glass rocks",
+              "source": {
+                "section": "Chapter 7",
+                "start_line": 1903,
+                "end_line": 1923
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "chapter_heading_minilm": {
+              "reply": "glass rocks",
+              "source": {
+                "section": "Chapter 7",
+                "start_line": 1903,
+                "end_line": 1923
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "ollama_prototype": {
+              "reply": "glass rocks",
+              "source": {
+                "section": "Chapter 7",
+                "start_line": 1916,
+                "end_line": 1937
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "At once the Mangaboos began piling up the rocks of glass again"
+            }
+          }
+        },
+        {
+          "conversation": 11,
+          "turn": 1,
+          "prompt": "Which animals could the people of Voe see in the brooks?",
+          "expected": "Fish.",
+          "results": {
+            "original_minilm": {
+              "reply": "the fishes",
+              "source": {
+                "section": "Chapter 9",
+                "start_line": 2297,
+                "end_line": 2314
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "chapter_heading_minilm": {
+              "reply": "the fishes",
+              "source": {
+                "section": "Chapter 9",
+                "start_line": 2297,
+                "end_line": 2314
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "ollama_prototype": {
+              "reply": "fishes",
+              "source": {
+                "section": "Chapter 9",
+                "start_line": 2283,
+                "end_line": 2302
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "But the fishes that swim in our brooks we can see, and often we catch them to eat."
+            }
+          }
+        },
+        {
+          "conversation": 12,
+          "turn": 1,
+          "prompt": "What kind of ribbon did the Braided Man want?",
+          "expected": "A blue hair ribbon.",
+          "results": {
+            "original_minilm": {
+              "reply": "blue hair-ribbon",
+              "source": {
+                "section": "Chapter 10",
+                "start_line": 2707,
+                "end_line": 2725
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "chapter_heading_minilm": {
+              "reply": "blue hair-ribbon",
+              "source": {
+                "section": "Chapter 10",
+                "start_line": 2707,
+                "end_line": 2725
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "ollama_prototype": {
+              "reply": "blue hair-ribbon",
+              "source": {
+                "section": "Chapter 10",
+                "start_line": 2707,
+                "end_line": 2725
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "But I would like very much a blue hair-ribbon."
+            }
+          }
+        },
+        {
+          "conversation": 13,
+          "turn": 1,
+          "prompt": "What color were the dragonettes' eyes?",
+          "expected": "Yellow.",
+          "results": {
+            "original_minilm": {
+              "reply": "yellow",
+              "source": {
+                "section": "Chapter 13",
+                "start_line": 3574,
+                "end_line": 3590
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "chapter_heading_minilm": {
+              "reply": "yellow",
+              "source": {
+                "section": "Chapter 13",
+                "start_line": 3574,
+                "end_line": 3590
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "ollama_prototype": {
+              "reply": "yellow",
+              "source": {
+                "section": "Chapter 13",
+                "start_line": 3596,
+                "end_line": 3614
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "blinking yellow eyes of the dragonettes"
+            }
+          }
+        },
+        {
+          "conversation": 14,
+          "turn": 1,
+          "prompt": "Why were Dorothy's aunt and uncle in mourning?",
+          "expected": "They thought she had died in the earthquake.",
+          "results": {
+            "original_minilm": {
+              "reply": "they thought their little niece had been killed by the earthquake",
+              "source": {
+                "section": "Chapter 20",
+                "start_line": 5338,
+                "end_line": 5357
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "chapter_heading_minilm": {
+              "reply": "they thought their little niece had been killed by the earthquake",
+              "source": {
+                "section": "Chapter 20",
+                "start_line": 5338,
+                "end_line": 5357
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "ollama_prototype": {
+              "reply": "They thought their niece had been killed by an earthquake.",
+              "source": {
+                "section": "Chapter 20",
+                "start_line": 5338,
+                "end_line": 5357
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "because they thought their little niece had been killed by the earthquake."
+            }
+          }
+        },
+        {
+          "conversation": 15,
+          "turn": 1,
+          "prompt": "What marked Ozma's own piglet?",
+          "expected": "An emerald collar.",
+          "results": {
+            "original_minilm": {
+              "reply": "Gwig",
+              "source": {
+                "section": "Chapter 6",
+                "start_line": 1696,
+                "end_line": 1713
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "Gwig",
+              "source": {
+                "section": "Chapter 6",
+                "start_line": 1696,
+                "end_line": 1713
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            }
+          }
+        },
+        {
+          "conversation": 16,
+          "turn": 1,
+          "prompt": "What title did Ozma give the Sawhorse after the race?",
+          "expected": "Prince of Horses.",
+          "results": {
+            "original_minilm": {
+              "reply": "Prince of Horses",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4852,
+                "end_line": 4871
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "chapter_heading_minilm": {
+              "reply": "Prince of Horses",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4852,
+                "end_line": 4871
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "ollama_prototype": {
+              "reply": "Prince of Horses",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4852,
+                "end_line": 4871
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "My friend, I reward you for your swiftness by proclaiming you Prince of Horses, whether of wood or of flesh; and hereafter all other horses--in the Land of Oz, at least--must be considered imitations, and you the real Champion of your race."
+            }
+          }
+        },
+        {
+          "conversation": 17,
+          "turn": 1,
+          "prompt": "Who is in the birdcage?",
+          "expected": "Eureka.",
+          "results": {
+            "original_minilm": {
+              "reply": "Eureka",
+              "source": {
+                "section": "Chapter 2",
+                "start_line": 501,
+                "end_line": 525
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "chapter_heading_minilm": {
+              "reply": "Eureka",
+              "source": {
+                "section": "Chapter 2",
+                "start_line": 501,
+                "end_line": 525
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "ollama_prototype": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            }
+          }
+        },
+        {
+          "conversation": 17,
+          "turn": 2,
+          "prompt": "Why that name?",
+          "expected": "Dorothy found her.",
+          "results": {
+            "original_minilm": {
+              "reply": "Eureka",
+              "source": {
+                "section": "Chapter 1",
+                "start_line": 194,
+                "end_line": 223
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "Eureka",
+              "source": {
+                "section": "Chapter 1",
+                "start_line": 194,
+                "end_line": 223
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            }
+          }
+        },
+        {
+          "conversation": 18,
+          "turn": 1,
+          "prompt": "What name does the Wizard use?",
+          "expected": "Oz.",
+          "results": {
+            "original_minilm": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            }
+          }
+        },
+        {
+          "conversation": 18,
+          "turn": 2,
+          "prompt": "Why that name?",
+          "expected": "His first two initials are O. Z.",
+          "results": {
+            "original_minilm": {
+              "reply": "Mangaboos",
+              "source": {
+                "section": "Chapter 3",
+                "start_line": 944,
+                "end_line": 971
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "Mangaboos",
+              "source": {
+                "section": "Chapter 3",
+                "start_line": 944,
+                "end_line": 971
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            }
+          }
+        },
+        {
+          "conversation": 19,
+          "turn": 1,
+          "prompt": "What rescued Dorothy?",
+          "expected": "The Magic Belt.",
+          "results": {
+            "original_minilm": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            }
+          }
+        },
+        {
+          "conversation": 19,
+          "turn": 2,
+          "prompt": "Who used it?",
+          "expected": "Ozma.",
+          "results": {
+            "original_minilm": {
+              "reply": "DOROTHY POKED THE BOY WITH HER PARASOL",
+              "source": {
+                "section": "Chapter 1",
+                "start_line": 247,
+                "end_line": 274
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "DOROTHY POKED THE BOY WITH HER PARASOL",
+              "source": {
+                "section": "Chapter 1",
+                "start_line": 247,
+                "end_line": 274
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "The Wizard",
+              "source": {
+                "section": "Chapter 9",
+                "start_line": 2467,
+                "end_line": 2484
+              },
+              "correct": false,
+              "source_supports_reply": false,
+              "quote": "Quick! To the water, or you are lost!"
+            }
+          }
+        },
+        {
+          "conversation": 20,
+          "turn": 1,
+          "prompt": "How did Zeb reach Oz?",
+          "expected": "The Magic Belt.",
+          "results": {
+            "original_minilm": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "Zeb reached Oz by going down in a balloon.",
+              "source": {
+                "section": "Chapter 3",
+                "start_line": 849,
+                "end_line": 870
+              },
+              "correct": false,
+              "source_supports_reply": false,
+              "quote": "I live on top of the earth, your honor, which is far better than living inside it; but yesterday I went up in a balloon"
+            }
+          }
+        },
+        {
+          "conversation": 20,
+          "turn": 2,
+          "prompt": "Who used it?",
+          "expected": "Dorothy.",
+          "results": {
+            "original_minilm": {
+              "reply": "Princess Ozma",
+              "source": {
+                "section": "Chapter 14",
+                "start_line": 3794,
+                "end_line": 3812
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "Princess Ozma",
+              "source": {
+                "section": "Chapter 14",
+                "start_line": 3794,
+                "end_line": 3812
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "Zeb used a balloon.",
+              "source": {
+                "section": "Chapter 3",
+                "start_line": 865,
+                "end_line": 880
+              },
+              "correct": false,
+              "source_supports_reply": false,
+              "quote": "but yesterday I went up in a balloon, and when I came down I fell into a big crack in the earth"
+            }
+          }
+        },
+        {
+          "conversation": 21,
+          "turn": 1,
+          "prompt": "What did Nick show at trial?",
+          "expected": "A piglet.",
+          "results": {
+            "original_minilm": {
+              "reply": "innocent",
+              "source": {
+                "section": "Chapter 19",
+                "start_line": 5235,
+                "end_line": 5258
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "exceedingly thoughtful",
+              "source": {
+                "section": "Chapter 18",
+                "start_line": 5035,
+                "end_line": 5051
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "Nick showed a tiny white piglet",
+              "source": {
+                "section": "Chapter 19",
+                "start_line": 5235,
+                "end_line": 5258
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "He took off his funnel hat and from beneath it produced a tiny white piglet, which he held aloft that all might see it clearly."
+            }
+          }
+        },
+        {
+          "conversation": 21,
+          "turn": 2,
+          "prompt": "Where was it?",
+          "expected": "Under his funnel hat.",
+          "results": {
+            "original_minilm": {
+              "reply": "In a room of the palace",
+              "source": {
+                "section": "Chapter 19",
+                "start_line": 5235,
+                "end_line": 5258
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "The Wizard, when he returned to his own room",
+              "source": {
+                "section": "Chapter 18",
+                "start_line": 5035,
+                "end_line": 5051
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "In a room of the palace",
+              "source": {
+                "section": "Chapter 19",
+                "start_line": 5235,
+                "end_line": 5258
+              },
+              "correct": false,
+              "source_supports_reply": false,
+              "quote": "\"In a room of the palace,\" he answered."
+            }
+          }
+        },
+        {
+          "conversation": 22,
+          "turn": 1,
+          "prompt": "Which pet went missing?",
+          "expected": "Ozma's piglet.",
+          "results": {
+            "original_minilm": {
+              "reply": "Nick Chopper",
+              "source": {
+                "section": "Chapter 19",
+                "start_line": 5249,
+                "end_line": 5274
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "Nick Chopper",
+              "source": {
+                "section": "Chapter 19",
+                "start_line": 5249,
+                "end_line": 5274
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "Eureka",
+              "source": {
+                "section": "Chapter 19",
+                "start_line": 5249,
+                "end_line": 5274
+              },
+              "correct": false,
+              "source_supports_reply": false,
+              "quote": "Where did you find my missing pet, Nick Chopper?"
+            }
+          }
+        },
+        {
+          "conversation": 22,
+          "turn": 2,
+          "prompt": "Where was it?",
+          "expected": "Inside a vase.",
+          "results": {
+            "original_minilm": {
+              "reply": "In a room of the palace",
+              "source": {
+                "section": "Chapter 19",
+                "start_line": 5235,
+                "end_line": 5258
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "In a room of the palace",
+              "source": {
+                "section": "Chapter 19",
+                "start_line": 5235,
+                "end_line": 5258
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "In a room of the palace",
+              "source": {
+                "section": "Chapter 19",
+                "start_line": 5235,
+                "end_line": 5258
+              },
+              "correct": false,
+              "source_supports_reply": false,
+              "quote": "\"In a room of the palace,\" he answered."
+            }
+          }
+        },
+        {
+          "conversation": 23,
+          "turn": 1,
+          "prompt": "Where does Dorothy return?",
+          "expected": "Kansas.",
+          "results": {
+            "original_minilm": {
+              "reply": "Under the bed in your own room",
+              "source": {
+                "section": "Chapter 18",
+                "start_line": 4928,
+                "end_line": 4956
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "Under the bed in your own room",
+              "source": {
+                "section": "Chapter 18",
+                "start_line": 4928,
+                "end_line": 4956
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "The Emerald City",
+              "source": {
+                "section": "Chapter 16",
+                "start_line": 4531,
+                "end_line": 4550
+              },
+              "correct": false,
+              "source_supports_reply": false,
+              "quote": "These royal beasts are both warm friends of little Dorothy and have come to the Emerald City this morning to welcome her to our fairyland."
+            }
+          }
+        },
+        {
+          "conversation": 23,
+          "turn": 2,
+          "prompt": "Who went too?",
+          "expected": "Eureka.",
+          "results": {
+            "original_minilm": {
+              "reply": "The green maiden",
+              "source": {
+                "section": "Chapter 18",
+                "start_line": 4928,
+                "end_line": 4956
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "Uncle Henry",
+              "source": {
+                "section": "Chapter 20",
+                "start_line": 5338,
+                "end_line": 5357
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            }
+          }
+        },
+        {
+          "conversation": 24,
+          "turn": 1,
+          "prompt": "Where does Zeb return?",
+          "expected": "Hugson's Ranch.",
+          "results": {
+            "original_minilm": {
+              "reply": "one of the upper rooms",
+              "source": {
+                "section": "Chapter 5",
+                "start_line": 1609,
+                "end_line": 1624
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "THE RANCH",
+              "source": {
+                "section": "Chapter 20",
+                "start_line": 5326,
+                "end_line": 5346
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "Zeb returns to Kansas",
+              "source": {
+                "section": "Chapter 20",
+                "start_line": 5397,
+                "end_line": 5418
+              },
+              "correct": false,
+              "source_supports_reply": false,
+              "quote": "Greeting her uncle and aunt in Kansas, by this time,"
+            }
+          }
+        },
+        {
+          "conversation": 24,
+          "turn": 2,
+          "prompt": "Who went too?",
+          "expected": "Jim.",
+          "results": {
+            "original_minilm": {
+              "reply": "Jim",
+              "source": {
+                "section": "Chapter 5",
+                "start_line": 1609,
+                "end_line": 1624
+              },
+              "correct": true,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "Jim",
+              "source": {
+                "section": "Chapter 20",
+                "start_line": 5384,
+                "end_line": 5407
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "ollama_prototype": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            }
+          }
+        }
+      ]
+    },
+    "fresh": {
+      "scores": {
+        "original_minilm": {
+          "correct_first_replies": {
+            "passed": 4,
+            "total": 8
+          },
+          "correct_followups": {
+            "passed": 0,
+            "total": 2
+          },
+          "correct_first_replies_with_support": {
+            "passed": 4,
+            "total": 8
+          },
+          "correct_followups_with_support": {
+            "passed": 0,
+            "total": 2
+          },
+          "replies_with_citations": {
+            "passed": 6,
+            "total": 10
+          },
+          "median_reply_seconds": 0.146
+        },
+        "chapter_heading_minilm": {
+          "correct_first_replies": {
+            "passed": 5,
+            "total": 8
+          },
+          "correct_followups": {
+            "passed": 0,
+            "total": 2
+          },
+          "correct_first_replies_with_support": {
+            "passed": 4,
+            "total": 8
+          },
+          "correct_followups_with_support": {
+            "passed": 0,
+            "total": 2
+          },
+          "replies_with_citations": {
+            "passed": 6,
+            "total": 10
+          },
+          "median_reply_seconds": 0.117
+        },
+        "ollama_prototype": {
+          "correct_first_replies": {
+            "passed": 6,
+            "total": 8
+          },
+          "correct_followups": {
+            "passed": 2,
+            "total": 2
+          },
+          "correct_first_replies_with_support": {
+            "passed": 6,
+            "total": 8
+          },
+          "correct_followups_with_support": {
+            "passed": 2,
+            "total": 2
+          },
+          "replies_with_citations": {
+            "passed": 9,
+            "total": 10
+          },
+          "median_reply_seconds": 5.265
+        }
+      },
+      "predictions": [
+        {
+          "conversation": 1,
+          "turn": 1,
+          "prompt": "What precious metal covers the Sawhorse's wooden feet?",
+          "expected": "Gold.",
+          "results": {
+            "original_minilm": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            }
+          }
+        },
+        {
+          "conversation": 2,
+          "turn": 1,
+          "prompt": "What tune did the Oz band play in the procession?",
+          "expected": "The Oz Spangled Banner.",
+          "results": {
+            "original_minilm": {
+              "reply": "The Oz Spangled Banner",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4640,
+                "end_line": 4655
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "chapter_heading_minilm": {
+              "reply": "The Oz Spangled Banner",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4640,
+                "end_line": 4655
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "ollama_prototype": {
+              "reply": "The Oz band played 'The Oz Spangled Banner'.",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4626,
+                "end_line": 4645
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "They played the National air called \"The Oz Spangled Banner,\""
+            }
+          }
+        },
+        {
+          "conversation": 3,
+          "turn": 1,
+          "prompt": "What did Eureka use to climb down the wooden house?",
+          "expected": "Her claws.",
+          "results": {
+            "original_minilm": {
+              "reply": "her claws",
+              "source": {
+                "section": "Chapter 12",
+                "start_line": 3285,
+                "end_line": 3303
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "chapter_heading_minilm": {
+              "reply": "her claws",
+              "source": {
+                "section": "Chapter 12",
+                "start_line": 3285,
+                "end_line": 3303
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "ollama_prototype": {
+              "reply": "claws",
+              "source": {
+                "section": "Chapter 12",
+                "start_line": 3285,
+                "end_line": 3303
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "Eureka clung with her claws to the wooden side of the house and let herself down easily."
+            }
+          }
+        },
+        {
+          "conversation": 4,
+          "turn": 1,
+          "prompt": "Who owned the magical silver shoes before Dorothy?",
+          "expected": "The Wicked Witch.",
+          "results": {
+            "original_minilm": {
+              "reply": "the Wicked Witch",
+              "source": {
+                "section": "Chapter 14",
+                "start_line": 3782,
+                "end_line": 3802
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "chapter_heading_minilm": {
+              "reply": "the Wicked Witch",
+              "source": {
+                "section": "Chapter 14",
+                "start_line": 3782,
+                "end_line": 3802
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "ollama_prototype": {
+              "reply": "The Wicked Witch",
+              "source": {
+                "section": "Chapter 14",
+                "start_line": 3768,
+                "end_line": 3791
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "They once belonged to the"
+            }
+          }
+        },
+        {
+          "conversation": 4,
+          "turn": 2,
+          "prompt": "Where did Dorothy lose them?",
+          "expected": "Somewhere in the air.",
+          "results": {
+            "original_minilm": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "somewhere in the air",
+              "source": {
+                "section": "Chapter 14",
+                "start_line": 3782,
+                "end_line": 3802
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "No; I lost them somewhere in the air,"
+            }
+          }
+        },
+        {
+          "conversation": 5,
+          "turn": 1,
+          "prompt": "Who knocked Jim over after the race?",
+          "expected": "The Hungry Tiger.",
+          "results": {
+            "original_minilm": {
+              "reply": "the Tiger",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4831,
+                "end_line": 4847
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "chapter_heading_minilm": {
+              "reply": "the Tiger",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4831,
+                "end_line": 4847
+              },
+              "correct": true,
+              "source_supports_reply": true
+            },
+            "ollama_prototype": {
+              "reply": "The Tiger",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4831,
+                "end_line": 4847
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "The beast struck Jim full on his shoulder and sent the astonished cab-horse rolling over and over"
+            }
+          }
+        },
+        {
+          "conversation": 5,
+          "turn": 2,
+          "prompt": "Why did he knock Jim over?",
+          "expected": "Jim kicked the Sawhorse.",
+          "results": {
+            "original_minilm": {
+              "reply": "shouts of delight",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4821,
+                "end_line": 4837
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "shouts of delight",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4821,
+                "end_line": 4837
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "Jim kicked the Sawhorse in anger after losing the race.",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4821,
+                "end_line": 4837
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "As he looked at the comical face of the Sawhorse he imagined that the creature was laughing at him; so in a fit of unreasonable anger he turned around and made a vicious kick that sent his rival tumbling head over heels upon the ground"
+            }
+          }
+        },
+        {
+          "conversation": 6,
+          "turn": 1,
+          "prompt": "What was Gwig seated upon when the prince called him?",
+          "expected": "A glass throne.",
+          "results": {
+            "original_minilm": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "a glass throne",
+              "source": {
+                "section": "Chapter 3",
+                "start_line": 745,
+                "end_line": 764
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "disclosing a strange personage seated upon a glass throne just before Jim's nose."
+            }
+          }
+        },
+        {
+          "conversation": 7,
+          "turn": 1,
+          "prompt": "What did the Wizard put under his hat to make it vanish?",
+          "expected": "The last piglet.",
+          "results": {
+            "original_minilm": {
+              "reply": "a mystic sign",
+              "source": {
+                "section": "Chapter 3",
+                "start_line": 1014,
+                "end_line": 1033
+              },
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "a tiny white piglet",
+              "source": {
+                "section": "Chapter 19",
+                "start_line": 5224,
+                "end_line": 5242
+              },
+              "correct": true,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "The Wizard placed a piglet under his hat to make it vanish.",
+              "source": {
+                "section": "Chapter 3",
+                "start_line": 1014,
+                "end_line": 1033
+              },
+              "correct": true,
+              "source_supports_reply": true,
+              "quote": "This the Wizard placed underneath his hat and made a mystic sign above it. When he removed his hat the last piglet had disappeared entirely."
+            }
+          }
+        },
+        {
+          "conversation": 8,
+          "turn": 1,
+          "prompt": "What did Ozma watch Dorothy through?",
+          "expected": "An enchanted picture.",
+          "results": {
+            "original_minilm": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "chapter_heading_minilm": {
+              "reply": "I couldn't find an answer supported by the book.",
+              "source": null,
+              "correct": false,
+              "source_supports_reply": false
+            },
+            "ollama_prototype": {
+              "reply": "a beautiful canopy",
+              "source": {
+                "section": "Chapter 17",
+                "start_line": 4726,
+                "end_line": 4742
+              },
+              "correct": false,
+              "source_supports_reply": false,
+              "quote": "There was a beautiful canopy for Ozma and her guests to sit under and watch the people run races and jump and wrestle."
+            }
+          }
+        }
+      ]
+    }
+  }
+}
