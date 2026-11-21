@@ -32,6 +32,31 @@ def generate_predictions(model, tokenizer, conversations, history_mode, max_toke
     return generate_session_predictions(session, conversations, history_mode)
 
 
+def passage_trace_record(reply):
+    trace = reply.passage_trace
+    candidates = []
+    selected_rank = None
+    for rank, (passage, score) in enumerate(trace.candidates, start=1):
+        row = {'rank': rank, 'search_score': round(score, 6), **asdict(passage)}
+        if passage == reply.source:
+            selected_rank = rank
+        if rank <= len(trace.spans):
+            span = trace.spans[rank - 1]
+            row.update(reader_span=span.text, reader_margin=round(span.margin, 6))
+            if span.context_end is not None and span.context_end < len(passage.text):
+                row['reader_text'] = passage.text[:span.context_end]
+        candidates.append(row)
+    return {
+        'query': trace.query,
+        'previous_question': trace.previous_question,
+        'previous_answer': trace.previous_answer,
+        'selected_rank': selected_rank,
+        'evidence_ranks': None,
+        'review_note': '',
+        'candidates': candidates,
+    }
+
+
 def generate_session_predictions(session, conversations, history_mode):
     predictions = []
     for line_number, conversation in conversations:
@@ -55,6 +80,8 @@ def generate_session_predictions(session, conversations, history_mode):
                 if isinstance(reply, BookReply):
                     row['source'] = asdict(reply.source) if reply.source else None
                     row['source_supports_reply'] = None if reply.source else False
+                    if reply.passage_trace is not None:
+                        row['passage_trace'] = passage_trace_record(reply)
                 else:
                     row.update(
                         history_compacted=reply.history_compacted,
@@ -100,6 +127,27 @@ def grounded_correctness(predictions):
     return reviewed_score(judgments)
 
 
+def passage_review_counts(predictions):
+    found = missing = pending = 0
+    for row in predictions:
+        trace = row.get('passage_trace')
+        if trace is None:
+            continue
+        ranks = trace['evidence_ranks']
+        if ranks is None:
+            pending += 1
+            continue
+        available = {candidate['rank'] for candidate in trace['candidates']}
+        if not isinstance(ranks, list) or any(type(rank) is not int or rank not in available for rank in ranks):
+            raise ValueError(f'Conversation {row["conversation"]}, turn {row["turn"]}: '
+                             'evidence_ranks must contain retrieved passage ranks.')
+        if ranks:
+            found += 1
+        else:
+            missing += 1
+    return found, missing, pending
+
+
 def print_summary(path, report):
     print(f'{path} | {report["conversations"]} conversations | test SHA-256 {report["test_sha256"][:12]}')
     if any(run.get('mode') != 'book' for run in report['runs']):
@@ -127,6 +175,9 @@ def print_summary(path, report):
             print(f'  Correct follow-ups with support:    {grounded_correctness(followups)}')
             print(f'  Replies with a source:  {sourced}/{len(rows)}')
             print(f'  Abstentions:           {len(rows) - sourced}/{len(rows)}')
+            found, missing, pending = passage_review_counts(rows)
+            if found or missing or pending:
+                print(f'  Passage reviews:        {found} with evidence, {missing} without evidence, {pending} pending')
         else:
             if followups and 'history_compacted' in followups[0]:
                 print(f'  Compacted history:     {sum(row["history_compacted"] for row in followups)}/{len(followups)} follow-ups')
@@ -135,6 +186,8 @@ def print_summary(path, report):
 
 
 def run_evaluation(args):
+    if args.trace_passages and not args.book:
+        raise ValueError('--trace-passages requires --book.')
     if args.max_tokens < 1:
         raise ValueError('--max-tokens must be positive.')
     if args.output.exists():
@@ -182,7 +235,7 @@ def run_evaluation(args):
                 'predictions': generate_predictions(model, tokenizer, conversations, history, args.max_tokens),
             })
     if args.book:
-        session = BookSession.from_book()
+        session = BookSession.from_book(trace_passages=args.trace_passages)
         for history in history_modes:
             report['runs'].append({
                 'mode': 'book',
@@ -217,6 +270,7 @@ def main():
     run = commands.add_parser('run', help='Generate replies and save an evaluation report.')
     run.add_argument('--checkpoint', action='append', type=Path, help='Checkpoint to evaluate. Repeat to compare checkpoints.')
     run.add_argument('--book', action='store_true', help='Evaluate book lookup. Combine with --checkpoint for a comparison.')
+    run.add_argument('--trace-passages', action='store_true', help='Save ranked passages and reader spans for book lookup.')
     run.add_argument('--test-data', type=Path, default=DATA_DIR / 'oz_chat_test.jsonl', help='Held-out JSONL conversations.')
     run.add_argument('--history', action='append', choices=HISTORY_MODES, help='History mode. Repeat to compare modes (default: generated).')
     run.add_argument('--max-tokens', type=int, default=DEFAULT_MAX_TOKENS, help='Maximum new tokens per reply.')

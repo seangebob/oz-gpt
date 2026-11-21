@@ -78,6 +78,16 @@ class Passage:
 class AnswerSpan:
     text: str
     margin: float
+    context_end: int | None = None
+
+
+@dataclass(frozen=True)
+class PassageTrace:
+    query: str
+    previous_question: str
+    previous_answer: str
+    candidates: tuple[tuple[Passage, float], ...]
+    spans: tuple[AnswerSpan, ...]
 
 
 @dataclass(frozen=True)
@@ -85,6 +95,7 @@ class BookReply:
     text: str
     source: Passage | None
     history_used: bool
+    passage_trace: PassageTrace | None = None
 
 
 def book_passages(text):
@@ -193,20 +204,23 @@ class ExtractiveReader:
             begin = offsets[row, first + i, 0].item()
             finish = offsets[row, first + j, 1].item()
             margin = (score - start[0] - end[0]).item()
-            answers.append(AnswerSpan(passage.text[begin:finish].strip(), margin))
+            context_end = offsets[row, last - 1, 1].item()
+            answers.append(AnswerSpan(passage.text[begin:finish].strip(), margin, context_end))
         return answers
 
 
 class BookSession:
-    def __init__(self, index, reader):
+    def __init__(self, index, reader, *, trace_passages=False):
         self.index = index
         self.reader = reader
+        self.trace_passages = trace_passages
         self.reset()
 
     @classmethod
-    def from_book(cls, path=BOOK_PATH):
+    def from_book(cls, path=BOOK_PATH, *, trace_passages=False):
         book = path.read_bytes()
-        session = cls(BookIndex(book_passages(book.decode('utf-8-sig'))), ExtractiveReader())
+        index = BookIndex(book_passages(book.decode('utf-8-sig')))
+        session = cls(index, ExtractiveReader(), trace_passages=trace_passages)
         session.book_sha256 = hashlib.sha256(book).hexdigest()
         return session
 
@@ -229,7 +243,8 @@ class BookSession:
         if history_used:
             reader_question = followup_question(question, earlier_question, earlier_answer)
         candidates = self.index.search(reader_question, earlier_question, earlier_answer)
-        reply = BookReply(NO_ANSWER, None, history_used)
+        text, source = NO_ANSWER, None
+        spans = []
         if candidates:
             spans = self.reader.read(reader_question, [passage for passage, _ in candidates])
             strongest_search_score = candidates[0][1]
@@ -239,8 +254,10 @@ class BookSession:
                 if span.margin >= MIN_ANSWER_MARGIN and span.text and span.text in passage.text
             ]
             if ranked:
-                _, text, passage = max(ranked, key=lambda item: item[0])
-                reply = BookReply(text, passage, history_used)
+                _, text, source = max(ranked, key=lambda item: item[0])
+        trace = None
+        if self.trace_passages:
+            trace = PassageTrace(reader_question, earlier_question, earlier_answer, tuple(candidates), tuple(spans))
         if remember:
-            self.remember(question, reply.text if reply.source else '')
-        return reply
+            self.remember(question, text if source else '')
+        return BookReply(text, source, history_used, trace)

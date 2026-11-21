@@ -177,6 +177,14 @@ Use `--book` to evaluate book lookup against the same conversations. Add `--chec
 python -m model.chat_evaluation run --book --checkpoint model/model-chat.pth --output oz-book-comparison.json
 ```
 
+To investigate missed replies, add `--trace-passages` to save the ranked passages, the search query after follow-up rewriting, and the passage the reader selected.
+
+```bash
+python -m model.chat_evaluation run --book --trace-passages --output oz-passage-review.json
+```
+
+For each missed reply, open its `passage_trace`. Check each candidate's `reader_text` if present, or its `text` otherwise. Set `evidence_ranks` to the ranks that support the expected answer, such as `[1, 3]`. Use `[]` if the reader received no supporting passage and leave `null` for cases you haven't reviewed. Record tricky calls in `review_note`. Run `python -m model.chat_evaluation summarize oz-passage-review.json` to see the review totals.
+
 ---
 
 ## Training Your Own Corpus
