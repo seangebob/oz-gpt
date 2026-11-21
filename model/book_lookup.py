@@ -26,7 +26,20 @@ FOLLOW_UP = re.compile(
     r'|^(?:how many|what kind|which one)\W*$', re.IGNORECASE,
 )
 PRONOUN = re.compile(r'\b(?:he|she|it|they|him|them|his|hers|its|their)\b', re.IGNORECASE)
-NAMED_SUBJECT = re.compile(r"(?i:who|what) (?i:is|was) ([A-Z][\w'-]+(?: [A-Z][\w'-]+){0,3})[?.!]*")
+NAME = r"(?:(?i:the) )?[A-Z][\w'-]+(?: [A-Z][\w'-]+){0,3}"
+NAMED_SUBJECT = re.compile(rf'(?i:who|what) (?i:is|was) ({NAME})')
+NAME_ANSWER = re.compile(r"(?:(?i:the) )?[A-Z][a-z][\w'-]*(?: [A-Z][a-z][\w'-]*){0,3}")
+PAST_ACTION = re.compile(rf'(?i:what did) (?P<actor>{NAME}) (?P<verb>[a-z]+)(?P<rest> .*)?')
+CHOICE_SUBJECT = re.compile(
+    r"which ((?!of\b)[\w'-]+(?: [\w'-]+){0,3}?) ((?:was|were|went|fell|came|had|[\w-]{3,}ed)\b.*)",
+    re.IGNORECASE,
+)
+PLURAL_OBJECT = re.compile(r"\b(?i:the|these|those) ((?:[a-z][\w'-]* ){0,4}[a-z][\w'-]*s)$")
+RETURN_QUESTION = re.compile(rf'(?i:where (?:did|does)) ({NAME}) (?i:return)')
+PAST_TENSE = {
+    'bring': 'brought', 'buy': 'bought', 'do': 'did', 'find': 'found', 'get': 'got', 'give': 'gave',
+    'hide': 'hid', 'leave': 'left', 'make': 'made', 'put': 'put', 'take': 'took', 'wear': 'wore',
+}
 STOP_WORDS = set(
     'a an and are as at be been but by can could did do does for from had has have he her him his '
     'how i in is it its me of on or she should that the their them then there these they this those '
@@ -46,23 +59,61 @@ def search_terms(text):
 
 
 def followup_question(question, previous_question, previous_answer):
+    previous_question = previous_question.rstrip('?.!')
     named = NAMED_SUBJECT.fullmatch(previous_question)
-    topic = named[1] if named else previous_answer.strip(' .?!"')
-    if topic:
-        if re.fullmatch(r'what kind\W*', question, re.IGNORECASE):
-            return f'What kind of thing is {topic}?'
-        if re.fullmatch(r'how many\W*', question, re.IGNORECASE):
-            return f'How many {topic}?'
+    actor = named[1] if named else ''
+    name = previous_answer.strip(' .?!"')
+    if not actor and re.match(r'who\b', previous_question, re.IGNORECASE) and NAME_ANSWER.fullmatch(name):
+        actor = name
+    if actor and re.fullmatch(r'why (?:that|this) name\W*', question, re.IGNORECASE):
+        return f'Why was {actor} given that name?'
 
-        def replace_pronoun(match):
-            return f"{topic}'s" if match[0].lower() in {'his', 'hers', 'its', 'their'} else topic
+    returning = RETURN_QUESTION.fullmatch(previous_question)
+    if returning and re.fullmatch(r'who (?:went|came) (?:too|along)\W*', question, re.IGNORECASE):
+        actor = returning[1]
+        return f'Who went with {actor} when {actor} returned?'
 
-        expanded = PRONOUN.sub(replace_pronoun, question)
-        if expanded != question and not re.search(r'\bit\b', question, re.IGNORECASE):
-            return expanded
-        question = expanded
+    item = ''
+    action = PAST_ACTION.fullmatch(previous_question)
+    choice = CHOICE_SUBJECT.fullmatch(previous_question)
+    if action:
+        actor, verb, rest = action.group('actor', 'verb', 'rest')
+        if verb in {'show', 'reveal', 'display', 'produce'} and re.fullmatch(r'where was it\W*', question, re.IGNORECASE):
+            return f'Where did {actor} produce the item from?'
+        regular_past = re.sub(r'([^aeiou])y$', r'\1i', verb) + ('d' if verb.endswith('e') else 'ed')
+        past = PAST_TENSE.get(verb, regular_past)
+        item = f'the item {actor} {past}{rest or ""}'
+    elif choice:
+        item = f'the {choice[1]} that {choice[2]}'
+    elif re.match(r'what\b', previous_question, re.IGNORECASE) and not re.match(
+        r'what (?:do|did|does|is|are|was|were|can|could)\b', previous_question, re.IGNORECASE,
+    ):
+        item = f'the thing that {previous_question[5:]}'
+
+    plural = PLURAL_OBJECT.search(previous_question)
+    plural_item = plural[1] if plural else ''
+    if (item or actor) and re.fullmatch(r'what kind\W*', question, re.IGNORECASE):
+        return f'What kind of thing is {item or actor}?'
+    if plural_item and re.fullmatch(r'how many\W*', question, re.IGNORECASE):
+        return f'How many {plural_item}?'
+
+    def replace_pronoun(match):
+        pronoun = match[0].lower()
+        if pronoun in {'they', 'them', 'their'}:
+            referent = f'the {plural_item}' if plural_item else ''
+        elif pronoun in {'it', 'its'}:
+            referent = item or actor
+        else:
+            referent = actor
+        if not referent:
+            return match[0]
+        return f"{referent}'s" if pronoun in {'his', 'hers', 'its', 'their'} else referent
+
+    expanded = PRONOUN.sub(replace_pronoun, question)
+    if expanded != question:
+        return expanded
     event = re.sub(r'^\s*(?:who|what|where|when|why|how)\b\s*', '', previous_question, flags=re.IGNORECASE)
-    return f'{question.rstrip("?")} (context: {event.rstrip("?.!")})?'
+    return f'{question.rstrip("?")} (context: {event})?'
 
 
 @dataclass(frozen=True)
@@ -141,11 +192,9 @@ class BookIndex:
             for word, count in document_counts.items()
         }
 
-    def search(self, question, previous_question='', previous_answer=''):
+    def search(self, question, previous_question=''):
         query = dict.fromkeys(search_terms(question), 1.0)
         for word in dict.fromkeys(search_terms(previous_question)):
-            query[word] = query.get(word, 0.0) + 0.6
-        for word in dict.fromkeys(search_terms(previous_answer)):
             query[word] = query.get(word, 0.0) + 0.6
 
         heading_scores = {
@@ -242,7 +291,7 @@ class BookSession:
         reader_question = question
         if history_used:
             reader_question = followup_question(question, earlier_question, earlier_answer)
-        candidates = self.index.search(reader_question, earlier_question, earlier_answer)
+        candidates = self.index.search(reader_question, earlier_question)
         text, source = NO_ANSWER, None
         spans = []
         if candidates:

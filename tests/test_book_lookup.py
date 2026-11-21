@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock
 
-from model.book_lookup import AnswerSpan, BookIndex, BookSession, NO_ANSWER, Passage, book_passages
+from model.book_lookup import AnswerSpan, BookIndex, BookSession, NO_ANSWER, Passage, book_passages, followup_question
 from model.chat_evaluation import generate_session_predictions, grounded_correctness, passage_review_counts
 
 
@@ -106,6 +106,31 @@ class BookLookupTests(unittest.TestCase):
         result = session.reply('Who is with him?')
         self.assertEqual(result.text, NO_ANSWER)
         self.assertFalse(result.history_used)
+
+    def test_followup_search_anchors_the_item_to_the_previous_action(self):
+        index = Mock()
+        index.search.return_value = []
+        session = BookSession(index, Mock(), trace_passages=True)
+        previous = 'What did Clara reveal at the fair?'
+        session.remember(previous, 'exceedingly thoughtful')
+        reply = session.reply('Where was it?')
+        index.search.assert_called_once_with('Where did Clara produce the item from?', previous)
+        self.assertEqual(reply.passage_trace.previous_answer, 'exceedingly thoughtful')
+
+    def test_followup_rewrites_use_the_question_for_people_and_objects(self):
+        cases = [
+            ('What did he fix?', 'What did the Tin Woodman use at the palace?', 'a branch',
+             'What did the Tin Woodman fix?'),
+            ('Where was it?', 'Which little dog went missing?', 'a neighbor',
+             'Where was the little dog that went missing?'),
+            ('Where is it?', 'Which red dog was lost?', 'a neighbor', 'Where is the red dog that was lost?'),
+            ('Why that name?', 'Who is in the stable?', 'Comet', 'Why was Comet given that name?'),
+            ('Where did she lose them?', 'Which witch owned the silver shoes?', 'the Wicked Witch',
+             'Where did she lose the silver shoes?'),
+        ]
+        for question, previous, answer, expected in cases:
+            with self.subTest(question=question, previous=previous):
+                self.assertEqual(followup_question(question, previous, answer), expected)
 
 
 if __name__ == '__main__':

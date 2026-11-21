@@ -1,0 +1,334 @@
+{
+  "baseline_code_commit": "66facb6e817953c32b68da47f404c89f3f7ea2f4",
+  "book_sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9",
+  "reader_model": "deepset/minilm-uncased-squad2",
+  "reader_revision": "934656cdda79824eabf503ed56e15c01ddbdbe3f",
+  "scoring": "Manual review. A reply counts only when the cited passage supports the fact asked about. Equivalent wording counts.",
+  "heldout_regression": {
+    "test_sha256": "1c29194de5fcf79db46c2097ba1fd8e150c205cddd22e33a9b1b0d96052755ea",
+    "followups": 8,
+    "supported_before": 1,
+    "supported_after": 3,
+    "cases": [
+      {
+        "conversation": 17,
+        "previous_question": "Who is in the birdcage?",
+        "user_followup": "Why that name?",
+        "expected": "Dorothy found her.",
+        "before": {
+          "reply": "Eureka",
+          "rewritten_question": "Why that name (context: is in the birdcage)?",
+          "source": {
+            "section": "Chapter 1",
+            "start_line": 194,
+            "end_line": 223
+          },
+          "correct_with_support": false
+        },
+        "after": {
+          "reply": "because I found it",
+          "rewritten_question": "Why was Eureka given that name?",
+          "source": {
+            "section": "Chapter 1",
+            "start_line": 210,
+            "end_line": 243
+          },
+          "correct_with_support": true
+        }
+      },
+      {
+        "conversation": 18,
+        "previous_question": "What name does the Wizard use?",
+        "user_followup": "Why that name?",
+        "expected": "His first two initials are O. Z.",
+        "before": {
+          "reply": "Mangaboos",
+          "rewritten_question": "Why that name (context: name does the Wizard use)?",
+          "source": {
+            "section": "Chapter 3",
+            "start_line": 944,
+            "end_line": 971
+          },
+          "correct_with_support": false
+        },
+        "after": {
+          "reply": "Mangaboos",
+          "rewritten_question": "Why that name (context: name does the Wizard use)?",
+          "source": {
+            "section": "Chapter 3",
+            "start_line": 944,
+            "end_line": 971
+          },
+          "correct_with_support": false
+        }
+      },
+      {
+        "conversation": 19,
+        "previous_question": "What rescued Dorothy?",
+        "user_followup": "Who used it?",
+        "expected": "Ozma.",
+        "before": {
+          "reply": "DOROTHY POKED THE BOY WITH HER PARASOL",
+          "rewritten_question": "Who used it (context: rescued Dorothy)?",
+          "source": {
+            "section": "Chapter 1",
+            "start_line": 247,
+            "end_line": 274
+          },
+          "correct_with_support": false
+        },
+        "after": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "rewritten_question": "Who used the thing that rescued Dorothy?",
+          "source": null,
+          "correct_with_support": false
+        }
+      },
+      {
+        "conversation": 20,
+        "previous_question": "How did Zeb reach Oz?",
+        "user_followup": "Who used it?",
+        "expected": "Dorothy.",
+        "before": {
+          "reply": "Princess Ozma",
+          "rewritten_question": "Who used it (context: did Zeb reach Oz)?",
+          "source": {
+            "section": "Chapter 14",
+            "start_line": 3794,
+            "end_line": 3812
+          },
+          "correct_with_support": false
+        },
+        "after": {
+          "reply": "Princess Ozma",
+          "rewritten_question": "Who used it (context: did Zeb reach Oz)?",
+          "source": {
+            "section": "Chapter 14",
+            "start_line": 3794,
+            "end_line": 3812
+          },
+          "correct_with_support": false
+        }
+      },
+      {
+        "conversation": 21,
+        "previous_question": "What did Nick show at trial?",
+        "user_followup": "Where was it?",
+        "expected": "Under his funnel hat.",
+        "before": {
+          "reply": "The Wizard, when he returned to his own room",
+          "rewritten_question": "Where was exceedingly thoughtful (context: did Nick show at trial)?",
+          "source": {
+            "section": "Chapter 18",
+            "start_line": 5035,
+            "end_line": 5051
+          },
+          "correct_with_support": false
+        },
+        "after": {
+          "reply": "funnel hat",
+          "rewritten_question": "Where did Nick produce the item from?",
+          "source": {
+            "section": "Chapter 19",
+            "start_line": 5235,
+            "end_line": 5258
+          },
+          "correct_with_support": true
+        }
+      },
+      {
+        "conversation": 22,
+        "previous_question": "Which pet went missing?",
+        "user_followup": "Where was it?",
+        "expected": "Inside a vase.",
+        "before": {
+          "reply": "In a room of the palace",
+          "rewritten_question": "Where was Nick Chopper (context: Which pet went missing)?",
+          "source": {
+            "section": "Chapter 19",
+            "start_line": 5235,
+            "end_line": 5258
+          },
+          "correct_with_support": false
+        },
+        "after": {
+          "reply": "In a room of the palace",
+          "rewritten_question": "Where was the pet that went missing?",
+          "source": {
+            "section": "Chapter 19",
+            "start_line": 5235,
+            "end_line": 5258
+          },
+          "correct_with_support": false
+        }
+      },
+      {
+        "conversation": 23,
+        "previous_question": "Where does Dorothy return?",
+        "user_followup": "Who went too?",
+        "expected": "Eureka.",
+        "before": {
+          "reply": "Uncle Henry",
+          "rewritten_question": "Who went too (context: does Dorothy return)?",
+          "source": {
+            "section": "Chapter 20",
+            "start_line": 5338,
+            "end_line": 5357
+          },
+          "correct_with_support": false
+        },
+        "after": {
+          "reply": "the boy",
+          "rewritten_question": "Who went with Dorothy when Dorothy returned?",
+          "source": {
+            "section": "Chapter 6",
+            "start_line": 1642,
+            "end_line": 1662
+          },
+          "correct_with_support": false
+        }
+      },
+      {
+        "conversation": 24,
+        "previous_question": "Where does Zeb return?",
+        "user_followup": "Who went too?",
+        "expected": "Jim.",
+        "before": {
+          "reply": "Jim",
+          "rewritten_question": "Who went too (context: does Zeb return)?",
+          "source": {
+            "section": "Chapter 20",
+            "start_line": 5384,
+            "end_line": 5407
+          },
+          "correct_with_support": true
+        },
+        "after": {
+          "reply": "Jim",
+          "rewritten_question": "Who went with Zeb when Zeb returned?",
+          "source": {
+            "section": "Chapter 20",
+            "start_line": 5384,
+            "end_line": 5407
+          },
+          "correct_with_support": true
+        }
+      }
+    ]
+  },
+  "separate_five_conversation_check": {
+    "test_sha256": "c8c0caa600c31d5337f50dc489c5fb9c9c3e15c74dbc15f851365c2d4bc386a7",
+    "followups": 5,
+    "supported_before": 1,
+    "supported_after": 1,
+    "cases": [
+      {
+        "conversation": 1,
+        "previous_question": "Which witch once owned the magic silver shoes?",
+        "user_followup": "Where did Dorothy lose them?",
+        "expected": "Somewhere in the air.",
+        "before": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "rewritten_question": "Where did Dorothy lose Wicked Witch?",
+          "source": null,
+          "correct_with_support": false
+        },
+        "after": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "rewritten_question": "Where did Dorothy lose the magic silver shoes?",
+          "source": null,
+          "correct_with_support": false
+        }
+      },
+      {
+        "conversation": 2,
+        "previous_question": "What did the Tin Woodman use to mend the Sawhorse?",
+        "user_followup": "Which parts did he replace?",
+        "expected": "A leg and an ear.",
+        "before": {
+          "reply": "leg and a new ear",
+          "rewritten_question": "Which parts did his gleaming axe replace?",
+          "source": {
+            "section": "Chapter 17",
+            "start_line": 4841,
+            "end_line": 4858
+          },
+          "correct_with_support": true
+        },
+        "after": {
+          "reply": "leg and a new ear for the Sawhorse",
+          "rewritten_question": "Which parts did the Tin Woodman replace?",
+          "source": {
+            "section": "Chapter 17",
+            "start_line": 4841,
+            "end_line": 4858
+          },
+          "correct_with_support": true
+        }
+      },
+      {
+        "conversation": 3,
+        "previous_question": "Who hid under a chair in Ozma's room?",
+        "user_followup": "Why was she hiding?",
+        "expected": "She planned to eat the piglet.",
+        "before": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "rewritten_question": "Why was she hiding (context: hid under a chair in Ozma's room)?",
+          "source": null,
+          "correct_with_support": false
+        },
+        "after": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "rewritten_question": "Why was she hiding (context: hid under a chair in Ozma's room)?",
+          "source": null,
+          "correct_with_support": false
+        }
+      },
+      {
+        "conversation": 4,
+        "previous_question": "Who is Gwig?",
+        "user_followup": "What covered his head?",
+        "expected": "Thorns.",
+        "before": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "rewritten_question": "What covered Gwig's head?",
+          "source": null,
+          "correct_with_support": false
+        },
+        "after": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "rewritten_question": "What covered Gwig's head?",
+          "source": null,
+          "correct_with_support": false
+        }
+      },
+      {
+        "conversation": 5,
+        "previous_question": "What did the Wizard pretend to take out of Ozma's hair?",
+        "user_followup": "Where was it really?",
+        "expected": "In his inside pocket.",
+        "before": {
+          "reply": "underneath his hat",
+          "rewritten_question": "Where was PIGLET really (context: did the Wizard pretend to take out of Ozma's hair)?",
+          "source": {
+            "section": "Chapter 17",
+            "start_line": 4681,
+            "end_line": 4696
+          },
+          "correct_with_support": false
+        },
+        "after": {
+          "reply": "PIGLET",
+          "rewritten_question": "Where was the item the Wizard pretended to take out of Ozma's hair really?",
+          "source": {
+            "section": "Chapter 17",
+            "start_line": 4797,
+            "end_line": 4818
+          },
+          "correct_with_support": false
+        }
+      }
+    ]
+  },
+  "first_replies_match_before_and_after": true
+}
