@@ -1,0 +1,399 @@
+{
+  "baseline_code_commit": "ddb56e64bd80e1a1c538b4c8dd76aeff34182b8c",
+  "test_file": "data/oz_book_lookup_quality_test.jsonl",
+  "test_sha256": "2fdc91b949111fc3485cd984027240a4b56325f08f5282301f55ee7158166cca",
+  "book_sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9",
+  "reader_model": "deepset/minilm-uncased-squad2",
+  "reader_revision": "934656cdda79824eabf503ed56e15c01ddbdbe3f",
+  "procedure": "Use the same fixture for before and after. The generated run uses the model’s earlier answer. The reference run supplies the expected earlier answer as a diagnostic. A reply counts as correct only if its cited text answers the question. The five follow-ups are known misses used to assess the repair.",
+  "first_reply_review_correction": {
+    "conversation": 21,
+    "turn": 1,
+    "supporting_book_lines": [
+      4277,
+      4281
+    ],
+    "note": "The prompt attributes the Magic Belt threat to Ozma. Dorothy says it. The previous review credited this reply.",
+    "first_replies_correct_with_support_before_and_after": 11,
+    "first_replies_total": 21
+  },
+  "generated_overall": {
+    "correct_with_support_before": 11,
+    "correct_with_support_after": 13,
+    "turns": 26
+  },
+  "followups": {
+    "generated": {
+      "followups_correct_with_support_before": 0,
+      "followups_correct_with_support_after": 2,
+      "followups_total": 5,
+      "followup_abstentions_before": 1,
+      "followup_abstentions_after": 1,
+      "cases": [
+        {
+          "conversation": 17,
+          "prompt": "Where did he take her?",
+          "expected": "To prison.",
+          "before": {
+            "query": "Where did Captain-General take Captain-General?",
+            "previous_answer": "Captain-General",
+            "reply": "I couldn't find an answer supported by the book.",
+            "citation": null
+          },
+          "after": {
+            "query": "Where did Captain-General take Eureka to?",
+            "previous_answer": "Captain-General",
+            "reply": "prison",
+            "citation": {
+              "section": "Chapter 18",
+              "start_line": 4995,
+              "end_line": 5019
+            }
+          },
+          "correct_with_support_before": false,
+          "correct_with_support_after": true,
+          "supporting_book_lines": [
+            5004,
+            5006
+          ],
+          "supporting_passage_ranks_after": [
+            1,
+            2
+          ],
+          "review_note": "The Captain-General carried Eureka away to prison."
+        },
+        {
+          "conversation": 18,
+          "prompt": "Why did he suggest it?",
+          "expected": "He hoped she would treat them better than the Prince.",
+          "before": {
+            "query": "Why did he suggest it (context: suggested taking the Royal Princess off her bush)?",
+            "previous_answer": "",
+            "reply": "She is the Ruler destined to be my successor",
+            "citation": {
+              "section": "Chapter 4",
+              "start_line": 1243,
+              "end_line": 1265
+            }
+          },
+          "after": {
+            "query": "Why did someone suggest taking the Royal Princess off her bush?",
+            "previous_answer": "",
+            "reply": "I couldn't find an answer supported by the book.",
+            "citation": null
+          },
+          "correct_with_support_before": false,
+          "correct_with_support_after": false,
+          "supporting_book_lines": [
+            1349,
+            1352
+          ],
+          "supporting_passage_ranks_after": [
+            1
+          ],
+          "review_note": "The reader sees the Wizard’s stated reason in the highest-ranked passage and abstains."
+        },
+        {
+          "conversation": 19,
+          "prompt": "Who was going to show him his room?",
+          "expected": "Jellia Jamb.",
+          "before": {
+            "query": "Who was going to show Jellia Jellia's room?",
+            "previous_answer": "in the private rooms",
+            "reply": "the Wizard",
+            "citation": {
+              "section": "Chapter 15",
+              "start_line": 4068,
+              "end_line": 4087
+            }
+          },
+          "after": {
+            "query": "Who was going to show Zeb his room?",
+            "previous_answer": "in the private rooms",
+            "reply": "Jellia Jamb",
+            "citation": {
+              "section": "Chapter 15",
+              "start_line": 4020,
+              "end_line": 4041
+            }
+          },
+          "correct_with_support_before": false,
+          "correct_with_support_after": true,
+          "supporting_book_lines": [
+            4027,
+            4032
+          ],
+          "supporting_passage_ranks_after": [
+            1
+          ],
+          "review_note": "Jellia Jamb tells Zeb she was ordered to show him his apartments."
+        },
+        {
+          "conversation": 20,
+          "prompt": "Why did he do that?",
+          "expected": "So they could cross the water without sinking.",
+          "before": {
+            "query": "Why did Zeb do that?",
+            "previous_answer": "all four of Jim's hoofs and then upon the tires of the buggy-wheels",
+            "reply": "carefully rubbed it upon all four of Jim's hoofs and then upon the tires of the buggy-wheels",
+            "citation": {
+              "section": "Chapter 9",
+              "start_line": 2458,
+              "end_line": 2474
+            }
+          },
+          "after": {
+            "query": "Why did Zeb do that?",
+            "previous_answer": "all four of Jim's hoofs and then upon the tires of the buggy-wheels",
+            "reply": "carefully rubbed it upon all four of Jim's hoofs and then upon the tires of the buggy-wheels",
+            "citation": {
+              "section": "Chapter 9",
+              "start_line": 2458,
+              "end_line": 2474
+            }
+          },
+          "correct_with_support_before": false,
+          "correct_with_support_after": false,
+          "supporting_book_lines": [
+            2457,
+            2461
+          ],
+          "supporting_passage_ranks_after": [
+            1,
+            3
+          ],
+          "review_note": "The reader describes what Zeb rubbed rather than the purpose of rubbing it."
+        },
+        {
+          "conversation": 21,
+          "prompt": "How did they react?",
+          "expected": "They were frightened and promised to be good.",
+          "before": {
+            "query": "How did they react (context: did Ozma say she would do if Billina and Eureka kept quarrelling)?",
+            "previous_answer": "take my Magic Belt and wish you both home again",
+            "reply": "angry and indignant",
+            "citation": {
+              "section": "Chapter 18",
+              "start_line": 4928,
+              "end_line": 4956
+            }
+          },
+          "after": {
+            "query": "How did they react (context: did Ozma say she would do if Billina and Eureka kept quarrelling)?",
+            "previous_answer": "take my Magic Belt and wish you both home again",
+            "reply": "angry and indignant",
+            "citation": {
+              "section": "Chapter 18",
+              "start_line": 4928,
+              "end_line": 4956
+            }
+          },
+          "correct_with_support_before": false,
+          "correct_with_support_after": false,
+          "supporting_book_lines": [
+            4277,
+            4284
+          ],
+          "supporting_passage_ranks_after": [
+            1
+          ],
+          "review_note": "The reader chooses a later scene. Dorothy makes the threat in the relevant passage."
+        }
+      ]
+    },
+    "reference": {
+      "followups_correct_with_support_before": 0,
+      "followups_correct_with_support_after": 2,
+      "followups_total": 5,
+      "followup_abstentions_before": 1,
+      "followup_abstentions_after": 1,
+      "cases": [
+        {
+          "conversation": 17,
+          "prompt": "Where did he take her?",
+          "expected": "To prison.",
+          "before": {
+            "query": "Where did The Captain-General take The Captain-General?",
+            "previous_answer": "The Captain-General.",
+            "reply": "I couldn't find an answer supported by the book.",
+            "citation": null
+          },
+          "after": {
+            "query": "Where did the Captain-General take Eureka to?",
+            "previous_answer": "The Captain-General.",
+            "reply": "prison",
+            "citation": {
+              "section": "Chapter 18",
+              "start_line": 4995,
+              "end_line": 5019
+            }
+          },
+          "correct_with_support_before": false,
+          "correct_with_support_after": true,
+          "supporting_book_lines": [
+            5004,
+            5006
+          ],
+          "supporting_passage_ranks_after": [
+            1,
+            2
+          ],
+          "review_note": "The Captain-General carried Eureka away to prison."
+        },
+        {
+          "conversation": 18,
+          "prompt": "Why did he suggest it?",
+          "expected": "He hoped she would treat them better than the Prince.",
+          "before": {
+            "query": "Why did The Wizard suggest The Wizard?",
+            "previous_answer": "The Wizard.",
+            "reply": "\"Flop them all together",
+            "citation": {
+              "section": "Chapter 12",
+              "start_line": 3330,
+              "end_line": 3352
+            }
+          },
+          "after": {
+            "query": "Why did the Wizard suggest taking the Royal Princess off her bush?",
+            "previous_answer": "The Wizard.",
+            "reply": "I couldn't find an answer supported by the book.",
+            "citation": null
+          },
+          "correct_with_support_before": false,
+          "correct_with_support_after": false,
+          "supporting_book_lines": [
+            1349,
+            1352
+          ],
+          "supporting_passage_ranks_after": [
+            1
+          ],
+          "review_note": "The reader sees the Wizard’s stated reason in the highest-ranked passage and abstains."
+        },
+        {
+          "conversation": 19,
+          "prompt": "Who was going to show him his room?",
+          "expected": "Jellia Jamb.",
+          "before": {
+            "query": "Who was going to show Jellia Jellia's room?",
+            "previous_answer": "With Ozma in the private rooms.",
+            "reply": "the Wizard",
+            "citation": {
+              "section": "Chapter 15",
+              "start_line": 4068,
+              "end_line": 4087
+            }
+          },
+          "after": {
+            "query": "Who was going to show Zeb his room?",
+            "previous_answer": "With Ozma in the private rooms.",
+            "reply": "Jellia Jamb",
+            "citation": {
+              "section": "Chapter 15",
+              "start_line": 4020,
+              "end_line": 4041
+            }
+          },
+          "correct_with_support_before": false,
+          "correct_with_support_after": true,
+          "supporting_book_lines": [
+            4027,
+            4032
+          ],
+          "supporting_passage_ranks_after": [
+            1
+          ],
+          "review_note": "Jellia Jamb tells Zeb she was ordered to show him his apartments."
+        },
+        {
+          "conversation": 20,
+          "prompt": "Why did he do that?",
+          "expected": "So they could cross the water without sinking.",
+          "before": {
+            "query": "Why did Zeb do that?",
+            "previous_answer": "Jim’s hoofs and the buggy tires.",
+            "reply": "carefully rubbed it upon all four of Jim's hoofs and then upon the tires of the buggy-wheels",
+            "citation": {
+              "section": "Chapter 9",
+              "start_line": 2458,
+              "end_line": 2474
+            }
+          },
+          "after": {
+            "query": "Why did Zeb do that?",
+            "previous_answer": "Jim’s hoofs and the buggy tires.",
+            "reply": "carefully rubbed it upon all four of Jim's hoofs and then upon the tires of the buggy-wheels",
+            "citation": {
+              "section": "Chapter 9",
+              "start_line": 2458,
+              "end_line": 2474
+            }
+          },
+          "correct_with_support_before": false,
+          "correct_with_support_after": false,
+          "supporting_book_lines": [
+            2457,
+            2461
+          ],
+          "supporting_passage_ranks_after": [
+            1,
+            3
+          ],
+          "review_note": "The reader describes what Zeb rubbed rather than the purpose of rubbing it."
+        },
+        {
+          "conversation": 21,
+          "prompt": "How did they react?",
+          "expected": "They were frightened and promised to be good.",
+          "before": {
+            "query": "How did they react (context: did Ozma say she would do if Billina and Eureka kept quarrelling)?",
+            "previous_answer": "Use the Magic Belt to send them both home.",
+            "reply": "angry and indignant",
+            "citation": {
+              "section": "Chapter 18",
+              "start_line": 4928,
+              "end_line": 4956
+            }
+          },
+          "after": {
+            "query": "How did they react (context: did Ozma say she would do if Billina and Eureka kept quarrelling)?",
+            "previous_answer": "Use the Magic Belt to send them both home.",
+            "reply": "angry and indignant",
+            "citation": {
+              "section": "Chapter 18",
+              "start_line": 4928,
+              "end_line": 4956
+            }
+          },
+          "correct_with_support_before": false,
+          "correct_with_support_after": false,
+          "supporting_book_lines": [
+            4277,
+            4284
+          ],
+          "supporting_passage_ranks_after": [
+            1
+          ],
+          "review_note": "The reader chooses a later scene. Dorothy makes the threat in the relevant passage."
+        }
+      ]
+    }
+  },
+  "regressions": [
+    {
+      "test_file": "data/oz_book_lookup_test.jsonl",
+      "test_sha256": "fdb302e5e6c8fc12d6de0cde1f96d3489982657d0ddb97b23173a2b3d495b625",
+      "all_replies_and_citations_match_baseline": true,
+      "correct_with_support_before_and_after": 18,
+      "turns": 29
+    },
+    {
+      "test_file": "data/oz_chat_test.jsonl",
+      "test_sha256": "1c29194de5fcf79db46c2097ba1fd8e150c205cddd22e33a9b1b0d96052755ea",
+      "all_replies_and_citations_match_baseline": true,
+      "correct_with_support_before_and_after": 20,
+      "turns": 32
+    }
+  ]
+}

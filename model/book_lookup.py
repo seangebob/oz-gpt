@@ -39,12 +39,15 @@ SHORT_FOLLOW_UP = re.compile(
     r'|\b(?:there|that|those|too|else)\W*$', re.IGNORECASE,
 )
 PRONOUN = re.compile(r'\b(?:he|she|it|they|him|her|them|his|hers|its|their)\b', re.IGNORECASE)
-BOOK_NAMES = (
+FEMALE_NAMES = r'Jellia(?: Jamb)?|Dorothy|Eureka|Ozma|Aunt Em|Billina'
+MALE_NAMES = (
     r'Braided Man|Cowardly Lion|Hungry Tiger|Tin Woodman|Woggle-Bug|Nick Chopper|'
-    r'Uncle Henry|Uncle Bill|Aunt Em|Jellia Jamb|Dorothy|Eureka|Gwig|Jim|Ozma|'
-    r'Sawhorse|Scarecrow|Tik-tok|Wizard|Zeb(?:ediah)?'
+    r'Uncle Henry|Uncle Bill|Gwig|Jim|Sawhorse|Scarecrow|Tik-tok|Wizard|Zeb(?:ediah)?|Captain-General'
 )
+BOOK_NAMES = f'{FEMALE_NAMES}|{MALE_NAMES}'
 BOOK_NAME = re.compile(rf'\b(?:{BOOK_NAMES})\b', re.IGNORECASE)
+FEMALE_NAME = re.compile(rf'(?:{FEMALE_NAMES})', re.IGNORECASE)
+MALE_NAME = re.compile(rf'(?:{MALE_NAMES})', re.IGNORECASE)
 NAME = rf"(?:(?i:the) )?(?:(?i:{BOOK_NAMES})\b|[A-Z][\w'-]+(?: [A-Z][\w'-]+){{0,3}})"
 NAMED_SUBJECT = re.compile(rf'(?i:who|what) (?i:is|was) ({NAME})')
 QUESTION_ACTOR = re.compile(
@@ -73,6 +76,11 @@ RESCUE_QUESTION = re.compile(rf'what (rescued|saved|freed) ({NAME})', re.IGNOREC
 TRAVEL_QUESTION = re.compile(rf'(?i:how did) ({NAME}) (?i:reach|get to|arrive in) (.+)')
 MEANS_ANSWER = re.compile(r"(?i:a|an|the) [\w'-]+(?: [\w'-]+){0,5}|[A-Z][\w'-]+(?: [A-Z][\w'-]+){1,4}")
 ACTION_ACTOR = re.compile(r'who ([a-z]+)( .+)?', re.IGNORECASE)
+NAMED_OBJECT = re.compile(rf' ({NAME})(?= |$)')
+LOCATION_TRANSFER = re.compile(r'where did (he|she) (bring|carry|drive|lead|send|take) (him|her)\?$', re.IGNORECASE)
+TRANSFER_PARTICIPLE = {'bring': 'brought', 'carry': 'carried', 'drive': 'driven',
+                       'lead': 'led', 'send': 'sent', 'take': 'taken'}
+REPEATED_ACTION_REASON = re.compile(r'why did (he|she) ([a-z]+) (?:it|that)\W*', re.IGNORECASE)
 ACTION_REASON = re.compile(r'why (?:was|were) (?:he|she|they) ([a-z]+)ing\W*', re.IGNORECASE)
 LOST_ITEMS = re.compile(rf'(?i:where did) ({NAME}) (?i:lose them)\W*')
 PAST_TENSE = {
@@ -135,14 +143,33 @@ def _uses_history(question):
     return True
 
 
+def _person_key(name):
+    return name.casefold().removeprefix('the ')
+
+
+def _person_referent(pronoun, actor, direct_object, people):
+    name_pattern = FEMALE_NAME if pronoun in {'she', 'her', 'hers'} else MALE_NAME
+    actor_key = _person_key(actor)
+    object_key = _person_key(direct_object)
+    # A named object can be a better antecedent than the actor, especially in a two-person question.
+    if pronoun not in {'he', 'she'} and object_key != actor_key and name_pattern.fullmatch(object_key):
+        return direct_object
+    if actor and (not people or people.keys() == {actor_key} or name_pattern.fullmatch(actor_key)):
+        return actor
+    matching = [name for key, name in people.items() if name_pattern.fullmatch(key)]
+    return matching[0] if len(matching) == 1 else ''
+
+
 def followup_question(question, previous_question, previous_answer):
     previous_question = previous_question.replace('’', "'").rstrip('?.!')
     named = NAMED_SUBJECT.fullmatch(previous_question)
+    prior_action = ACTION_ACTOR.fullmatch(previous_question)
     actor = named[1] if named else ''
     name = previous_answer.strip(' .?!"')
     if not actor and re.match(r'who\b', previous_question, re.IGNORECASE) and NAME_ANSWER.fullmatch(name):
-        actor = name
-    if not actor and (subject := QUESTION_ACTOR.match(previous_question)):
+        actor = 'the ' + name[4:] if name.startswith('The ') else name
+    subject = QUESTION_ACTOR.match(previous_question)
+    if not actor and subject:
         actor = subject[1].removesuffix("'s")
     if actor and re.fullmatch(r'why (?:that|this) name\W*', question, re.IGNORECASE):
         return f'Why was {actor} given that name?'
@@ -159,7 +186,7 @@ def followup_question(question, previous_question, previous_answer):
             return re.sub(rf'\b{re.escape(prior_subject)}\b', lambda _: about[1], previous_question) + '?'
 
     if re.fullmatch(r'why\W*', question, re.IGNORECASE):
-        if prior_action := ACTION_ACTOR.fullmatch(previous_question):
+        if prior_action:
             verb, rest = prior_action.groups()
             if base := BASE_VERB.get(verb.lower()):
                 return f"Why did {actor or 'someone'} {base}{rest or ''}?"
@@ -184,7 +211,7 @@ def followup_question(question, previous_question, previous_answer):
             return f'Who brought {travel[1]} to {travel[2]}?'
 
     reason = ACTION_REASON.fullmatch(question)
-    if reason and (prior_action := ACTION_ACTOR.fullmatch(previous_question)):
+    if reason and prior_action:
         stem = reason[1].lower()
         if prior_action[1].lower() in {_past_tense(stem), _past_tense(stem + 'e')}:
             return f"Why was someone {stem}ing{prior_action[2] or ''}?"
@@ -220,17 +247,56 @@ def followup_question(question, previous_question, previous_answer):
     if plural_item and re.fullmatch(r'how many\W*', question, re.IGNORECASE):
         return f'How many {plural_item}?'
 
+    people = {_person_key(match[0]): match[0] for match in BOOK_NAME.finditer(previous_question)}
+    direct_object = ''
+    if subject:
+        verb = re.match(r' [a-z]+', previous_question[subject.end():], re.IGNORECASE)
+        if verb and (match := NAMED_OBJECT.match(previous_question, subject.end() + verb.end())):
+            direct_object = match[1]
+    elif prior_action and (match := NAMED_OBJECT.match(prior_action[2] or '')):
+        direct_object = match[1]
+        if not named and _person_key(actor) == _person_key(direct_object):
+            actor = ''
+
+    repeated = REPEATED_ACTION_REASON.fullmatch(question)
+    if repeated and prior_action and prior_action[2]:
+        pronoun, verb = (part.lower() for part in repeated.groups())
+        if prior_action[1].lower() == _past_tense(verb):
+            person = _person_referent(pronoun, actor, direct_object, people) or 'someone'
+            return f'Why did {person} {verb}{prior_action[2]}?'
+
+    if transfer := LOCATION_TRANSFER.fullmatch(question):
+        subject_pronoun, verb, object_pronoun = transfer[1].lower(), transfer[2].lower(), transfer[3].lower()
+        mover = _person_referent(subject_pronoun, actor, direct_object, people)
+        passenger = _person_referent(object_pronoun, actor, direct_object, people)
+        if passenger and _person_key(passenger) != _person_key(mover):
+            # Ask for the destination so the reader can distinguish it from the starting place.
+            if mover:
+                return f'Where did {mover} {verb} {passenger} to?'
+            return f'Where was {passenger} {TRANSFER_PARTICIPLE[verb]} to?'
+
+    last_object = None
+
     def replace_pronoun(match):
+        nonlocal last_object
         pronoun = match[0].lower()
+        possessive = _possessive(question, match)
         if pronoun in {'they', 'them', 'their'}:
             referent = f'the {plural_item}' if plural_item else ''
         elif pronoun in {'it', 'its'}:
             referent = item or actor
         else:
-            referent = actor
+            referent = _person_referent(pronoun, actor, direct_object, people)
         if not referent:
             return match[0]
-        return f"{referent}'s" if _possessive(question, match) else referent
+        if possessive and last_object:
+            previous_match, previous_referent = last_object
+            # "Show Zeb his room" keeps the immediate possessive grammatical and unambiguous.
+            if referent == previous_referent and question[previous_match.end():match.start()].isspace():
+                return match[0]
+        if pronoun in {'him', 'her'} and not possessive:
+            last_object = match, referent
+        return f"{referent}'s" if possessive else referent
 
     expanded = PRONOUN.sub(replace_pronoun, question)
     if expanded != question:

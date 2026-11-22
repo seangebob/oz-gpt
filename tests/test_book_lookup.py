@@ -306,6 +306,42 @@ The Wizard was born in Omaha.
                 session.reply('Who is Dorothy?')
                 self.assertEqual(session.reply('Where did she go?').passage_trace.query, 'Where did Dorothy go?')
 
+    def test_transfer_followup_keeps_the_actor_and_object_in_separate_roles(self):
+        previous = 'Who took Eureka away after Ozma ordered her held for trial?'
+        question = 'Where did he take her?'
+        self.assertEqual(followup_question(question, previous, 'The Captain-General.'),
+                         'Where did the Captain-General take Eureka to?')
+        for answer in ('Ozma', 'Eureka', ''):
+            with self.subTest(earlier_answer=answer):
+                self.assertEqual(followup_question(question, previous, answer), 'Where was Eureka taken to?')
+
+        self.assertEqual(followup_question('Where did she lead him?', 'Who led zeb away from Dorothy?', 'Ozma'),
+                         'Where did Ozma lead zeb to?')
+
+    def test_followup_object_and_possessive_keep_the_matching_participant(self):
+        previous = 'Where did Jellia say Dorothy was when Zeb asked at the palace?'
+        self.assertEqual(followup_question('Who was going to show him his room?', previous, 'Ozma'),
+                         'Who was going to show Zeb his room?')
+
+    def test_reason_followup_restores_the_action_even_without_the_actor(self):
+        previous = 'Who suggested taking the Royal Princess off her bush?'
+        question = 'Why did he suggest it?'
+        for answer, person in [('The Wizard.', 'the Wizard'), ('', 'someone')]:
+            with self.subTest(earlier_answer=answer):
+                self.assertEqual(followup_question(question, previous, answer),
+                                 f'Why did {person} suggest taking the Royal Princess off her bush?')
+
+    def test_actor_and_object_are_available_to_the_next_followup(self):
+        index = Mock(search=Mock(return_value=[]))
+        session = BookSession(index, Mock(), trace_passages=True)
+        session.remember('Who took Eureka away?', 'Captain-General')
+
+        session.reply('Where did he take her?')
+        third_turn = session.reply('Where did she see him?')
+
+        self.assertEqual(third_turn.passage_trace.previous_question, 'Where did Captain-General take Eureka to?')
+        self.assertEqual(third_turn.passage_trace.query, 'Where did Eureka see Captain-General?')
+
     def test_followup_rewrites_use_the_question_for_people_and_objects(self):
         cases = [
             ('What did he fix?', 'What did the Tin Woodman use at the palace?', 'a branch',
