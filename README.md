@@ -190,6 +190,18 @@ python -m model.chat_training --compact-history --history-answer-dropout 0.5 \
   --output model/model-chat-memory-repeat.pth
 ```
 
+### Try the broader fact coverage checkpoint
+
+This experiment extends the compact-history checkpoint with 180 sourced conversations covering 30 facts and events. It adds follow-ups about who acted, how many, why, and what happened next. The selected run replayed each new first reply once during training.
+
+```bash
+python -m model.chatbot --chat model/model-chat-coverage-experiment.pth
+```
+
+Ask `What animals remained in the Wizard's performing act when the princess had her pet?` and then `How many were there?`. After `/reset`, ask `What weapons did the Wizard pull from the satchel?` and repeat the follow-up. The answers are eight piglets and two revolvers.
+
+On the fresh paraphrase test the coverage checkpoint improved first replies from 1/30 to 8/30 and follow-ups from 0/20 to 5/20. It answered both turns correctly in 3/20 multi-turn conversations. With history disabled its follow-up score was 0/20. On the earlier memory test it got 3/18 first replies and 11/18 follow-ups, compared with 7/18 and 9/18 for the starting checkpoint. It remains opt-in and scored 0/14 on facts absent from chat training. [Reviewed coverage benchmark and training runs](evaluations/oz_chat_fact_coverage_comparison.json)
+
 ### Look up answers in the Oz book
 
 Install the optional answer reader dependency and start book lookup mode.
@@ -322,7 +334,7 @@ Issue numbers refer to the project bug review. Complete each stage in this order
 
 ### Remaining repairs in order
 
-1. **#1 Improve factual accuracy in trained chat.** The compact-history checkpoint retained prior context on all 18 paired test follow-ups and answered 9 correctly. It also retained context on all four follow-ups in the earlier paraphrase test, where it scored 0/4. Next improve factual first replies and broaden the kinds of follow-ups taught in training. Test broader fact coverage across seeds and reserve a fresh set of facts absent from chat training before promoting a new default. [Memory benchmark results](evaluations/oz_chat_compact_history_comparison.json)
+1. **#1 Improve factual accuracy in trained chat.** Compact history enabled context-dependent replies. The broader coverage checkpoint answered 8/30 new first replies and 5/20 new follow-ups correctly, while earlier memory first replies fell from 7/18 to 3/18. The remaining work is to improve factual first replies across both sets and verify generalization on a fresh set of facts absent from supervised training. The latest unseen-fact score is 0/14. [Memory benchmark results](evaluations/oz_chat_compact_history_comparison.json) · [Fact coverage benchmark results](evaluations/oz_chat_fact_coverage_comparison.json)
 2. **Improve book lookup on the misses from the fresh benchmark.** Review whether the retrieved passages contain the correct answer, then investigate when an incorrect first reply becomes the next turn’s subject. Use a new final set for the next tuning round. [Development questions](data/oz_book_lookup_dev.jsonl) · [Final questions](data/oz_book_lookup_test.jsonl)
 
 ### Cleanup follow-ups
