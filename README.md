@@ -153,6 +153,8 @@ Use `--compact-history` to train with short `Q:` and `A:` labels on earlier turn
 
 Use `--init-chat-checkpoint` to start from a previous chat run with a fresh optimizer. This keeps its vocabulary and history format. You can pass `--compact-history` to switch a legacy checkpoint to the compact format during fine-tuning. Choose a new path with `--output`.
 
+Repeat `--dev-data` to evaluate separate development files. Add `--select-by balanced-first` to prioritize the lowest first-reply match rate across those files. Ties use the average first-reply rate, total matches, then validation loss. The default selection uses total development matches with validation loss as a tiebreaker.
+
 ### Try the chat accuracy experiment
 
 The expanded data includes 92 new conversations with book line references. The experimental checkpoint used an additional training objective that predicts the complete answer from the question and any packed history. It uses the same character-level generator when you chat.

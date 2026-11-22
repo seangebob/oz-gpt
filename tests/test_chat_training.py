@@ -14,7 +14,7 @@ from model.chat_data import (
     END_OF_TURN, IGNORE_TARGET, ChatTokenizer, collate_examples, format_prompt,
     encode_conversations, format_turn, load_chat_checkpoint, load_examples, pack_history, with_history,
 )
-from model.chat_training import DATA_DIR, main as train_chat, save_checkpoint
+from model.chat_training import DATA_DIR, DevelopmentMatches, development_score, main as train_chat, save_checkpoint
 from model.chat_session import ChatSession
 from model.model import GPTLanguageModel, block_size, chars
 
@@ -103,14 +103,14 @@ class ChatTrainingTests(unittest.TestCase):
         prompts = normalized_messages(earlier, 'user', first_only=True)
         pairs = {(row['fact_family'], row['messages'][2]['content']) for row in training if 'followup_group' in row}
         for name in ('memory_dev', 'memory_test', 'memory_unseen',
-                     'coverage_dev', 'coverage_test', 'coverage_unseen'):
+                     'coverage_dev', 'coverage_test', 'coverage_unseen', 'generalization_test'):
             split = chat_split(name)
             questions = normalized_messages(split, 'user', first_only=True)
             self.assertEqual(len(questions), len(split))
             self.assertFalse(prompts & questions)
             prompts.update(questions)
             load_examples(DATA_DIR / f'oz_chat_{name}.jsonl', ChatTokenizer(chars, compact_history=True))
-            if name.endswith('_unseen'):
+            if name.endswith('_unseen') or name == 'generalization_test':
                 self.assertFalse(normalized_messages(earlier, 'assistant') & normalized_messages(split, 'assistant'))
             else:
                 by_question = {}
@@ -121,6 +121,14 @@ class ChatTrainingTests(unittest.TestCase):
                     self.assertIn((row['fact_family'], followup), pairs)
                     by_question.setdefault(followup, set()).add(answer)
                 self.assertTrue(by_question and all(len(answers) > 1 for answers in by_question.values()))
+
+    def test_balanced_selection_prioritizes_the_weakest_first_reply_score(self):
+        uneven = [DevelopmentMatches(8, 10, 14, 20), DevelopmentMatches(2, 10, 9, 20)]
+        balanced = [DevelopmentMatches(4, 10, 8, 20), DevelopmentMatches(4, 10, 8, 20)]
+        stronger = [DevelopmentMatches(5, 10, 8, 20), DevelopmentMatches(4, 10, 7, 20)]
+        self.assertGreater(development_score(uneven, 'matches'), development_score(balanced, 'matches'))
+        self.assertGreater(development_score(balanced, 'balanced-first'), development_score(uneven, 'balanced-first'))
+        self.assertGreater(development_score(stronger, 'balanced-first'), development_score(balanced, 'balanced-first'))
 
     def test_history_keeps_only_consecutive_recent_turns(self):
         first = format_turn('Hi', 'Hello!')

@@ -1,5 +1,6 @@
 import argparse
 from collections import Counter
+from dataclasses import dataclass
 from math import isfinite
 from pathlib import Path
 from pickle import UnpicklingError
@@ -76,24 +77,45 @@ def answer_class_loss(model, classifier, inputs, targets, classes):
     return reply_loss + ANSWER_CLASS_WEIGHT * class_loss, reply_loss
 
 
+@dataclass(frozen=True)
+class DevelopmentMatches:
+    first_matches: int
+    first_replies: int
+    matches: int
+    replies: int
+
+
 def development_matches(model, tokenizer, conversations, device):
     model.eval()
     session = ChatSession(model, tokenizer, device=device)
-    matches = total = 0
+    first_matches = matches = total = 0
     for _, conversation in conversations:
         session.reset()
-        for prompt, expected in conversation_turns(conversation):
-            matches += reference_matches(session.reply(prompt).text, expected)
+        for turn, (prompt, expected) in enumerate(conversation_turns(conversation)):
+            matched = reference_matches(session.reply(prompt).text, expected)
+            matches += matched
+            if turn == 0:
+                first_matches += matched
             total += 1
-    return matches, total
+    return DevelopmentMatches(first_matches, len(conversations), matches, total)
+
+
+def development_score(results, selection):
+    matches = sum(result.matches for result in results)
+    if selection == 'balanced-first':
+        rates = [result.first_matches / result.first_replies for result in results]
+        return min(rates), sum(rates), matches
+    return (matches,)
 
 
 def main():
     parser = argparse.ArgumentParser(description='Fine-tune the Oz model to answer user messages.')
     parser.add_argument('--train-data', type=Path, default=DATA_DIR / 'oz_chat_train.jsonl')
     parser.add_argument('--val-data', type=Path, default=DATA_DIR / 'oz_chat_val.jsonl')
-    parser.add_argument('--dev-data', type=Path,
-                        help='Select by generated reference matches on this development file, then by validation loss')
+    parser.add_argument('--dev-data', action='append', type=Path, default=[],
+                        help='Development file for checkpoint selection. Repeat to compare separate benchmarks.')
+    parser.add_argument('--select-by', choices=('matches', 'balanced-first'), default='matches',
+                        help='Select by total development matches or prioritize first replies across development files')
     initialization = parser.add_mutually_exclusive_group()
     initialization.add_argument('--base-checkpoint', type=Path, default=Path(RETRAINED_BASE_PATH))
     initialization.add_argument('--init-chat-checkpoint', type=Path,
@@ -119,9 +141,9 @@ def main():
         parser.error('Steps, batch size, evaluation interval, and learning rate must be positive and finite.')
     if not 0 <= args.history_answer_dropout <= 1:
         parser.error('--history-answer-dropout must be between 0 and 1.')
-    datasets = [args.train_data, args.val_data]
-    if args.dev_data is not None:
-        datasets.append(args.dev_data)
+    if args.select_by == 'balanced-first' and not args.dev_data:
+        parser.error('--select-by balanced-first requires --dev-data.')
+    datasets = [args.train_data, args.val_data, *args.dev_data]
     dataset_paths = {path.resolve() for path in datasets}
     if len(dataset_paths) != len(datasets):
         parser.error('Use separate training, validation, and development files.')
@@ -145,11 +167,12 @@ def main():
         masked_examples = (load_examples(args.train_data, tokenizer, mask_history_replies=True)
                            if args.history_answer_dropout else None)
         val_examples = load_examples(args.val_data, tokenizer)
-        dev_conversations = []
-        if args.dev_data is not None:
-            with args.dev_data.open(encoding='utf-8') as source:
-                dev_conversations = list(read_conversations(source, args.dev_data))
-            encode_conversations(dev_conversations, tokenizer, args.dev_data)
+        dev_sets = []
+        for path in args.dev_data:
+            with path.open(encoding='utf-8') as source:
+                conversations = list(read_conversations(source, path))
+            encode_conversations(conversations, tokenizer, path)
+            dev_sets.append(conversations)
         model.to(args.device)
     except (OSError, ValueError, RuntimeError, EOFError, UnpicklingError) as error:
         parser.exit(1, f'Error preparing chat training: {error}\n')
@@ -173,6 +196,7 @@ def main():
 
     best_score = None
     best_step = 0
+    best_loss = float('inf')
     best_state = None
     model.train()
     for step in range(1, args.steps + 1):
@@ -195,17 +219,23 @@ def main():
 
         if step % args.eval_every == 0 or step == args.steps:
             val_loss = evaluate(model, val_examples, args.batch_size, args.device)
-            matches = 0
             summary = f'Step {step:>4d} | train reply loss {reply_loss.item():.4f} | validation reply loss {val_loss:.4f}'
-            if dev_conversations:
-                matches, total = development_matches(model, tokenizer, dev_conversations, args.device)
+            results = [development_matches(model, tokenizer, rows, args.device) for rows in dev_sets]
+            if results:
+                matches = sum(result.matches for result in results)
+                total = sum(result.replies for result in results)
                 summary += f' | development reference matches {matches}/{total}'
+                if args.select_by == 'balanced-first':
+                    first_counts = ', '.join(f'{path.name} {result.first_matches}/{result.first_replies}'
+                                              for path, result in zip(args.dev_data, results))
+                    summary += f' | first replies {first_counts}'
             print(summary)
-            score = (-matches, val_loss)
-            if isfinite(val_loss) and (best_score is None or score < best_score):
+            score = (*development_score(results, args.select_by), -val_loss)
+            if isfinite(val_loss) and (best_score is None or score > best_score):
                 best_state = {key: tensor.detach().to('cpu', copy=True) for key, tensor in model.state_dict().items()}
                 best_score = score
                 best_step = step
+                best_loss = val_loss
             model.train()
 
     if best_state is None:
@@ -215,7 +245,7 @@ def main():
         save_checkpoint(args.output, model, tokenizer)
     except OSError as error:
         parser.exit(1, f'Could not save chat checkpoint at {args.output}: {error}\n')
-    print(f'Saved best chat checkpoint to {args.output} at step {best_step} (validation reply loss {best_score[1]:.4f}).')
+    print(f'Saved best chat checkpoint to {args.output} at step {best_step} (validation reply loss {best_loss:.4f}).')
 
 
 if __name__ == '__main__':
