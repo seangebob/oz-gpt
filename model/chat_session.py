@@ -16,19 +16,24 @@ class ChatReply:
     ended_with_marker: bool
     history_used: bool
     history_compacted: bool
+    reply_method: str = 'generator'
 
 
 class ChatSession:
-    def __init__(self, model, tokenizer, *, device='cpu', max_tokens=DEFAULT_MAX_TOKENS):
+    def __init__(self, model, tokenizer, *, device='cpu', max_tokens=DEFAULT_MAX_TOKENS,
+                 first_reply_classifier=None):
         self.model = model
         self.tokenizer = tokenizer
         self.device = device
         self.max_tokens = max_tokens
+        self.first_reply_classifier = first_reply_classifier
         self.stop_ids = tokenizer.encode(END_OF_TURN)
         self.history = deque()
+        self.reset()
 
     def reset(self):
         self.history.clear()
+        self._first_reply = True
 
     def remember(self, user_text, reply):
         self.history.append((user_text.strip(), reply.strip()))
@@ -53,10 +58,20 @@ class ChatSession:
                                             compact_history=self.tokenizer.compact_history)
         token_ids = self.tokenizer.encode(formatted)
         remaining = block_size + 1 - len(token_ids)
+        limit = min(self.max_tokens, remaining)
+        if self.first_reply_classifier is not None and self._first_reply and not self.history:
+            answer = self.first_reply_classifier.predict(user_text)
+            if answer and len(answer) + len(self.stop_ids) <= limit and set(answer) <= self.tokenizer.ids.keys():
+                if remember:
+                    self.remember(user_text, answer)
+                self._first_reply = False
+                return ChatReply(answer, False, False, False, reply_method='classifier')
+
         context = torch.tensor([token_ids], dtype=torch.long, device=self.device)
         generated = self.model.generate(
-            context, min(self.max_tokens, remaining), stop_ids=self.stop_ids, sample=False,
+            context, limit, stop_ids=self.stop_ids, sample=False,
         )
+        self._first_reply = False
         output = self.tokenizer.decode(generated[0, len(token_ids):].tolist())
         ended = output.endswith(END_OF_TURN)
         text = output.removesuffix(END_OF_TURN).strip()

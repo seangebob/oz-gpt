@@ -6,10 +6,45 @@ import torch
 from model.chat_data import END_OF_TURN, ChatTokenizer, format_prompt, format_turn
 from model.chat_evaluation import correctness, generate_predictions, reference_matches
 from model.chat_session import ChatSession, DEFAULT_MAX_TOKENS, REPLY_RESERVE
+from model.first_reply import FirstReplyClassifier, fit_first_replies
 from model.model import block_size, chars
 
 
 class ChatEvaluationTests(unittest.TestCase):
+    def test_first_reply_classifier_selects_learned_answers_and_falls_back(self):
+        classifier = FirstReplyClassifier(fit_first_replies([
+            ('What does a sparrow eat?', 'Seeds.'), ('What is a sparrow fed?', 'Seeds.'),
+            ('What does a panda eat?', 'Bamboo.'), ('What is a panda fed?', 'Bamboo.'),
+        ]))
+        self.assertEqual(classifier.predict('What do sparrows eat?'), 'Seeds.')
+        self.assertEqual(classifier.predict('What do pandas eat?'), 'Bamboo.')
+        self.assertIsNone(classifier.predict('12345'))
+
+    def test_classifier_answers_only_the_first_turn_in_each_history_mode(self):
+        tokenizer = ChatTokenizer(chars)
+        conversations = [(1, {'messages': [
+            {'role': 'user', 'content': 'Who is Jim?'},
+            {'role': 'assistant', 'content': 'A horse.'},
+            {'role': 'user', 'content': 'What kind?'},
+            {'role': 'assistant', 'content': 'A cab-horse.'},
+        ]})]
+        for mode in ('generated', 'none', 'reference'):
+            with self.subTest(mode=mode):
+                model, classifier = Mock(), Mock()
+                classifier.predict.return_value = 'A horse.'
+
+                def generate(context, *_args, **_kwargs):
+                    return torch.cat((context, torch.tensor([tokenizer.encode('A cab-horse.' + END_OF_TURN)])), dim=1)
+
+                model.generate.side_effect = generate
+                rows = generate_predictions(model, tokenizer, conversations, mode, DEFAULT_MAX_TOKENS,
+                                            first_reply_classifier=classifier)
+                classifier.predict.assert_called_once_with('Who is Jim?')
+                self.assertEqual([row['reply_method'] for row in rows], ['classifier', 'generator'])
+                self.assertEqual([row['clean_stop'] for row in rows], [None, True])
+                self.assertEqual(rows[1]['history_used'], mode != 'none')
+                self.assertTrue(all(row['reference_match'] for row in rows))
+
     def test_history_modes_use_the_right_reply_and_reset_between_conversations(self):
         tokenizer = ChatTokenizer(chars)
         conversations = [

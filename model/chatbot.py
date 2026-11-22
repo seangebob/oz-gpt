@@ -6,6 +6,7 @@ from pathlib import Path
 from model.book_lookup import BookSession
 from model.chat_data import CHAT_CHECKPOINT, load_chat_checkpoint
 from model.chat_session import ChatSession, DEFAULT_MAX_TOKENS
+from model.first_reply import FIRST_REPLY_CHECKPOINT, load_first_reply_classifier
 from model.model import (
     encode, decode, get_device, load_base_model, model_from_state, MODEL_PATH,
 )
@@ -19,9 +20,13 @@ modes.add_argument('--chat', nargs='?', const=CHAT_CHECKPOINT, type=Path, metava
                    help='Use an Oz chat checkpoint (default path: model/model-chat-retrained.pth)')
 modes.add_argument('--book', action='store_true', help='Look up answers in the bundled Oz book')
 modes.add_argument('--checkpoint', type=Path, help='Use a different base checkpoint for text completion')
+parser.add_argument('--first-reply-classifier', nargs='?', const=FIRST_REPLY_CHECKPOINT, type=Path,
+                    metavar='CHECKPOINT', help='Classify the first reply to known facts in --chat mode')
 args = parser.parse_args()
 if args.chat and args.max_tokens < 1:
     parser.error('--max_tokens must be positive in chat mode.')
+if args.first_reply_classifier and not args.chat:
+    parser.error('--first-reply-classifier requires --chat.')
 
 if args.book:
     print('Loading the Oz book and its answer reader...')
@@ -44,6 +49,7 @@ else:
 
     print("Loading model parameters...")
     try:
+        classifier = load_first_reply_classifier(args.first_reply_classifier) if args.first_reply_classifier else None
         if args.chat:
             state, tokenizer = load_chat_checkpoint(checkpoint)
             model = model_from_state(state, len(tokenizer.characters))
@@ -57,7 +63,8 @@ else:
 
     model.eval()
     if args.chat:
-        session = ChatSession(model, tokenizer, device=device, max_tokens=args.max_tokens)
+        session = ChatSession(model, tokenizer, device=device, max_tokens=args.max_tokens,
+                              first_reply_classifier=classifier)
     print("Model loaded successfully!\n")
 
 # Interactive chat loop
@@ -97,6 +104,8 @@ while True:
             if args.book and reply.source:
                 source = reply.source
                 print(f'Source: {source.section}, lines {source.start_line}–{source.end_line}')
+            elif args.chat and reply.reply_method == 'classifier':
+                print('Reply method: trained classifier')
             print()
             continue
 

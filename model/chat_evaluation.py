@@ -14,6 +14,7 @@ from model.chat_data import (
 )
 from model.chat_session import ChatSession, DEFAULT_MAX_TOKENS, REPLY_RESERVE
 from model.chat_training import DATA_DIR, evaluate
+from model.first_reply import FIRST_REPLY_CHECKPOINT, load_first_reply_classifier
 from model.model import MODEL_PATH, RETRAINED_BASE_PATH, block_size, chars, model_from_state
 
 
@@ -21,8 +22,8 @@ HISTORY_MODES = ('generated', 'none', 'reference')
 REPORT_VERSION = 1
 
 
-def generate_predictions(model, tokenizer, conversations, history_mode, max_tokens):
-    session = ChatSession(model, tokenizer, max_tokens=max_tokens)
+def generate_predictions(model, tokenizer, conversations, history_mode, max_tokens, *, first_reply_classifier=None):
+    session = ChatSession(model, tokenizer, max_tokens=max_tokens, first_reply_classifier=first_reply_classifier)
     return generate_session_predictions(session, conversations, history_mode)
 
 
@@ -88,9 +89,11 @@ def generate_session_predictions(session, conversations, history_mode):
                         row['passage_trace'] = passage_trace_record(reply)
                 else:
                     row.update(
+                        reply_method=reply.reply_method,
                         history_compacted=reply.history_compacted,
                         ended_with_marker=reply.ended_with_marker,
-                        clean_stop=reply.ended_with_marker and 'END]' not in reply.text,
+                        clean_stop=(reply.ended_with_marker and 'END]' not in reply.text
+                                    if reply.reply_method == 'generator' else None),
                     )
                 predictions.append(row)
         except ValueError as error:
@@ -185,7 +188,10 @@ def print_summary(path, report):
         else:
             if followups and 'history_compacted' in followups[0]:
                 print(f'  Compacted history:     {sum(row["history_compacted"] for row in followups)}/{len(followups)} follow-ups')
-            print(f'  Clean stops:           {sum(row["clean_stop"] for row in rows)}/{len(rows)}')
+            generated = [row for row in rows if row['clean_stop'] is not None]
+            if run.get('first_reply_classifier'):
+                print(f'  Classifier first replies: {len(rows) - len(generated)}/{len(first)}')
+            print(f'  Clean stops:           {sum(row["clean_stop"] for row in generated)}/{len(generated)}')
             print(f'  Reference reply loss:  {run["reference_reply_loss"]:.4f} (lower is better)')
 
 
@@ -197,6 +203,17 @@ def run_evaluation(args):
     if args.output.exists():
         raise FileExistsError(f'Report already exists: {args.output}')
     checkpoints = args.checkpoint or ([] if args.book else [CHAT_CHECKPOINT])
+    classifier = None
+    classifier_metadata = {}
+    if args.first_reply_classifier:
+        if not checkpoints:
+            raise ValueError('--first-reply-classifier requires a chat checkpoint when used with --book.')
+        classifier_bytes = args.first_reply_classifier.read_bytes()
+        classifier = load_first_reply_classifier(io.BytesIO(classifier_bytes))
+        classifier_metadata = {
+            'first_reply_classifier': str(args.first_reply_classifier),
+            'first_reply_classifier_sha256': hashlib.sha256(classifier_bytes).hexdigest(),
+        }
     history_modes = list(dict.fromkeys(args.history or ['generated']))
     test_bytes = args.test_data.read_bytes()
     with io.StringIO(test_bytes.decode('utf-8'), newline=None) as source:
@@ -235,7 +252,9 @@ def run_evaluation(args):
                 'history': history,
                 'history_packing': tokenizer.history_packing,
                 'reference_reply_loss': round(loss, 6),
-                'predictions': generate_predictions(model, tokenizer, conversations, history, args.max_tokens),
+                **classifier_metadata,
+                'predictions': generate_predictions(model, tokenizer, conversations, history, args.max_tokens,
+                                                    first_reply_classifier=classifier),
             })
     if args.book:
         session = BookSession.from_book(trace_passages=args.trace_passages)
@@ -272,6 +291,8 @@ def main():
     commands = parser.add_subparsers(dest='command', required=True)
     run = commands.add_parser('run', help='Generate replies and save an evaluation report.')
     run.add_argument('--checkpoint', action='append', type=Path, help='Checkpoint to evaluate. Repeat to compare checkpoints.')
+    run.add_argument('--first-reply-classifier', nargs='?', const=FIRST_REPLY_CHECKPOINT, type=Path,
+                     metavar='CHECKPOINT', help='Use a trained classifier for high-scoring first replies')
     run.add_argument('--book', action='store_true', help='Evaluate book lookup. Combine with --checkpoint for a comparison.')
     run.add_argument('--trace-passages', action='store_true', help='Save ranked passages and reader spans for book lookup.')
     run.add_argument('--test-data', type=Path, default=DATA_DIR / 'oz_chat_test.jsonl', help='Held-out JSONL conversations.')

@@ -204,6 +204,18 @@ Ask `What animals remained in the Wizard's performing act when the princess had 
 
 On the fresh paraphrase test the coverage checkpoint improved first replies from 1/30 to 8/30 and follow-ups from 0/20 to 5/20. It answered both turns correctly in 3/20 multi-turn conversations. With history disabled its follow-up score was 0/20. On the earlier memory test it got 3/18 first replies and 11/18 follow-ups, compared with 7/18 and 9/18 for the starting checkpoint. It remains opt-in and scored 0/14 on facts absent from chat training. [Reviewed coverage benchmark and training runs](evaluations/oz_chat_fact_coverage_comparison.json)
 
+### Use the trained first-reply classifier
+
+The classifier learns from the first replies in the chat training examples. It selects an answer when its score clears a threshold. With the command below, the coverage checkpoint generates replies on lower scores and on later turns. The terminal labels classifier replies. Type `/reset` to start a fresh conversation on another topic.
+
+```bash
+python -m model.chatbot --chat model/model-chat-coverage-experiment.pth --first-reply-classifier
+```
+
+With the classifier enabled, the coverage checkpoint scored 12/18 on memory first replies and 21/30 on coverage first replies. The strongest previous scores were 7/18 and 8/30. It scored 11/18 and 8/20 on their follow-ups. All configurations scored 0/16 on fresh facts absent from chat training. The separate balanced replay experiment reached 4/18 and 6/30 on first replies using generation alone. [Reviewed first-reply and generalization results](evaluations/oz_chat_first_reply_generalization_comparison.json)
+
+To fit a classifier from the current chat dataset, run `python -m model.first_reply --output model/model-first-replies-local.pth` and pass that path to `--first-reply-classifier`.
+
 ### Look up answers in the Oz book
 
 Install the optional answer reader dependency and start book lookup mode.
@@ -336,7 +348,7 @@ Issue numbers refer to the project bug review. Complete each stage in this order
 
 ### Remaining repairs in order
 
-1. **#1 Improve factual accuracy in trained chat.** Compact history enabled context-dependent replies. The broader coverage checkpoint answered 8/30 new first replies and 5/20 new follow-ups correctly, while earlier memory first replies fell from 7/18 to 3/18. The remaining work is to improve factual first replies across both sets and verify generalization on a fresh set of facts absent from supervised training. The latest unseen-fact score is 0/14. [Memory benchmark results](evaluations/oz_chat_compact_history_comparison.json) · [Fact coverage benchmark results](evaluations/oz_chat_fact_coverage_comparison.json)
+1. **#1 Improve factual accuracy in trained chat.** Compact history enabled context-dependent replies. The optional classifier improved first replies on both benchmarks by selecting answers learned during training. Generalization remains open at 0/16 on the latest fresh-fact test, and the generator alone still struggles on first replies. [First-reply and generalization results](evaluations/oz_chat_first_reply_generalization_comparison.json)
 2. **Improve book lookup on the misses from the fresh benchmark.** Review whether the retrieved passages contain the correct answer, then investigate when an incorrect first reply becomes the next turn’s subject. Use a new final set for the next tuning round. [Development questions](data/oz_book_lookup_dev.jsonl) · [Final questions](data/oz_book_lookup_test.jsonl)
 
 ### Cleanup follow-ups
