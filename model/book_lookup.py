@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from bisect import bisect_left, bisect_right
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 import hashlib
 from math import log1p
 from pathlib import Path
@@ -25,6 +25,8 @@ EXPANDED_MATCH_FRACTION = 0.75
 MIN_ANSWER_MARGIN = 2.0
 MIN_SINGLE_PASSAGE_MARGIN = 3.25
 ANSWER_AGREEMENT_BONUS = 0.5
+RETRIEVAL_SCORE_WEIGHT = 0.5
+ANSWER_SCORE_TOLERANCE = 0.02
 CHAPTER_HEADING_WEIGHT = 0.28
 
 CHAPTER_HEADING = re.compile(r'CHAPTER (\d+)\.', re.IGNORECASE)
@@ -231,6 +233,8 @@ class Passage:
     end_line: int
     text: str
     heading: str = ''
+    word_start: int = field(default=0, repr=False, compare=False)
+    sentence_starts: tuple[int, ...] = field(default=(), repr=False, compare=False)
 
 
 @dataclass(frozen=True)
@@ -245,6 +249,7 @@ class AnswerSpan:
     text: str
     margin: float
     context_end: int | None = None
+    start: int | None = None
 
 
 @dataclass(frozen=True)
@@ -302,9 +307,13 @@ def _passage_windows(text):
         for offset in range(0, len(words), PASSAGE_STEP):
             limit = min(offset + PASSAGE_WORDS, len(words))
             window = words[offset:limit]
-            passage = Passage(label, window[0][1], window[-1][1], ' '.join(word for word, _ in window), heading)
-            first = sentences[bisect_right(sentences, offset) - 1]
-            last = sentences[bisect_left(sentences, limit)]
+            first_index = bisect_right(sentences, offset) - 1
+            last_index = bisect_left(sentences, limit)
+            first, last = sentences[first_index], sentences[last_index]
+            passage = Passage(
+                label, window[0][1], window[-1][1], ' '.join(word for word, _ in window), heading,
+                word_start=offset, sentence_starts=tuple(sentences[first_index:last_index]),
+            )
             prefix = suffix = None
             if 0 < offset - first <= PASSAGE_CONTEXT_WORDS:
                 paragraph_end = min(paragraphs[bisect_right(paragraphs, offset)], limit)
@@ -361,12 +370,12 @@ class BookIndex:
         if not (prefix or suffix):
             return passage
         text = ' '.join(part for part in (prefix.text if prefix else '', passage.text, suffix.text if suffix else '') if part)
-        return Passage(
-            passage.section,
-            prefix.line if prefix else passage.start_line,
-            suffix.line if suffix else passage.end_line,
-            text,
-            passage.heading,
+        return replace(
+            passage,
+            start_line=prefix.line if prefix else passage.start_line,
+            end_line=suffix.line if suffix else passage.end_line,
+            text=text,
+            word_start=passage.word_start - (len(prefix.text.split()) if prefix else 0),
         )
 
     def search(self, question, previous_question='', *, limit=SEARCH_LIMIT):
@@ -433,8 +442,26 @@ class ExtractiveReader:
             finish = offsets[row, first + j, 1].item()
             margin = (score - start[0] - end[0]).item()
             context_end = offsets[row, last - 1, 1].item()
-            answers.append(AnswerSpan(passage.text[begin:finish].strip(), margin, context_end))
+            answers.append(AnswerSpan(passage.text[begin:finish].strip(), margin, context_end, start=begin))
         return answers
+
+
+def _sentence_start(passage, span):
+    if not passage.sentence_starts:
+        return None
+    start = passage.text.find(span.text) if span.start is None else span.start
+    word = passage.word_start + passage.text.count(' ', 0, start)
+    return passage.sentence_starts[bisect_right(passage.sentence_starts, word) - 1]
+
+
+def _independent_evidence(passage, span, other_passage, other_span):
+    if passage.section != other_passage.section:
+        return True
+    start = _sentence_start(passage, span)
+    other_start = _sentence_start(other_passage, other_span)
+    if start is not None and other_start is not None:
+        return start != other_start
+    return passage.end_line < other_passage.start_line or other_passage.end_line < passage.start_line
 
 
 def _select_answer(candidates, spans):
@@ -446,20 +473,26 @@ def _select_answer(candidates, spans):
         key = ' '.join(span.text.casefold().split()).strip(' .!?,')
         key = re.sub(r'^(?:a|an|the) ', '', key)
         if key:
-            strength = span.margin + 2 * score / strongest_search_score
+            strength = span.margin + RETRIEVAL_SCORE_WEIGHT * score / strongest_search_score
             answers.setdefault(key, []).append((strength, span, passage))
 
     ranked = []
     for matches in answers.values():
         strength, span, passage = max(matches, key=lambda match: match[0])
-        agrees = any(other_passage != passage for _, _, other_passage in matches)
+        agrees = any(_independent_evidence(passage, span, other_passage, other_span)
+                     for _, other_span, other_passage in matches)
         if agrees:
             strength += ANSWER_AGREEMENT_BONUS
         elif span.margin < MIN_SINGLE_PASSAGE_MARGIN:
             continue
-        ranked.append((strength, span.text, passage))
+        ranked.append((strength, span.margin, span.text, passage))
 
-    _, text, source = max(ranked, key=lambda match: match[0], default=(0.0, NO_ANSWER, None))
+    if not ranked:
+        return NO_ANSWER, None
+    strongest = max(match[0] for match in ranked)
+    # Keep almost equal search scores from overriding the reader's preference.
+    near_best = (match for match in ranked if strongest - match[0] <= ANSWER_SCORE_TOLERANCE)
+    _, _, text, source = max(near_best, key=lambda match: (match[1], match[0]))
     return text, source
 
 

@@ -1,5 +1,4 @@
 import argparse
-from dataclasses import asdict
 import hashlib
 import io
 import json
@@ -27,12 +26,22 @@ def generate_predictions(model, tokenizer, conversations, history_mode, max_toke
     return generate_session_predictions(session, conversations, history_mode)
 
 
+def passage_record(passage):
+    return {
+        'section': passage.section,
+        'start_line': passage.start_line,
+        'end_line': passage.end_line,
+        'text': passage.text,
+        'heading': passage.heading,
+    }
+
+
 def passage_trace_record(reply):
     trace = reply.passage_trace
     candidates = []
     selected_rank = None
     for rank, (passage, score) in enumerate(trace.candidates, start=1):
-        row = {'rank': rank, 'search_score': round(score, 6), **asdict(passage)}
+        row = {'rank': rank, 'search_score': round(score, 6), **passage_record(passage)}
         if passage == reply.source:
             selected_rank = rank
         if rank <= len(trace.spans):
@@ -73,7 +82,7 @@ def generate_session_predictions(session, conversations, history_mode):
                     'correct': True if matched else None,
                 }
                 if isinstance(reply, BookReply):
-                    row['source'] = asdict(reply.source) if reply.source else None
+                    row['source'] = passage_record(reply.source) if reply.source else None
                     row['source_supports_reply'] = None if reply.source else False
                     if reply.passage_trace is not None:
                         row['passage_trace'] = passage_trace_record(reply)

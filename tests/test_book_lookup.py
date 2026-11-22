@@ -90,7 +90,7 @@ The Wizard was born in Omaha.
         passages = [
             Passage('Chapter 1', 1, 2, 'An owl answered during rehearsal.'),
             Passage('Chapter 1', 3, 4, 'The fox answered for the council.'),
-            Passage('Chapter 1', 4, 5, 'When it convened, a fox answered for the council.'),
+            Passage('Chapter 1', 5, 6, 'When it convened, a fox answered for the council.'),
         ]
         index = Mock()
         index.search.return_value = [(passage, 2.0) for passage in passages]
@@ -106,7 +106,7 @@ The Wizard was born in Omaha.
 
     def test_a_weak_single_passage_answer_requires_agreement(self):
         first = Passage('Chapter 1', 1, 2, 'The fox answered.')
-        second = Passage('Chapter 1', 2, 3, 'At noon the fox answered.')
+        second = Passage('Chapter 1', 3, 4, 'At noon the fox answered.')
         index = Mock()
         reader = Mock()
         reader.read.return_value = [AnswerSpan('fox', 2.8), AnswerSpan('fox', 2.9)]
@@ -115,6 +115,23 @@ The Wizard was born in Omaha.
         index.search.return_value = [(first, 2.0), (first, 2.0)]
         self.assertEqual(session.reply('Who answered?').text, NO_ANSWER)
         index.search.return_value = [(first, 2.0), (second, 2.0)]
+        self.assertEqual(session.reply('Who answered?').text, 'fox')
+
+    @patch('model.book_lookup.PASSAGE_WORDS', 12)
+    @patch('model.book_lookup.PASSAGE_STEP', 5)
+    def test_overlapping_windows_vote_once_for_the_same_sentence(self):
+        book = ('CHAPTER 1.\n\nAn old owl sat nearby. The fox answered for the council. '
+                'Later another fox answered the same question. The crowd gathered.')
+        first, overlap, independent, *_ = BookIndex.from_text(book).passages
+        index = Mock()
+        reader = Mock()
+        session = BookSession(index, reader)
+        index.search.return_value = [(first, 2.0), (overlap, 2.0)]
+        reader.read.return_value = [AnswerSpan('fox', 2.8, start=p.text.index('fox')) for p in (first, overlap)]
+        self.assertEqual(session.reply('Who answered?').text, NO_ANSWER)
+
+        index.search.return_value.append((independent, 2.0))
+        reader.read.return_value.append(AnswerSpan('fox', 2.8, start=independent.text.index('fox')))
         self.assertEqual(session.reply('Who answered?').text, 'fox')
 
     def test_wider_search_reads_extra_passages_and_checks_their_topic(self):
