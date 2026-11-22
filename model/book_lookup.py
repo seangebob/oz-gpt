@@ -37,6 +37,7 @@ FOLLOW_UP = re.compile(
 PRONOUN = re.compile(r'\b(?:he|she|it|they|him|them|his|hers|its|their)\b', re.IGNORECASE)
 NAME = r"(?:(?i:the) )?[A-Z][\w'-]+(?: [A-Z][\w'-]+){0,3}"
 NAMED_SUBJECT = re.compile(rf'(?i:who|what) (?i:is|was) ({NAME})')
+QUESTION_ACTOR = re.compile(rf'(?i:what|where|when|why|how) (?i:did|does|was|is) ({NAME})(?= |$)')
 NAME_ANSWER = re.compile(r"(?:(?i:the) )?[A-Z][a-z][\w'-]*(?: [A-Z][a-z][\w'-]*){0,3}")
 PAST_ACTION = re.compile(rf'(?i:what did) (?P<actor>{NAME}) (?P<verb>[a-z]+)(?P<rest> .*)?')
 CHOICE_SUBJECT = re.compile(
@@ -87,6 +88,8 @@ def followup_question(question, previous_question, previous_answer):
     name = previous_answer.strip(' .?!"')
     if not actor and re.match(r'who\b', previous_question, re.IGNORECASE) and NAME_ANSWER.fullmatch(name):
         actor = name
+    if not actor and (subject := QUESTION_ACTOR.match(previous_question)):
+        actor = subject[1]
     if actor and re.fullmatch(r'why (?:that|this) name\W*', question, re.IGNORECASE):
         return f'Why was {actor} given that name?'
 
@@ -444,19 +447,28 @@ class BookSession:
         self.previous_answer = ''
 
     def remember(self, question, answer):
-        self.previous_question = question
+        self._remember_resolved(self._followup(question) or question, answer)
+
+    def _followup(self, question):
+        if self.previous_question and FOLLOW_UP.search(question):
+            return followup_question(question, self.previous_question, self.previous_answer)
+        return None
+
+    def _remember_resolved(self, question, answer):
+        # Reader-only context is already in the preceding question.
+        resolved, annotation, _ = question.partition(' (context: ')
+        self.previous_question = resolved + '?' if annotation else question
         self.previous_answer = answer
 
     def reply(self, question, *, remember=True):
         question = question.strip()
         if not question:
             raise ValueError('Empty prompt — please enter text')
-        history_used = bool(self.previous_question and FOLLOW_UP.search(question))
+        rewritten = self._followup(question)
+        history_used = rewritten is not None
         earlier_question = self.previous_question if history_used else ''
         earlier_answer = self.previous_answer if history_used else ''
-        reader_question = question
-        if history_used:
-            reader_question = followup_question(question, earlier_question, earlier_answer)
+        reader_question = rewritten or question
         candidates = self.index.search(reader_question, earlier_question)
         text, source = NO_ANSWER, None
         spans = []
@@ -479,5 +491,5 @@ class BookSession:
         if self.trace_passages:
             trace = PassageTrace(reader_question, earlier_question, earlier_answer, tuple(candidates), tuple(spans))
         if remember:
-            self.remember(question, text if source else '')
+            self._remember_resolved(reader_question, text if source else '')
         return BookReply(text, source, history_used, trace)

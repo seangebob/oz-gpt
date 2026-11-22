@@ -215,6 +215,25 @@ The Wizard was born in Omaha.
         index.search.assert_called_once_with('Where did Clara produce the item from?', previous)
         self.assertEqual(reply.passage_trace.previous_answer, 'exceedingly thoughtful')
 
+    def test_resolved_subject_survives_multiple_followups(self):
+        for history in ('generated', 'reference'):
+            with self.subTest(history=history):
+                session = BookSession(self.index, Mock(read=Mock(return_value=[])), trace_passages=True)
+                turns = [('What did Jim pull?', 'The buggy.'), ('Where did he go?', 'The ranch.'),
+                         ('Who went with him?', 'Zeb.')]
+                conversation = {'messages': [
+                    {'role': role, 'content': text}
+                    for question, answer in turns
+                    for role, text in [('user', question), ('assistant', answer)]
+                ]}
+                rows = generate_session_predictions(session, [(1, conversation)], history)
+                trace = rows[2]['passage_trace']
+                self.assertEqual(trace['previous_question'], 'Where did Jim go?')
+                self.assertEqual(trace['query'], 'Who went with Jim?')
+
+                session.reply('Who is Dorothy?')
+                self.assertEqual(session.reply('Where did she go?').passage_trace.query, 'Where did Dorothy go?')
+
     def test_followup_rewrites_use_the_question_for_people_and_objects(self):
         cases = [
             ('What did he fix?', 'What did the Tin Woodman use at the palace?', 'a branch',
