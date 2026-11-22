@@ -176,7 +176,7 @@ python -m pip install 'transformers>=4.45,<6'
 python -m model.chatbot --book
 ```
 
-Try `Where was the Wizard born?`. Book lookup searches the bundled text and uses chapter headings to help rank relevant passages. When a passage cuts through a paragraph that matches the question, lookup can include the rest of the sentence and extends the citation to cover it. To interpret a short follow-up, book lookup restates the question using the earlier action and the people or objects involved. The reader checks eight passages first and can search up to 24 when it finds no answer or a weak follow-up answer. Answers from the wider search need a stronger match to the question or a specific phrase already seen in the initial passages. Each extracted answer cites the chapter and source lines. When two passages suggest the same answer, it can win a close choice. The reader needs higher confidence to answer based on a single passage. It can still select a passage that answers the question poorly, so check the citation for unfamiliar facts.
+Try `Where was the Wizard born?`. Book lookup searches the bundled text and uses chapter headings to help rank relevant passages. When a passage cuts through a paragraph that matches the question, lookup can include the rest of the sentence and extends the citation to cover it. Short follow-ups use the earlier action and can carry a resolved subject across turns. The reader checks eight passages first and can search up to 24 when it finds no answer or a weak follow-up answer. Each extracted answer cites the chapter and source lines. Agreement across independent sentences can settle a close choice. Overlapping windows that contain the same sentence count once.
 
 The first run downloads the [MiniLM extractive answer reader](https://huggingface.co/deepset/minilm-uncased-squad2). The reader runs locally on CPU. `--chat` continues to use the Oz checkpoint trained in this project.
 
@@ -211,6 +211,14 @@ Use `--book` to evaluate book lookup against the same conversations. Add `--chec
 ```bash
 python -m model.chat_evaluation run --book --checkpoint model/model-chat-retrained.pth --output oz-book-comparison.json
 ```
+
+Evaluate book lookup on the fresh 29-turn benchmark from the repo root.
+
+```bash
+python -m model.chat_evaluation run --book --test-data data/oz_book_lookup_test.jsonl --output oz-book-fresh.json
+```
+
+After the four book lookup repairs, first replies scored 12/20 and later turns improved from 4/9 to 5/9. The context-dependent subset scored 4/8 in both runs. One standalone trial question improved when it stopped using the previous turn. Correct answers with supporting citations rose from 15/29 to 16/29, and abstentions fell from seven to six. The original regression set stayed at 20/32 for correct, cited answers. [Reviewed results and per-turn citations](evaluations/oz_book_lookup_repair_comparison.json)
 
 To investigate missed replies, add `--trace-passages` to save the ranked passages, the search query after follow-up rewriting, and the passage the reader selected.
 
@@ -287,17 +295,12 @@ Issue numbers refer to the project bug review. Complete each stage in this order
 1. **Make base training safe · complete.** **#4** sample each sequence across its full split → **#7** give evaluation frequency and batch count separate flags → **#6** save training runs to new checkpoint paths.
 2. **Retrain the base model · complete.** **#5** compared the samplers and model sizes on the same validation split and saved the selected base weights at `model/model-base-retrained.pth`. [Base retraining results](evaluations/oz_base_retraining_comparison.json)
 3. **Rebuild and evaluate the trained chat model.** **#2** held out complete conversation families and removed validation reply overlap → **#8** shared history formatting between training and live chat → **#3** trained and published a fresh checkpoint → **#1** expanded training and tested new phrasings and unseen facts separately. Unseen-fact accuracy remains open at 0/14. [Reviewed chat comparison](evaluations/oz_chat_repair_comparison.json) · [Fact expansion results](evaluations/oz_chat_fact_expansion_comparison.json)
-4. **Improve book lookup and check it on fresh questions.** **#9** → **#11** → **#12** → **#10**. Use the order below.
+4. **Repair book lookup and check it on fresh questions · complete.** **#9** retained the resolved subject → **#11** repaired question rewriting → **#12** normalized common verb forms → **#10** counted evidence by sentence and checked the Hungry Tiger citation. [Fresh and regression benchmarks](evaluations/oz_book_lookup_repair_comparison.json)
 
 ### Remaining repairs in order
 
 1. **#1 Improve factual accuracy in trained chat.** First retain enough of the previous question and answer for follow-ups and check a development set where the same short question has different answers. The experiment packed history on 0 of 4 known-fact paraphrase follow-ups. Then compare additional paraphrases and broader supervised fact coverage across multiple seeds. Keep a fresh unseen-fact test for the next final comparison and score first replies and follow-ups separately.
-2. **Prepare fresh book lookup questions · complete.** The 20-turn development set and the 29-turn final set were frozen before tuning. Both include book line references for each expected answer. The original 32-turn benchmark remains the regression check. [Development questions](data/oz_book_lookup_dev.jsonl) · [Final questions](data/oz_book_lookup_test.jsonl)
-3. **#9 Retain the resolved subject across turns.** Test conversations with at least three turns where a later question refers back to a named character or event.
-4. **#11 Repair question rewriting.** Resolve `her` and lowercase names, handle irregular verbs such as `see` and `go`, and recognize short follow-ups such as “Why?” and “What about Zeb?” Check standalone questions that contain pronouns.
-5. **#12 Normalize search terms.** Make forms such as `rescue` and `rescued`, `live` and `lived`, and `name` and `named` match. Check that nearby unrelated words stay distinct.
-6. **#10 Count independent evidence.** Count a sentence shared by overlapping passages once. Retune answer selection on the development set and check that the Hungry Tiger answer still cites the jury’s appointment of its spokesman.
-7. **Score book lookup on the fresh test set.** Record factual first replies, follow-up accuracy, citation support, and abstentions.
+2. **Improve book lookup on the misses from the fresh benchmark.** Review whether the retrieved passages contain the correct answer, then investigate when an incorrect first reply becomes the next turn’s subject. Use a new final set for the next tuning round. [Development questions](data/oz_book_lookup_dev.jsonl) · [Final questions](data/oz_book_lookup_test.jsonl)
 
 ### Cleanup follow-ups
 
