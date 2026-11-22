@@ -269,9 +269,23 @@ Issue numbers refer to the project bug review. Complete each stage in this order
 1. **Make base training safe · complete.** **#4** sample each sequence across its full split → **#7** give evaluation frequency and batch count separate flags → **#6** save training runs to new checkpoint paths.
 2. **Retrain the base model · complete.** **#5** compared the samplers and model sizes on the same validation split and saved the selected base weights at `model/model-base-retrained.pth`. [Base retraining results](evaluations/oz_base_retraining_comparison.json)
 3. **Rebuild and evaluate the trained chat model.** **#2** held out complete conversation families and removed validation reply overlap → **#8** shared history formatting between training and live chat → **#3** trained and published a fresh checkpoint → **#1** measured factual replies and follow-ups. Factual accuracy remains open at 0/32. [Reviewed chat comparison](evaluations/oz_chat_repair_comparison.json)
-4. **Improve book lookup and check it on fresh questions.** **#9** carry the resolved subject through multiple turns → **#11** fix pronouns, lowercase names, verb forms, and follow-up detection → **#12** normalize word variants for search → **#10** count distinct evidence for agreement and retune on development questions. Set aside fresh test questions before tuning and use them for the final score.
+4. **Improve book lookup and check it on fresh questions.** **#9** → **#11** → **#12** → **#10**. Use the order below.
 
-Keep the local `oz-*.json` reports for review. Handle the cleanup of tracked generated files and obsolete files, the corpus extraction fixes, and the remaining device and vocabulary work separately.
+### Remaining repairs in order
+
+1. **#1 Improve factual accuracy in trained chat.** Expand book-grounded training examples and keep fact families together when splitting the data. Develop on one set and reserve a separate set of unseen facts for final scoring. Track familiar prompts, new phrasings of known facts, and unseen facts separately. Compare checkpoints by reviewed factual first replies and follow-ups, alongside reply loss and clean stops.
+2. **Prepare fresh book lookup questions.** Freeze a development set and a separate final test set before tuning. Keep the existing 32-turn benchmark for regression checks.
+3. **#9 Retain the resolved subject across turns.** Test conversations with at least three turns where a later question refers back to a named character or event.
+4. **#11 Repair question rewriting.** Resolve `her` and lowercase names, handle irregular verbs such as `see` and `go`, and recognize short follow-ups such as “Why?” and “What about Zeb?” Check standalone questions that contain pronouns.
+5. **#12 Normalize search terms.** Make forms such as `rescue` and `rescued`, `live` and `lived`, and `name` and `named` match. Check that nearby unrelated words stay distinct.
+6. **#10 Count independent evidence.** Count a sentence shared by overlapping passages once. Retune answer selection on the development set and check that the Hungry Tiger answer still cites the jury’s appointment of its spokesman.
+7. **Score book lookup on the fresh test set.** Record factual first replies, follow-up accuracy, citation support, and abstentions.
+
+### Cleanup follow-ups
+
+- Add ignore rules for Python bytecode, `.DS_Store`, and notebook checkpoints. Remove the 14 tracked `.pyc` files, the tracked `.DS_Store`, and the tracked files under `extra/.ipynb_checkpoints/` from Git.
+- Fix `model/data_extract.py` so one `.xz` shard can produce usable training and validation splits. Connect the extracted text and vocabulary to the optional custom-corpus training workflow. Remove the committed empty outputs and retire the old Python source stored as `model/model-01.pkl`.
+- Plan removal of the book’s byte-order mark together with vocabulary migration and checkpoint retraining. Keep the local `oz-*.json` reports for manual review. Apple MPS support for base training shipped with Step 2.
 
 ## Future Improvements
 
