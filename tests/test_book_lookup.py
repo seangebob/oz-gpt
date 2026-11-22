@@ -1,7 +1,9 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from model.book_lookup import AnswerSpan, BookIndex, BookSession, NO_ANSWER, Passage, book_passages, followup_question
+from model.book_lookup import (
+    AnswerSpan, BookIndex, BookSession, NO_ANSWER, Passage, book_passages, followup_question, search_terms,
+)
 from model.chat_evaluation import generate_session_predictions, grounded_correctness, passage_review_counts
 
 
@@ -33,6 +35,18 @@ class BookLookupTests(unittest.TestCase):
         relevant = Passage('Chapter 2', 30, 32, 'Zeb stopped on the road.', 'ZEB RETURNS TO THE RANCH')
         index = BookIndex([unrelated, relevant])
         self.assertEqual(index.search('Where did Zeb return?')[0][0], relevant)
+
+    def test_search_matches_silent_e_verb_forms_and_keeps_unrelated_words_distinct(self):
+        variants = ('rescue rescues rescued rescuing', 'live lives lived living', 'name names named naming')
+        for words in variants:
+            with self.subTest(words=words):
+                self.assertEqual(set(search_terms(words)), {words.split()[0]})
+        self.assertTrue({'rescue', 'live', 'name'}.isdisjoint(search_terms('rescuer lively namesake')))
+
+        relevant = Passage('Chapter 1', 3, 4, 'Eureka hurried to the rescue.')
+        unrelated = Passage('Chapter 2', 5, 6, 'A rescuer was passing.')
+        self.assertEqual([passage for passage, _ in BookIndex([unrelated, relevant]).search('Who rescued her?')],
+                         [relevant])
 
     @patch('model.book_lookup.PASSAGE_WORDS', 10)
     @patch('model.book_lookup.PASSAGE_STEP', 8)

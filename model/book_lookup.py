@@ -79,11 +79,20 @@ STOP_WORDS = set(
     'how i in is it its me of on or she should that the their them then there these they this those '
     'to too us was were what when where which who whom why will with would you your'.split()
 )
+SILENT_E_VERBS = 'arrive believe escape live move name notice raise release rescue save serve'.split()
+VERB_VARIANTS = {
+    variant: verb
+    for verb in SILENT_E_VERBS
+    for variant in (verb + 'd', verb + 's', verb[:-1] + 'ing')
+}
 
 
 def search_terms(text):
     for word in re.findall(r'[a-z0-9]+', text.casefold()):
         if len(word) < 2 or word in STOP_WORDS:
+            continue
+        if word in VERB_VARIANTS:
+            yield VERB_VARIANTS[word]
             continue
         for suffix in ('ing', 'ed', 's'):
             if len(word) > len(suffix) + 3 and word.endswith(suffix):
