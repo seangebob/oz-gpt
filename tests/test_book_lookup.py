@@ -305,6 +305,8 @@ The Wizard was born in Omaha.
             ('Where did he go?', 'What did jim pull?', 'Where did jim go?'),
             ('Where was it?', 'What did jim see?', 'Where was the item jim saw?'),
             ('Was it far?', 'What did the wizard go to see?', 'Was the item the wizard went to see far?'),
+            ('What formed its tail?', 'What were the Sawhorse’s eyes made from?',
+             "What formed the Sawhorse's tail?"),
             ('Why?', 'Who shod the Sawhorse with gold?', 'Why did someone shoe the Sawhorse with gold?'),
             ('What about Zeb?', "What color was Dorothy's face under the suns?",
              "What color was Zeb's face under the suns?"),

@@ -128,7 +128,7 @@ def _uses_history(question):
 
 
 def followup_question(question, previous_question, previous_answer):
-    previous_question = previous_question.rstrip('?.!')
+    previous_question = previous_question.replace('’', "'").rstrip('?.!')
     named = NAMED_SUBJECT.fullmatch(previous_question)
     actor = named[1] if named else ''
     name = previous_answer.strip(' .?!"')
