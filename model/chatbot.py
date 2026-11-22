@@ -7,7 +7,7 @@ from model.book_lookup import BookSession
 from model.chat_data import CHAT_CHECKPOINT, load_chat_checkpoint
 from model.chat_session import ChatSession, DEFAULT_MAX_TOKENS
 from model.model import (
-    GPTLanguageModel, encode, decode, get_device, load_base_model, MODEL_PATH,
+    encode, decode, get_device, load_base_model, model_from_state, MODEL_PATH,
 )
 
 # CLI arguments
@@ -16,7 +16,7 @@ parser.add_argument('--max_tokens', type=int, default=DEFAULT_MAX_TOKENS,
                     help=f'Number of tokens to generate per prompt (default: {DEFAULT_MAX_TOKENS})')
 modes = parser.add_mutually_exclusive_group()
 modes.add_argument('--chat', nargs='?', const=CHAT_CHECKPOINT, type=Path, metavar='CHECKPOINT',
-                   help='Use an Oz chat checkpoint (default path: model/model-chat.pth)')
+                   help='Use an Oz chat checkpoint (default path: model/model-chat-retrained.pth)')
 modes.add_argument('--book', action='store_true', help='Look up answers in the bundled Oz book')
 modes.add_argument('--checkpoint', type=Path, help='Use a different base checkpoint for text completion')
 args = parser.parse_args()
@@ -46,8 +46,7 @@ else:
     try:
         if args.chat:
             state, tokenizer = load_chat_checkpoint(checkpoint)
-            model = GPTLanguageModel(len(tokenizer.characters))
-            model.load_state_dict(state)
+            model = model_from_state(state, len(tokenizer.characters))
         else:
             model = load_base_model(checkpoint)
         model.to(device)

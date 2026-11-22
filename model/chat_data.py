@@ -1,21 +1,22 @@
 import json
 from pathlib import Path
+from textwrap import shorten
 
 import torch
 
-from model.model import block_size, dropout, n_embd, n_head, n_layer
+from model.model import block_size, dropout, model_dimensions, n_embd
 
 
-CHAT_CHECKPOINT = Path(__file__).with_name('model-chat.pth')
+CHAT_CHECKPOINT = Path(__file__).with_name('model-chat-retrained.pth')
+CHAT_TRAIN_OUTPUT = Path(__file__).with_name('model-chat-experiment.pth')
 CHAT_FORMAT_VERSION = 1
+REPLY_RESERVE = 32
 END_MARKER = '[END]'
 END_OF_TURN = '\n' + END_MARKER
 IGNORE_TARGET = -100  # PyTorch cross-entropy's default ignore_index
 MODEL_CONFIG = {
     'block_size': block_size,
     'n_embd': n_embd,
-    'n_head': n_head,
-    'n_layer': n_layer,
     'dropout': dropout,
 }
 
@@ -60,6 +61,21 @@ def with_history(prompt, history, max_prompt_chars):
     return prompt
 
 
+def pack_history(prompt, history, budget):
+    formatted = with_history(prompt, [format_turn(*turn) for turn in history], budget)
+    if formatted != prompt or not history:
+        return formatted, False
+
+    user_text, previous_reply = history[-1]
+    reply_budget = budget - len(prompt) - len(format_turn(user_text, ''))
+    if reply_budget <= 0:
+        return prompt, False
+    shortened = shorten(previous_reply, width=reply_budget, placeholder='', break_on_hyphens=False)
+    if not shortened:
+        return prompt, False
+    return format_turn(user_text, shortened) + prompt, True
+
+
 def _message_text(message, role):
     if not isinstance(message, dict) or message.get('role') != role:
         raise ValueError(f'Expected a message with role {role!r}.')
@@ -87,13 +103,14 @@ def _conversation_examples(conversation, tokenizer):
         # Shifting by one yields at most block_size inputs and targets.
         if len(prompt) + len(reply) > block_size + 1:
             raise ValueError(f'Turn {turn} exceeds the {block_size}-character context. Shorten the prompt or reply.')
-        prompt = with_history(prompt, history, block_size + 1 - len(reply))
+        reserve = min(block_size + 1 - len(prompt), max(REPLY_RESERVE, len(reply)))
+        prompt, _ = pack_history(prompt, history, block_size + 1 - reserve)
 
         tokens = tokenizer.encode(prompt + reply)
         # The final prompt character predicts the first character of the reply.
         targets = [IGNORE_TARGET] * (len(prompt) - 1) + tokens[len(prompt):]
         yield tokens[:-1], targets
-        history.append(format_turn(user_text, assistant_text))
+        history.append((user_text, assistant_text))
 
 
 def read_conversations(source, path):
@@ -138,7 +155,9 @@ def load_chat_checkpoint(path):
     state = torch.load(path, map_location='cpu', weights_only=True)
     if not isinstance(state, dict) or state.get('chat_format') != CHAT_FORMAT_VERSION:
         raise ValueError('Expected a chat checkpoint created by model.chat_training.')
-    if state.get('model_config') != MODEL_CONFIG:
+    weights = state.get('model_state_dict')
+    heads, layers = model_dimensions(weights)
+    if state.get('model_config') != {**MODEL_CONFIG, 'n_head': heads, 'n_layer': layers}:
         raise ValueError('The checkpoint architecture differs from model/model.py.')
     tokenizer = ChatTokenizer(state.get('characters'))
-    return state['model_state_dict'], tokenizer
+    return weights, tokenizer

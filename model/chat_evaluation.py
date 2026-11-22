@@ -14,7 +14,7 @@ from model.chat_data import (
 )
 from model.chat_session import ChatSession, DEFAULT_MAX_TOKENS, HISTORY_PACKING, REPLY_RESERVE
 from model.chat_training import DATA_DIR, evaluate
-from model.model import GPTLanguageModel, MODEL_PATH, block_size, chars
+from model.model import MODEL_PATH, RETRAINED_BASE_PATH, block_size, chars, model_from_state
 
 
 HISTORY_MODES = ('generated', 'none', 'reference')
@@ -217,13 +217,12 @@ def run_evaluation(args):
     for path in checkpoints:
         checkpoint_bytes = path.read_bytes()
         source = io.BytesIO(checkpoint_bytes)
-        if path.resolve() == Path(MODEL_PATH).resolve():
+        if path.resolve() in {Path(MODEL_PATH).resolve(), Path(RETRAINED_BASE_PATH).resolve()}:
             state = torch.load(source, map_location='cpu', weights_only=True)
             tokenizer = ChatTokenizer(chars)
         else:
             state, tokenizer = load_chat_checkpoint(source)
-        model = GPTLanguageModel(len(tokenizer.characters))
-        model.load_state_dict(state)
+        model = model_from_state(state, len(tokenizer.characters))
         examples = encode_conversations(conversations, tokenizer, args.test_data)
         loss = evaluate(model, examples, batch_size=8, device='cpu')
         for history in history_modes:

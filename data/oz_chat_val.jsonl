@@ -1,8 +1,24 @@
-{"messages":[{"role":"user","content":"Hello there!"},{"role":"assistant","content":"Hello! Ask me about Oz."}]}
-{"messages":[{"role":"user","content":"Who wrote Dorothy's book?"},{"role":"assistant","content":"L. Frank Baum wrote it."}]}
-{"messages":[{"role":"user","content":"What's the kitten's name?"},{"role":"assistant","content":"Eureka is Dorothy's kitten."},{"role":"user","content":"What kind?"},{"role":"assistant","content":"A kitten."}]}
-{"messages":[{"role":"user","content":"Name the cab-horse."},{"role":"assistant","content":"Jim is the cab-horse."},{"role":"user","content":"What kind?"},{"role":"assistant","content":"A horse."}]}
-{"messages":[{"role":"user","content":"Thanks for the answers."},{"role":"assistant","content":"You're welcome!"}]}
-{"messages":[{"role":"user","content":"What caused the fall?"},{"role":"assistant","content":"An earthquake opens a crack in the ground."}]}
-{"messages":[{"role":"user","content":"What is a Mangaboo?"},{"role":"assistant","content":"The Mangaboos are vegetable people."}]}
-{"messages":[{"role":"user","content":"Who's Jim?"},{"role":"assistant","content":"Jim is the cab-horse."},{"role":"user","content":"What sort of horse?"},{"role":"assistant","content":"A horse."}]}
+{"messages":[{"role":"user","content":"Where had Dorothy traveled with Uncle Henry?"},{"role":"assistant","content":"Australia."}]}
+{"messages":[{"role":"user","content":"What country did Dorothy visit before California?"},{"role":"assistant","content":"Australia."}]}
+{"messages":[{"role":"user","content":"Who is Gwig?"},{"role":"assistant","content":"Gwig is the Mangaboos' sorcerer."}]}
+{"messages":[{"role":"user","content":"Name the Mangaboos' sorcerer."},{"role":"assistant","content":"Gwig is the Mangaboos' sorcerer."}]}
+{"messages":[{"role":"user","content":"Where is the Braided Man's factory?"},{"role":"assistant","content":"On Pyramid Mountain."}]}
+{"messages":[{"role":"user","content":"On what mountain does the Braided Man work?"},{"role":"assistant","content":"On Pyramid Mountain."}]}
+{"messages":[{"role":"user","content":"What does the Braided Man make for silk gowns?"},{"role":"assistant","content":"Rustles."}]}
+{"messages":[{"role":"user","content":"What is in the box meant for silk dresses?"},{"role":"assistant","content":"Rustles."}]}
+{"messages":[{"role":"user","content":"What are the Gargoyles made of?"},{"role":"assistant","content":"Wood."}]}
+{"messages":[{"role":"user","content":"What material forms the Gargoyles' bodies?"},{"role":"assistant","content":"Wood."}]}
+{"messages":[{"role":"user","content":"What frightens the Gargoyles most?"},{"role":"assistant","content":"Noise frightens them."}]}
+{"messages":[{"role":"user","content":"What do the wooden Gargoyles dread?"},{"role":"assistant","content":"Noise frightens them."}]}
+{"messages":[{"role":"user","content":"How old does a dragonette say it is?"},{"role":"assistant","content":"Sixty-six years old."}]}
+{"messages":[{"role":"user","content":"How many years old are the young dragons?"},{"role":"assistant","content":"Sixty-six years old."}]}
+{"messages":[{"role":"user","content":"When does Ozma check the picture for Dorothy?"},{"role":"assistant","content":"At four o'clock each day."}]}
+{"messages":[{"role":"user","content":"At what hour does Ozma look for Dorothy?"},{"role":"assistant","content":"At four o'clock each day."}]}
+{"messages":[{"role":"user","content":"Where was the Wizard born?"},{"role":"assistant","content":"Omaha."}]}
+{"messages":[{"role":"user","content":"What city is the Wizard from originally?"},{"role":"assistant","content":"Omaha."}]}
+{"messages":[{"role":"user","content":"What covers Gwig's head and hands?"},{"role":"assistant","content":"Sharp thorns."}]}
+{"messages":[{"role":"user","content":"What powers Tik-tok?"},{"role":"assistant","content":"Clockwork."}]}
+{"messages":[{"role":"user","content":"Who is the Mangaboo sorcerer?"},{"role":"assistant","content":"Gwig."},{"role":"user","content":"Where does he live?"},{"role":"assistant","content":"In the glass city."}]}
+{"messages":[{"role":"user","content":"Who makes rustles?"},{"role":"assistant","content":"The Braided Man."},{"role":"user","content":"Where does he live?"},{"role":"assistant","content":"On Pyramid Mountain."}]}
+{"messages":[{"role":"user","content":"Where did young Oz work?"},{"role":"assistant","content":"At a circus."},{"role":"user","content":"What was his act?"},{"role":"assistant","content":"Ventriloquism tricks."}]}
+{"messages":[{"role":"user","content":"Who is Tik-tok?"},{"role":"assistant","content":"A machine man."},{"role":"user","content":"What is he made of?"},{"role":"assistant","content":"Copper."}]}

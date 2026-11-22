@@ -201,10 +201,6 @@
 {"messages":[{"role":"user","content":"Name the author of Dorothy and the Wizard in Oz."},{"role":"assistant","content":"L. Frank Baum wrote it."}]}
 {"messages":[{"role":"user","content":"Who pays Zeb for ranch work?"},{"role":"assistant","content":"Uncle Bill Hugson."}]}
 {"messages":[{"role":"user","content":"Who hired Zeb to work at the ranch?"},{"role":"assistant","content":"Uncle Bill Hugson."}]}
-{"messages":[{"role":"user","content":"Where had Dorothy traveled with Uncle Henry?"},{"role":"assistant","content":"Australia."}]}
-{"messages":[{"role":"user","content":"What country did Dorothy visit before California?"},{"role":"assistant","content":"Australia."}]}
-{"messages":[{"role":"user","content":"Who is Gwig?"},{"role":"assistant","content":"Gwig is the Mangaboos' sorcerer."}]}
-{"messages":[{"role":"user","content":"Name the Mangaboos' sorcerer."},{"role":"assistant","content":"Gwig is the Mangaboos' sorcerer."}]}
 {"messages":[{"role":"user","content":"What are the Mangaboo houses made of?"},{"role":"assistant","content":"They are made of glass."}]}
 {"messages":[{"role":"user","content":"What material forms the houses in the first underground city?"},{"role":"assistant","content":"They are made of glass."}]}
 {"messages":[{"role":"user","content":"How did the Wizard descend to the glass city?"},{"role":"assistant","content":"A balloon carried him down."}]}
@@ -217,47 +213,27 @@
 {"messages":[{"role":"user","content":"What happens when someone eats a dama?"},{"role":"assistant","content":"It makes whoever eats it invisible."}]}
 {"messages":[{"role":"user","content":"What animals threaten the people of Voe?"},{"role":"assistant","content":"Invisible bears."}]}
 {"messages":[{"role":"user","content":"What predators roam the Valley of Voe?"},{"role":"assistant","content":"Invisible bears."}]}
-{"messages":[{"role":"user","content":"Where is the Braided Man's factory?"},{"role":"assistant","content":"On Pyramid Mountain."}]}
-{"messages":[{"role":"user","content":"On what mountain does the Braided Man work?"},{"role":"assistant","content":"On Pyramid Mountain."}]}
-{"messages":[{"role":"user","content":"What does the Braided Man make for silk gowns?"},{"role":"assistant","content":"Rustles."}]}
-{"messages":[{"role":"user","content":"What is in the box meant for silk dresses?"},{"role":"assistant","content":"Rustles."}]}
-{"messages":[{"role":"user","content":"What are the Gargoyles made of?"},{"role":"assistant","content":"Wood."}]}
-{"messages":[{"role":"user","content":"What material forms the Gargoyles' bodies?"},{"role":"assistant","content":"Wood."}]}
-{"messages":[{"role":"user","content":"What frightens the Gargoyles most?"},{"role":"assistant","content":"Noise frightens them."}]}
-{"messages":[{"role":"user","content":"What do the wooden Gargoyles dread?"},{"role":"assistant","content":"Noise frightens them."}]}
 {"messages":[{"role":"user","content":"How did Jim and the buggy escape the Gargoyles?"},{"role":"assistant","content":"They used the Gargoyles' wooden wings."}]}
 {"messages":[{"role":"user","content":"What let the buggy fly away from the Gargoyles?"},{"role":"assistant","content":"They used the Gargoyles' wooden wings."}]}
-{"messages":[{"role":"user","content":"How old does a dragonette say it is?"},{"role":"assistant","content":"Sixty-six years old."}]}
-{"messages":[{"role":"user","content":"How many years old are the young dragons?"},{"role":"assistant","content":"Sixty-six years old."}]}
-{"messages":[{"role":"user","content":"When does Ozma check the picture for Dorothy?"},{"role":"assistant","content":"At four o'clock each day."}]}
-{"messages":[{"role":"user","content":"At what hour does Ozma look for Dorothy?"},{"role":"assistant","content":"At four o'clock each day."}]}
-{"messages":[{"role":"user","content":"Where was the Wizard born?"},{"role":"assistant","content":"Omaha."}]}
-{"messages":[{"role":"user","content":"What city is the Wizard from originally?"},{"role":"assistant","content":"Omaha."}]}
 {"messages":[{"role":"user","content":"Who rules Oz in this book?"},{"role":"assistant","content":"Ozma."}]}
 {"messages":[{"role":"user","content":"Who is the ruler of the Emerald City?"},{"role":"assistant","content":"Ozma."}]}
 {"messages":[{"role":"user","content":"Who defends Eureka at the trial?"},{"role":"assistant","content":"The Tin Woodman."}]}
 {"messages":[{"role":"user","content":"Who speaks in Eureka's defense?"},{"role":"assistant","content":"The Tin Woodman."}]}
-{"messages":[{"role":"user","content":"What covers Gwig's head and hands?"},{"role":"assistant","content":"Sharp thorns."}]}
 {"messages":[{"role":"user","content":"How many suns light the Mangaboo country?"},{"role":"assistant","content":"Six colored suns."}]}
 {"messages":[{"role":"user","content":"Who took the sleeping Gargoyles' wings?"},{"role":"assistant","content":"Zeb, with Eureka's help."}]}
 {"messages":[{"role":"user","content":"Who is Eureka's public accuser?"},{"role":"assistant","content":"The Woggle-Bug."}]}
 {"messages":[{"role":"user","content":"How many piglets ran around the Wizard's feet?"},{"role":"assistant","content":"Nine."}]}
-{"messages":[{"role":"user","content":"What powers Tik-tok?"},{"role":"assistant","content":"Clockwork."}]}
 {"messages":[{"role":"user","content":"How does the Sawhorse come to life?"},{"role":"assistant","content":"Ozma sprinkles him with magic powder."}]}
 {"messages":[{"role":"user","content":"What is a dragonette?"},{"role":"assistant","content":"A young dragon."}]}
 {"messages":[{"role":"user","content":"Who pulls Dorothy's buggy?"},{"role":"assistant","content":"Jim."},{"role":"user","content":"Is it made of wood?"},{"role":"assistant","content":"No. Jim is a real horse."}]}
 {"messages":[{"role":"user","content":"Ozma rides what horse?"},{"role":"assistant","content":"The Sawhorse."},{"role":"user","content":"Is it made of wood?"},{"role":"assistant","content":"Yes. It's wooden."}]}
-{"messages":[{"role":"user","content":"Who is the Mangaboo sorcerer?"},{"role":"assistant","content":"Gwig."},{"role":"user","content":"Where does he live?"},{"role":"assistant","content":"In the glass city."}]}
-{"messages":[{"role":"user","content":"Who makes rustles?"},{"role":"assistant","content":"The Braided Man."},{"role":"user","content":"Where does he live?"},{"role":"assistant","content":"On Pyramid Mountain."}]}
 {"messages":[{"role":"user","content":"What do Voe bears eat?"},{"role":"assistant","content":"Dama fruit."},{"role":"user","content":"How does that help?"},{"role":"assistant","content":"It makes them invisible."}]}
 {"messages":[{"role":"user","content":"What do Gargoyles wear?"},{"role":"assistant","content":"Wings."},{"role":"user","content":"How does that help?"},{"role":"assistant","content":"The wings let them fly."}]}
 {"messages":[{"role":"user","content":"Who did Dorothy pick?"},{"role":"assistant","content":"The Princess."},{"role":"user","content":"What does she rule?"},{"role":"assistant","content":"The Mangaboos."}]}
 {"messages":[{"role":"user","content":"Who is Ozma?"},{"role":"assistant","content":"Dorothy's friend."},{"role":"user","content":"What does she rule?"},{"role":"assistant","content":"The Land of Oz."}]}
-{"messages":[{"role":"user","content":"Where did young Oz work?"},{"role":"assistant","content":"At a circus."},{"role":"user","content":"What was his act?"},{"role":"assistant","content":"Ventriloquism tricks."}]}
 {"messages":[{"role":"user","content":"What is the first city made of?"},{"role":"assistant","content":"Glass."},{"role":"user","content":"Who lives there?"},{"role":"assistant","content":"The Mangaboos."}]}
 {"messages":[{"role":"user","content":"Which valley is past the tunnel?"},{"role":"assistant","content":"Voe."},{"role":"user","content":"Who lives there?"},{"role":"assistant","content":"Invisible people."}]}
 {"messages":[{"role":"user","content":"What did Zeb fetch for Jim?"},{"role":"assistant","content":"Gargoyle wings."},{"role":"user","content":"How many?"},{"role":"assistant","content":"Eight."}]}
 {"messages":[{"role":"user","content":"What did the Wizard conjure?"},{"role":"assistant","content":"Tiny piglets."},{"role":"user","content":"How many?"},{"role":"assistant","content":"Nine."}]}
 {"messages":[{"role":"user","content":"Who went on trial in Oz?"},{"role":"assistant","content":"Eureka."},{"role":"user","content":"What was the charge?"},{"role":"assistant","content":"Eating Ozma's piglet."}]}
 {"messages":[{"role":"user","content":"What are dragonettes?"},{"role":"assistant","content":"Young dragons."},{"role":"user","content":"Were they hungry?"},{"role":"assistant","content":"Yes, very hungry."}]}
-{"messages":[{"role":"user","content":"Who is Tik-tok?"},{"role":"assistant","content":"A machine man."},{"role":"user","content":"What is he made of?"},{"role":"assistant","content":"Copper."}]}

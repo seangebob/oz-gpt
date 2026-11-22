@@ -1,15 +1,13 @@
 from collections import deque
 from dataclasses import dataclass
-from textwrap import shorten
 
 import torch
 
-from model.chat_data import END_MARKER, END_OF_TURN, format_prompt, format_turn, with_history
+from model.chat_data import END_MARKER, END_OF_TURN, REPLY_RESERVE, format_prompt, format_turn, pack_history
 from model.model import block_size
 
 
 DEFAULT_MAX_TOKENS = 150
-REPLY_RESERVE = 32  # Character slots for a short reply, including its end marker.
 HISTORY_PACKING = 'shorten_latest_reply_if_needed'
 
 
@@ -38,21 +36,6 @@ class ChatSession:
         while len(self.history) > 1 and sum(len(format_turn(*turn)) for turn in self.history) > block_size:
             self.history.popleft()
 
-    def _pack_history(self, prompt, budget):
-        turns = [format_turn(*turn) for turn in self.history]
-        formatted = with_history(prompt, turns, budget)
-        if formatted != prompt or not self.history:
-            return formatted, False
-
-        user_text, previous_reply = self.history[-1]
-        reply_budget = budget - len(prompt) - len(format_turn(user_text, ''))
-        if reply_budget <= 0:
-            return prompt, False
-        shortened = shorten(previous_reply, width=reply_budget, placeholder='', break_on_hyphens=False)
-        if not shortened:
-            return prompt, False
-        return format_turn(user_text, shortened) + prompt, True
-
     @torch.inference_mode()
     def reply(self, user_text, *, remember=True):
         user_text = user_text.strip()
@@ -66,7 +49,7 @@ class ChatSession:
         if remaining <= len(self.stop_ids):
             raise ValueError('Prompt is too long for the chat context. Try a shorter message.')
         reserve = min(self.max_tokens, REPLY_RESERVE, remaining)
-        formatted, compacted = self._pack_history(prompt, block_size + 1 - reserve)
+        formatted, compacted = pack_history(prompt, self.history, block_size + 1 - reserve)
         token_ids = self.tokenizer.encode(formatted)
         remaining = block_size + 1 - len(token_ids)
         context = torch.tensor([token_ids], dtype=torch.long, device=self.device)

@@ -13,6 +13,7 @@ dropout = 0.2
 
 # Path to the saved model weights
 MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "model-01.pth")
+RETRAINED_BASE_PATH = os.path.join(os.path.dirname(MODEL_PATH), "model-base-retrained.pth")
 
 # Path to the training corpus
 DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "wizard_of_oz.txt")
@@ -184,12 +185,21 @@ class GPTLanguageModel(nn.Module):
         return index
 
 
-def load_base_model(checkpoint):
-    state = torch.load(checkpoint, map_location='cpu', weights_only=True)
+def model_dimensions(state):
     if not isinstance(state, dict) or 'token_embedding_table.weight' not in state:
-        raise ValueError('Expected base GPT weights created by model.training.')
+        raise ValueError('Expected a GPT state dictionary.')
     heads = sum(key.startswith('blocks.0.sa.heads.') and key.endswith('.key.weight') for key in state)
     layers = sum(key.startswith('blocks.') and key.endswith('.ln1.weight') for key in state)
-    model = GPTLanguageModel(vocab_size, heads=heads, layers=layers)
+    return heads, layers
+
+
+def model_from_state(state, vocabulary_size):
+    heads, layers = model_dimensions(state)
+    model = GPTLanguageModel(vocabulary_size, heads=heads, layers=layers)
     model.load_state_dict(state)
     return model
+
+
+def load_base_model(checkpoint):
+    state = torch.load(checkpoint, map_location='cpu', weights_only=True)
+    return model_from_state(state, vocab_size)

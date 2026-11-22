@@ -2,6 +2,7 @@ from contextlib import redirect_stdout
 from io import StringIO
 import json
 from pathlib import Path
+import re
 import runpy
 from tempfile import TemporaryDirectory
 import unittest
@@ -14,6 +15,7 @@ from model.chat_data import (
     format_turn, load_chat_checkpoint, load_examples, with_history,
 )
 from model.chat_training import save_checkpoint
+from model.chat_session import ChatSession
 from model.model import GPTLanguageModel, block_size, chars
 
 
@@ -45,9 +47,23 @@ class ChatTrainingTests(unittest.TestCase):
         _, padded_targets = collate_examples([first, second])
         self.assertTrue(padded_targets[0, len(first[1]):].eq(IGNORE_TARGET).all())
 
+    def test_default_validation_replies_are_disjoint_from_training(self):
+        def normalized_replies(split):
+            path = Path(__file__).resolve().parents[1] / 'data' / f'oz_chat_{split}.jsonl'
+            return {
+                ' '.join(re.findall(r'[a-z0-9]+', message['content'].casefold()))
+                for line in path.read_text(encoding='utf-8').splitlines()
+                for message in json.loads(line)['messages']
+                if message['role'] == 'assistant'
+            }
+
+        self.assertFalse(normalized_replies('train') & normalized_replies('val'))
+
     def test_context_trimming_keeps_current_turn_and_rejects_oversize_turns(self):
         _, second = self.load_conversation(('Hi', 'a' * 70), ('Hello', 'b' * 50))
-        self.assertEqual(self.tokenizer.decode(second[0]), (format_prompt('Hello') + 'b' * 50 + END_OF_TURN)[:-1])
+        self.assertLessEqual(len(second[0]), block_size)
+        current_turn = (format_prompt('Hello') + 'b' * 50 + END_OF_TURN)[:-1]
+        self.assertTrue(self.tokenizer.decode(second[0]).endswith(current_turn))
         with self.assertRaisesRegex(ValueError, r'chat.jsonl:1: Turn 1 exceeds'):
             self.load_conversation(('Hi', 'a' * block_size))
 
@@ -58,6 +74,25 @@ class ChatTrainingTests(unittest.TestCase):
         self.assertEqual(with_history(prompt, [first, second], len(first + second + prompt)), first + second + prompt)
         self.assertEqual(with_history(prompt, [first, second], len(second + prompt)), second + prompt)
         self.assertEqual(with_history(prompt, [first, second], len(second + prompt) - 1), prompt)
+
+    def test_training_and_chat_pack_the_same_shortened_history(self):
+        first = 'Who is Jim?'
+        answer = 'Jim is a horse. He pulls the buggy and travels with Dorothy and Zeb.'
+        follow_up = 'What kind of animal?'
+        reply = 'A horse.' + END_OF_TURN
+        _, (inputs, targets) = self.load_conversation((first, answer), (follow_up, 'A horse.'))
+        prompt = self.tokenizer.decode(inputs)[:-len(reply) + 1]
+        self.assertEqual(prompt, format_turn(first, 'Jim is a horse. He') + format_prompt(follow_up))
+
+        with patch.object(GPTLanguageModel, 'generate') as generate:
+            generate.side_effect = lambda context, *_args, **_kw: torch.cat(
+                (context, torch.tensor([self.tokenizer.encode(reply)])), dim=1,
+            )
+            session = ChatSession(GPTLanguageModel(len(chars)), self.tokenizer)
+            session.remember(first, answer)
+            self.assertTrue(session.reply(follow_up).history_compacted)
+        self.assertEqual(self.tokenizer.decode(generate.call_args.args[0][0].tolist()), prompt)
+        self.assertEqual(self.tokenizer.decode([token for token in targets if token != IGNORE_TARGET]), reply)
 
     def test_cli_uses_history_and_resets_it(self):
         replies = ('Jim is the cab-horse.' + END_OF_TURN, 'A horse.' + END_OF_TURN, 'Ask me about Oz.' + END_OF_TURN)
@@ -76,11 +111,11 @@ class ChatTrainingTests(unittest.TestCase):
                 patch('sys.argv', ['chatbot', '--chat', str(path)]),
                 patch('model.chat_data.load_chat_checkpoint', return_value=({}, self.tokenizer)),
                 patch('model.model.get_device', return_value='cpu'),
-                patch('model.model.GPTLanguageModel') as model_class,
+                patch('model.model.model_from_state') as model_from_state,
                 patch('builtins.input', side_effect=['Who is Jim?', 'What kind?', '/reset', 'What kind?', 'quit']),
                 redirect_stdout(StringIO()) as stdout,
             ):
-                model_class.return_value.generate.side_effect = generate
+                model_from_state.return_value.generate.side_effect = generate
                 runpy.run_module('model.chatbot', run_name='__main__')
 
         follow_up = format_prompt('What kind?')
@@ -94,7 +129,7 @@ class ChatTrainingTests(unittest.TestCase):
 
     def test_checkpoint_restores_token_order(self):
         tokenizer = ChatTokenizer(list(reversed(chars)))
-        model = GPTLanguageModel(len(chars))
+        model = GPTLanguageModel(len(chars), heads=4, layers=2)
         with TemporaryDirectory() as directory:
             path = Path(directory) / 'chat.pth'
             save_checkpoint(path, model, tokenizer)

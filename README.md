@@ -129,24 +129,25 @@ Loads the model and generates 100 tokens from the prompt `"Dorothy"` — useful 
 
 ## Fine-tune the model for chat
 
-Run these commands from the repo root to fine-tune the bundled checkpoint and open the chat demo.
+Open trained chat from the repo root.
 
 ```bash
-python -m model.chat_training
 python -m model.chatbot --chat
 ```
 
+Chat loads `model/model-chat-retrained.pth` by default. In the 32-turn benchmark it stopped cleanly on every turn and scored 0/32 for factual accuracy. [Reviewed chat comparison](evaluations/oz_chat_repair_comparison.json)
+
 Try `Who is Jim?` followed by `What kind?` in the same session. Chat keeps the newest turns that fit in its 128-character context. If the latest turn is too long, it keeps the previous question and uses the start of the previous answer when they fit with room for a new reply. Type `/reset` to clear the conversation. Rerun chat training after adding new follow-up examples. The starter dataset focuses on short exchanges about Oz.
 
-Each line in the training and validation files is a complete conversation in JSONL format. Messages alternate between `user` and `assistant`. Keep whole conversations in separate files for training and validation.
+To fine-tune your own copy, run `python -m model.chat_training` and open it with `python -m model.chatbot --chat model/model-chat-experiment.pth`. Each line in the training and validation files is a complete conversation in JSONL format. Messages alternate between `user` and `assistant`. Keep related conversations and their paraphrases in the same split, and check for duplicate replies across training and validation.
 
 ```json
 {"messages":[{"role":"user","content":"Who is Eureka?"},{"role":"assistant","content":"Eureka is Dorothy's kitten."}]}
 ```
 
-The trainer formats each turn with `User:` and `Assistant:` labels and appends `[END]` to the reply. It uses the prompt and any recent complete turns that fit as context. Only the current assistant reply and its end marker contribute to the loss. Keep each formatted turn short enough for the model's 128-character context and use characters from the base vocabulary.
+The trainer formats each turn with `User:` and `Assistant:` labels and appends `[END]` to the reply. It uses the same history packing and shortening as live chat. When a training reply is longer than the usual live reserve, it reserves enough room for the whole target. Only the current assistant reply and its end marker contribute to the loss. Keep each formatted turn short enough for the model's 128-character context and use characters from the base vocabulary.
 
-Training starts from `model/model-01.pth` and saves the weights with the lowest validation reply loss, the model settings, and the ordered character vocabulary to `model/model-chat.pth`. The generated chat checkpoint is ignored by Git. Pass `--train-data` and `--val-data` to use your own files, `--steps` to change the default 1,600 training steps, or `--output` to save to a different path. Load a custom output with `python -m model.chatbot --chat path/to/checkpoint.pth`. Chat training automatically selects CUDA, Apple MPS, or CPU, and `--device` can override that choice.
+Training starts from `model/model-base-retrained.pth`. Use `--base-checkpoint` to start from different base weights. Training saves the weights with the lowest validation reply loss, model settings, and ordered character vocabulary to a new file. The default training output is `model/model-chat-experiment.pth`. Pass `--train-data` and `--val-data` to use your own files, `--steps` to change the default 1,600 training steps, or `--output` to choose a new path. By default, the trainer balances examples by distinct reply. Use `--sampling uniform` to compare uniform sampling. The trainer selects CUDA, Apple MPS, or CPU automatically, and `--device` can override that choice.
 
 ### Look up answers in the Oz book
 
@@ -173,7 +174,7 @@ To compare training datasets, save each trained checkpoint to a different path. 
 
 ```bash
 python -m model.chat_evaluation run \
-  --checkpoint model/model-chat.pth --checkpoint path/to/expanded-chat.pth \
+  --checkpoint model/model-chat-retrained.pth --checkpoint path/to/expanded-chat.pth \
   --history generated --output oz-training-comparison.json
 ```
 
@@ -190,7 +191,7 @@ Use reviewed correct first replies and correct follow-ups as the main scores. Re
 Use `--book` to evaluate book lookup against the same conversations. Add `--checkpoint` to include a chat model in the report. Book lookup reports citations and abstentions. Set `"source_supports_reply"` to `true` only when the cited passage supports the answer to that specific question. The summary counts answers that are both correct and supported.
 
 ```bash
-python -m model.chat_evaluation run --book --checkpoint model/model-chat.pth --output oz-book-comparison.json
+python -m model.chat_evaluation run --book --checkpoint model/model-chat-retrained.pth --output oz-book-comparison.json
 ```
 
 To investigate missed replies, add `--trace-passages` to save the ranked passages, the search query after follow-up rewriting, and the passage the reader selected.
@@ -267,7 +268,7 @@ Issue numbers refer to the project bug review. Complete each stage in this order
 
 1. **Make base training safe · complete.** **#4** sample each sequence across its full split → **#7** give evaluation frequency and batch count separate flags → **#6** save training runs to new checkpoint paths.
 2. **Retrain the base model · complete.** **#5** compared the samplers and model sizes on the same validation split and saved the selected base weights at `model/model-base-retrained.pth`. [Base retraining results](evaluations/oz_base_retraining_comparison.json)
-3. **Rebuild and evaluate the trained chat model.** **#2** create a clean validation set and audit repeated replies and near-duplicate conversations → **#8** match the history formatting used during training and real chat → **#3** train and record a fresh chat checkpoint → **#1** score factual replies and follow-ups and address the errors.
+3. **Rebuild and evaluate the trained chat model.** **#2** held out complete conversation families and removed validation reply overlap → **#8** shared history formatting between training and live chat → **#3** trained and published a fresh checkpoint → **#1** measured factual replies and follow-ups. Factual accuracy remains open at 0/32. [Reviewed chat comparison](evaluations/oz_chat_repair_comparison.json)
 4. **Improve book lookup and check it on fresh questions.** **#9** carry the resolved subject through multiple turns → **#11** fix pronouns, lowercase names, verb forms, and follow-up detection → **#12** normalize word variants for search → **#10** count distinct evidence for agreement and retune on development questions. Set aside fresh test questions before tuning and use them for the final score.
 
 Keep the local `oz-*.json` reports for review. Handle the cleanup of tracked generated files and obsolete files, the corpus extraction fixes, and the remaining device and vocabulary work separately.
