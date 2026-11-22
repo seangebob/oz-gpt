@@ -2,6 +2,7 @@ import argparse
 from collections import Counter
 from math import isfinite
 from pathlib import Path
+from pickle import UnpicklingError
 import random
 
 import torch
@@ -9,11 +10,13 @@ from torch.nn import functional as F
 
 from model.chat_data import (
     CHAT_TRAIN_OUTPUT, CHAT_FORMAT_VERSION, COMPACT_CHAT_FORMAT_VERSION, IGNORE_TARGET, MODEL_CONFIG,
-    ChatTokenizer, collate_examples, conversation_turns, encode_conversations, load_examples,
+    ChatTokenizer, collate_examples, conversation_turns, encode_conversations, load_chat_checkpoint, load_examples,
     read_conversations, reference_matches,
 )
 from model.chat_session import ChatSession
-from model.model import RETRAINED_BASE_PATH, block_size, chars, get_device, load_base_model, model_dimensions, n_embd
+from model.model import (
+    RETRAINED_BASE_PATH, block_size, chars, get_device, load_base_model, model_dimensions, model_from_state, n_embd,
+)
 from model.training import save_checkpoint as save_new_checkpoint
 
 
@@ -91,7 +94,10 @@ def main():
     parser.add_argument('--val-data', type=Path, default=DATA_DIR / 'oz_chat_val.jsonl')
     parser.add_argument('--dev-data', type=Path,
                         help='Select by generated reference matches on this development file, then by validation loss')
-    parser.add_argument('--base-checkpoint', type=Path, default=Path(RETRAINED_BASE_PATH))
+    initialization = parser.add_mutually_exclusive_group()
+    initialization.add_argument('--base-checkpoint', type=Path, default=Path(RETRAINED_BASE_PATH))
+    initialization.add_argument('--init-chat-checkpoint', type=Path,
+                                help='Start from previously trained chat weights and inherit their history format')
     parser.add_argument('--output', type=Path, default=CHAT_TRAIN_OUTPUT)
     parser.add_argument('--steps', type=int, default=1600)
     parser.add_argument('--batch-size', type=int, default=8)
@@ -119,13 +125,22 @@ def main():
     dataset_paths = {path.resolve() for path in datasets}
     if len(dataset_paths) != len(datasets):
         parser.error('Use separate training, validation, and development files.')
-    if args.output.resolve() in dataset_paths | {args.base_checkpoint.resolve()}:
-        parser.error('Choose an output path separate from the base checkpoint and datasets.')
+    start_checkpoint = args.init_chat_checkpoint or args.base_checkpoint
+    if args.output.resolve() in dataset_paths | {start_checkpoint.resolve()}:
+        parser.error('Choose an output path separate from the starting checkpoint and datasets.')
     if args.output.exists() or args.output.is_symlink():
         parser.error('The output path already exists. Choose a new path with --output.')
 
     try:
-        tokenizer = ChatTokenizer(chars, compact_history=args.compact_history)
+        torch.manual_seed(args.seed)
+        if args.init_chat_checkpoint is not None:
+            state, tokenizer = load_chat_checkpoint(start_checkpoint)
+            if args.compact_history and not tokenizer.compact_history:
+                tokenizer = ChatTokenizer(tokenizer.characters, compact_history=True)
+            model = model_from_state(state, len(tokenizer.characters))
+        else:
+            tokenizer = ChatTokenizer(chars, compact_history=args.compact_history)
+            model = load_base_model(start_checkpoint)
         train_examples = load_examples(args.train_data, tokenizer)
         masked_examples = (load_examples(args.train_data, tokenizer, mask_history_replies=True)
                            if args.history_answer_dropout else None)
@@ -135,9 +150,8 @@ def main():
             with args.dev_data.open(encoding='utf-8') as source:
                 dev_conversations = list(read_conversations(source, args.dev_data))
             encode_conversations(dev_conversations, tokenizer, args.dev_data)
-        torch.manual_seed(args.seed)
-        model = load_base_model(args.base_checkpoint).to(args.device)
-    except (OSError, ValueError, RuntimeError) as error:
+        model.to(args.device)
+    except (OSError, ValueError, RuntimeError, EOFError, UnpicklingError) as error:
         parser.exit(1, f'Error preparing chat training: {error}\n')
 
     rng = random.Random(args.seed)
@@ -152,9 +166,10 @@ def main():
         offset_rng = random.Random(args.seed + 20)
         newline_id = tokenizer.encode('\n')[0]
     optimizer = torch.optim.AdamW(parameters, lr=args.lr)
+    print(f'Starting checkpoint: {start_checkpoint} | history packing: {tokenizer.history_packing}')
     print(f'Device: {args.device} | train replies: {len(train_examples)} | validation replies: {len(val_examples)}')
     initial_loss = evaluate(model, val_examples, args.batch_size, args.device)
-    print(f'Base checkpoint | validation reply loss {initial_loss:.4f}')
+    print(f'Starting checkpoint | validation reply loss {initial_loss:.4f}')
 
     best_score = None
     best_step = 0

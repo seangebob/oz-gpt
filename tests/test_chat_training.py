@@ -1,4 +1,4 @@
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 import json
 from pathlib import Path
@@ -14,7 +14,7 @@ from model.chat_data import (
     END_OF_TURN, IGNORE_TARGET, ChatTokenizer, collate_examples, format_prompt,
     encode_conversations, format_turn, load_chat_checkpoint, load_examples, pack_history, with_history,
 )
-from model.chat_training import DATA_DIR, save_checkpoint
+from model.chat_training import DATA_DIR, main as train_chat, save_checkpoint
 from model.chat_session import ChatSession
 from model.model import GPTLanguageModel, block_size, chars
 
@@ -95,29 +95,32 @@ class ChatTrainingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, r'chat.jsonl:1: Turn 1 exceeds'):
             self.load_conversation(('Hi', 'a' * block_size))
 
-    def test_memory_benchmarks_hold_out_first_questions_and_reuse_followup_wording(self):
+    def test_followup_benchmarks_hold_out_first_questions_and_reuse_followup_wording(self):
         training = chat_split('train')
         earlier = training + sum((chat_split(name) for name in (
             'val', 'test', 'paraphrase_dev', 'paraphrase_test', 'unseen_facts_test',
         )), [])
         prompts = normalized_messages(earlier, 'user', first_only=True)
         pairs = {(row['fact_family'], row['messages'][2]['content']) for row in training if 'followup_group' in row}
-        for name in ('memory_dev', 'memory_test', 'memory_unseen'):
+        for name in ('memory_dev', 'memory_test', 'memory_unseen',
+                     'coverage_dev', 'coverage_test', 'coverage_unseen'):
             split = chat_split(name)
             questions = normalized_messages(split, 'user', first_only=True)
             self.assertEqual(len(questions), len(split))
             self.assertFalse(prompts & questions)
             prompts.update(questions)
             load_examples(DATA_DIR / f'oz_chat_{name}.jsonl', ChatTokenizer(chars, compact_history=True))
-            if name == 'memory_unseen':
+            if name.endswith('_unseen'):
                 self.assertFalse(normalized_messages(earlier, 'assistant') & normalized_messages(split, 'assistant'))
             else:
                 by_question = {}
                 for row in split:
+                    if 'followup_group' not in row:
+                        continue
                     followup, answer = (message['content'] for message in row['messages'][2:])
                     self.assertIn((row['fact_family'], followup), pairs)
                     by_question.setdefault(followup, set()).add(answer)
-                self.assertTrue(all(len(answers) > 1 for answers in by_question.values()))
+                self.assertTrue(by_question and all(len(answers) > 1 for answers in by_question.values()))
 
     def test_history_keeps_only_consecutive_recent_turns(self):
         first = format_turn('Hi', 'Hello!')
@@ -233,6 +236,34 @@ class ChatTrainingTests(unittest.TestCase):
                 self.assertEqual(loaded_tokenizer.encode('Hello'), tokenizer.encode('Hello'))
                 self.assertEqual(loaded_tokenizer.compact_history, compact)
                 self.assertTrue(torch.equal(weights['lm_head.weight'], model.lm_head.weight))
+
+    def test_training_from_chat_preserves_source_checkpoint_and_history_format(self):
+        tokenizer = ChatTokenizer(list(reversed(chars)), compact_history=True)
+        model = GPTLanguageModel(len(chars))
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            source, output = root / 'source.pth', root / 'output.pth'
+            training, validation = root / 'train.jsonl', root / 'val.jsonl'
+            save_checkpoint(source, model, tokenizer)
+            original = source.read_bytes()
+            for file, question, reply in ((training, 'Who is Jim?', 'A horse.'),
+                                          (validation, 'Who is Eureka?', 'A kitten.')):
+                file.write_text(json.dumps({'messages': [
+                    {'role': 'user', 'content': question}, {'role': 'assistant', 'content': reply},
+                ]}), encoding='utf-8')
+            args = ['chat_training', '--init-chat-checkpoint', str(source), '--train-data', str(training),
+                    '--val-data', str(validation), '--device', 'cpu', '--steps', '1', '--batch-size', '1']
+            with patch('sys.argv', args + ['--output', str(source)]), redirect_stderr(StringIO()):
+                with self.assertRaises(SystemExit) as exit_status:
+                    train_chat()
+            self.assertEqual(exit_status.exception.code, 2)
+            with patch('sys.argv', args + ['--output', str(output)]), redirect_stdout(StringIO()):
+                train_chat()
+            self.assertEqual(source.read_bytes(), original)
+            weights, saved = load_chat_checkpoint(output)
+            self.assertTrue(saved.compact_history)
+            self.assertEqual(saved.characters, tokenizer.characters)
+            self.assertFalse(torch.equal(weights['lm_head.weight'], model.lm_head.weight))
 
     def test_generation_only_stops_on_a_newly_generated_marker(self):
         model = GPTLanguageModel(4)

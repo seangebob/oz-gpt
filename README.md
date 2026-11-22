@@ -151,6 +151,8 @@ Training starts from `model/model-base-retrained.pth`. Use `--base-checkpoint` t
 
 Use `--compact-history` to train with short `Q:` and `A:` labels on earlier turns. The current turn keeps the `User:` and `Assistant:` labels. If space is tight, the trainer and chat session shorten the previous question and reply at word boundaries. The checkpoint selects its history format automatically when you load it. During training, `--history-answer-dropout 0.5` hides the earlier assistant replies on half the sampled examples so the model can practice using the previous question on its own.
 
+Use `--init-chat-checkpoint` to start from a previous chat run with a fresh optimizer. This keeps its vocabulary and history format. You can pass `--compact-history` to switch a legacy checkpoint to the compact format during fine-tuning. Choose a new path with `--output`.
+
 ### Try the chat accuracy experiment
 
 The expanded data includes 92 new conversations with book line references. The experimental checkpoint used an additional training objective that predicts the complete answer from the question and any packed history. It uses the same character-level generator when you chat.
