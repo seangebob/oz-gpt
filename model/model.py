@@ -120,11 +120,13 @@ class Block(nn.Module):
 
 
 class GPTLanguageModel(nn.Module):
-    def __init__(self, vocab_size):
+    def __init__(self, vocab_size, *, heads=n_head, layers=n_layer):
         super().__init__()
+        if heads < 1 or n_embd % heads or layers < 1:
+            raise ValueError(f'Use at least one layer and a positive head count that divides {n_embd}.')
         self.token_embedding_table = nn.Embedding(vocab_size, n_embd)
         self.position_embedding_table = nn.Embedding(block_size, n_embd)
-        self.blocks = nn.Sequential(*[Block(n_embd, n_head=n_head) for _ in range(n_layer)])
+        self.blocks = nn.Sequential(*[Block(n_embd, n_head=heads) for _ in range(layers)])
         self.ln_f = nn.LayerNorm(n_embd)
         self.lm_head = nn.Linear(n_embd, vocab_size)
         self.apply(self._init_weights)
@@ -180,3 +182,14 @@ class GPTLanguageModel(nn.Module):
                 if index[0, -stop_length:].tolist() == stop_ids:
                     break
         return index
+
+
+def load_base_model(checkpoint):
+    state = torch.load(checkpoint, map_location='cpu', weights_only=True)
+    if not isinstance(state, dict) or 'token_embedding_table.weight' not in state:
+        raise ValueError('Expected base GPT weights created by model.training.')
+    heads = sum(key.startswith('blocks.0.sa.heads.') and key.endswith('.key.weight') for key in state)
+    layers = sum(key.startswith('blocks.') and key.endswith('.ln1.weight') for key in state)
+    model = GPTLanguageModel(vocab_size, heads=heads, layers=layers)
+    model.load_state_dict(state)
+    return model

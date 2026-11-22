@@ -6,7 +6,7 @@ from tempfile import NamedTemporaryFile
 
 import torch
 
-from model.model import DATA_PATH, MODEL_PATH, GPTLanguageModel, block_size, encode, get_device, vocab_size
+from model.model import DATA_PATH, MODEL_PATH, GPTLanguageModel, block_size, encode, get_device, n_head, n_layer, vocab_size
 
 
 DEFAULT_OUTPUT = Path(MODEL_PATH).with_name('model-base-experiment.pth')
@@ -71,6 +71,11 @@ def main():
     parser.add_argument('--eval-batches', type=int, default=20,
                         help='Batches per split at each evaluation (default: 20)')
     parser.add_argument('--lr', type=float, default=3e-4, help='Learning rate (default: 3e-4)')
+    parser.add_argument('--seed', type=int, help='Seed model initialization, dropout, and training batches')
+    parser.add_argument('--device', choices=('cpu', 'cuda', 'mps'), default=get_device(allow_mps=True),
+                        help='Training device (default: CUDA, Apple MPS, or CPU, in that order)')
+    parser.add_argument('--heads', type=int, default=n_head, help=f'Attention heads per layer (default: {n_head})')
+    parser.add_argument('--layers', type=int, default=n_layer, help=f'Transformer layers (default: {n_layer})')
     parser.add_argument('--output', type=Path, default=DEFAULT_OUTPUT,
                         help='New checkpoint path (default: model/model-base-experiment.pth)')
     args = parser.parse_args()
@@ -78,6 +83,12 @@ def main():
         parser.error('Batch size, training steps, evaluation interval, and evaluation batches must be positive.')
     if not isfinite(args.lr) or args.lr <= 0:
         parser.error('Learning rate must be positive and finite.')
+    if args.seed is not None and not 0 <= args.seed < 2**64:
+        parser.error('Seed must be an unsigned 64-bit integer.')
+    if args.device == 'cuda' and not torch.cuda.is_available():
+        parser.error('CUDA is unavailable.')
+    if args.device == 'mps' and not torch.backends.mps.is_available():
+        parser.error('Apple MPS is unavailable.')
     if args.output.resolve() == Path(MODEL_PATH).resolve():
         parser.error('The bundled base checkpoint is protected. Choose a new path with --output.')
     if args.output.exists() or args.output.is_symlink():
@@ -85,23 +96,27 @@ def main():
 
     try:
         splits = load_splits(Path(DATA_PATH))
+        sampler = None
+        if args.seed is not None:
+            torch.manual_seed(args.seed)
+            sampler = torch.Generator().manual_seed(args.seed)
+        model = GPTLanguageModel(vocab_size, heads=args.heads, layers=args.layers).to(args.device)
     except (OSError, ValueError) as error:
         parser.error(str(error))
 
-    device = get_device()
-    model = GPTLanguageModel(vocab_size).to(device)
+    device = args.device
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
     print(f'Using device: {device}')
     print(f'batch_size={args.batch_size}  max_iters={args.max_iters}  eval_every={args.eval_every}  '
-          f'eval_batches={args.eval_batches}  lr={args.lr}')
-    print(f'Model parameters: {sum(p.numel() for p in model.parameters()):,}')
+          f'eval_batches={args.eval_batches}  lr={args.lr}  seed={args.seed}')
+    print(f'heads={args.heads}  layers={args.layers}  parameters={sum(p.numel() for p in model.parameters()):,}')
 
     for step in range(args.max_iters):
         if step % args.eval_every == 0:
             losses = estimate_loss(model, splits, args.batch_size, args.eval_batches, device)
             print(f"step {step:>5d} | train loss {losses['train']:.4f} | val loss {losses['val']:.4f}")
 
-        xb, yb = get_batch(splits['train'], args.batch_size, device)
+        xb, yb = get_batch(splits['train'], args.batch_size, device, sampler)
         optimizer.zero_grad(set_to_none=True)
         _, loss = model(xb, yb)
         loss.backward()

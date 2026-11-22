@@ -1,0 +1,262 @@
+{
+  "baseline_code_commit": "e8d9b5c9ec1f8c5fbd29d875a73f9931d422caad",
+  "corpus": "model/wizard_of_oz.txt",
+  "corpus_sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9",
+  "block_size": 128,
+  "vocab_size": 81,
+  "split_tokens": {
+    "train": 209077,
+    "val": 23231
+  },
+  "metric": "Mean next-character cross-entropy in nats. Lower loss is better.",
+  "evaluation": {
+    "device": "cpu",
+    "cpu_threads": 4,
+    "batch_size": 8,
+    "batches_per_split": 96,
+    "sampling_seed": 0,
+    "sampling": "The same independently sampled sequences were scored for every checkpoint."
+  },
+  "bundled": {
+    "checkpoint": "model/model-01.pth",
+    "checkpoint_sha256": "5ddbd40db69d7842d009766903c5d38bdbd690838b39de40f923611e425440f4",
+    "heads": 1,
+    "layers": 1,
+    "parameters": 1885521,
+    "loss": {
+      "train": 2.4481899738311768,
+      "val": 2.4950973987579346
+    }
+  },
+  "training": {
+    "device": "mps",
+    "torch_version": "2.13.0",
+    "batch_size": 8,
+    "learning_rate": 0.0003,
+    "optimizer": "AdamW",
+    "initialization": "Random initialization. Each seed also sets a separate batch sampler."
+  },
+  "controlled_trials": {
+    "steps": 600,
+    "seeds": [
+      7,
+      17,
+      27
+    ],
+    "local_window_sampler": "Sample one 1,025-token training window uniformly, then sample all eight sequence starts within that window. Both samplers use the same encoded corpus split.",
+    "whole_split_sampler": "Sample all eight sequence starts independently across the training split.",
+    "summary": [
+      {
+        "sampler": "local-window",
+        "heads": 1,
+        "layers": 1,
+        "mean_validation_loss": 2.494393,
+        "mean_training_seconds": 4.163
+      },
+      {
+        "sampler": "whole-split",
+        "heads": 1,
+        "layers": 1,
+        "mean_validation_loss": 2.461291,
+        "mean_training_seconds": 4.049
+      },
+      {
+        "sampler": "whole-split",
+        "heads": 4,
+        "layers": 1,
+        "mean_validation_loss": 2.457964,
+        "mean_training_seconds": 4.586
+      },
+      {
+        "sampler": "whole-split",
+        "heads": 4,
+        "layers": 2,
+        "mean_validation_loss": 2.291933,
+        "mean_training_seconds": 8.519
+      }
+    ],
+    "trials": [
+      {
+        "sampler": "local-window",
+        "heads": 1,
+        "layers": 1,
+        "parameters": 1885521,
+        "seed": 7,
+        "seconds": 4.297,
+        "loss": {
+          "train": 2.442582368850708,
+          "val": 2.4973795413970947
+        }
+      },
+      {
+        "sampler": "whole-split",
+        "heads": 1,
+        "layers": 1,
+        "parameters": 1885521,
+        "seed": 7,
+        "seconds": 4.044,
+        "loss": {
+          "train": 2.408757448196411,
+          "val": 2.4546289443969727
+        }
+      },
+      {
+        "sampler": "whole-split",
+        "heads": 4,
+        "layers": 1,
+        "parameters": 1885521,
+        "seed": 7,
+        "seconds": 4.648,
+        "loss": {
+          "train": 2.4053544998168945,
+          "val": 2.4511983394622803
+        }
+      },
+      {
+        "sampler": "whole-split",
+        "heads": 4,
+        "layers": 2,
+        "parameters": 3658833,
+        "seed": 7,
+        "seconds": 8.447,
+        "loss": {
+          "train": 2.25268816947937,
+          "val": 2.3076066970825195
+        }
+      },
+      {
+        "sampler": "local-window",
+        "heads": 1,
+        "layers": 1,
+        "parameters": 1885521,
+        "seed": 17,
+        "seconds": 4.142,
+        "loss": {
+          "train": 2.4406769275665283,
+          "val": 2.491255044937134
+        }
+      },
+      {
+        "sampler": "whole-split",
+        "heads": 1,
+        "layers": 1,
+        "parameters": 1885521,
+        "seed": 17,
+        "seconds": 4.049,
+        "loss": {
+          "train": 2.4115781784057617,
+          "val": 2.4655802249908447
+        }
+      },
+      {
+        "sampler": "whole-split",
+        "heads": 4,
+        "layers": 1,
+        "parameters": 1885521,
+        "seed": 17,
+        "seconds": 4.463,
+        "loss": {
+          "train": 2.408205032348633,
+          "val": 2.4617228507995605
+        }
+      },
+      {
+        "sampler": "whole-split",
+        "heads": 4,
+        "layers": 2,
+        "parameters": 3658833,
+        "seed": 17,
+        "seconds": 8.416,
+        "loss": {
+          "train": 2.231891393661499,
+          "val": 2.293652296066284
+        }
+      },
+      {
+        "sampler": "local-window",
+        "heads": 1,
+        "layers": 1,
+        "parameters": 1885521,
+        "seed": 27,
+        "seconds": 4.05,
+        "loss": {
+          "train": 2.4429571628570557,
+          "val": 2.4945433139801025
+        }
+      },
+      {
+        "sampler": "whole-split",
+        "heads": 1,
+        "layers": 1,
+        "parameters": 1885521,
+        "seed": 27,
+        "seconds": 4.054,
+        "loss": {
+          "train": 2.409224271774292,
+          "val": 2.4636638164520264
+        }
+      },
+      {
+        "sampler": "whole-split",
+        "heads": 4,
+        "layers": 1,
+        "parameters": 1885521,
+        "seed": 27,
+        "seconds": 4.648,
+        "loss": {
+          "train": 2.4060041904449463,
+          "val": 2.4609694480895996
+        }
+      },
+      {
+        "sampler": "whole-split",
+        "heads": 4,
+        "layers": 2,
+        "parameters": 3658833,
+        "seed": 27,
+        "seconds": 8.693,
+        "loss": {
+          "train": 2.2081875801086426,
+          "val": 2.274541139602661
+        }
+      }
+    ]
+  },
+  "longer_runs": {
+    "steps": 3600,
+    "seed": 7,
+    "sampler": "whole-split",
+    "candidates": [
+      {
+        "heads": 1,
+        "layers": 1,
+        "parameters": 1885521,
+        "loss": {
+          "train": 1.7307974100112915,
+          "val": 1.8322176933288574
+        }
+      },
+      {
+        "heads": 4,
+        "layers": 2,
+        "parameters": 3658833,
+        "loss": {
+          "train": 1.4890557527542114,
+          "val": 1.621864914894104
+        }
+      }
+    ]
+  },
+  "selected": {
+    "checkpoint": "model/model-base-retrained.pth",
+    "checkpoint_sha256": "a42c0f2c04e2d15967810e29bbd5be89a986449c0f415c94a6803d30377fed1c",
+    "reason": "Lowest validation loss in the matched 3,600-step comparison.",
+    "heads": 4,
+    "layers": 2,
+    "parameters": 3658833,
+    "loss": {
+      "train": 1.4890557527542114,
+      "val": 1.621864914894104
+    }
+  }
+}

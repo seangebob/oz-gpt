@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 import torch
 
 from model import training
-from model.model import encode
+from model.model import GPTLanguageModel, encode, load_base_model, vocab_size
 
 
 class BaseTrainingTests(unittest.TestCase):
@@ -49,6 +49,17 @@ class BaseTrainingTests(unittest.TestCase):
                 training.save_checkpoint(path, {'weight': torch.tensor([7])})
             self.assertEqual(path.read_bytes(), original)
             self.assertEqual(list(path.parent.iterdir()), [path])
+
+    def test_base_checkpoint_loader_restores_head_and_layer_counts(self):
+        for heads, layers in ((1, 1), (4, 2)):
+            with self.subTest(heads=heads, layers=layers), TemporaryDirectory() as directory:
+                path = Path(directory) / 'checkpoint.pth'
+                model = GPTLanguageModel(vocab_size, heads=heads, layers=layers)
+                training.save_checkpoint(path, model.state_dict())
+                restored = load_base_model(path)
+                self.assertEqual(len(restored.blocks), layers)
+                self.assertEqual(len(restored.blocks[0].sa.heads), heads)
+                self.assertTrue(torch.equal(restored.lm_head.weight, model.lm_head.weight))
 
 
 if __name__ == '__main__':

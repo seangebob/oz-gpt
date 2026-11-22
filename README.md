@@ -13,7 +13,7 @@ A character-level language model built from scratch using PyTorch. The base Tran
   - Residual connections & layer normalisation (`Block`)
 - Auto-regressive text generation
 - Interactive chatbot interface
-- CUDA support (falls back to CPU automatically)
+- CUDA and Apple MPS support for base training, with CPU fallback
 
 ---
 
@@ -77,6 +77,10 @@ This trains a new model on the first 90% of `wizard_of_oz.txt` and uses the fina
 | `--eval-every`, `--eval_iters` | `100` | Number of training steps between evaluations |
 | `--eval-batches` | `20` | Number of batches per split in each evaluation |
 | `--lr` | `3e-4` | Learning rate |
+| `--seed` | random | Seed for model initialization and training batches |
+| `--device` | automatic | Use `cuda`, `mps`, or `cpu` |
+| `--heads` | `1` | Attention heads per layer |
+| `--layers` | `1` | Number of Transformer layers |
 | `--output` | `model/model-base-experiment.pth` | Path for a new checkpoint |
 
 Example with custom settings
@@ -93,6 +97,14 @@ python -m model.chatbot
 ```
 
 Type any prompt and the bundled checkpoint will continue it. To try the checkpoint you just trained, run `python -m model.chatbot --checkpoint model/model-base-experiment.pth`. Type `quit` or `exit` to stop.
+
+Use the retrained base checkpoint for book-style completions.
+
+```bash
+python -m model.chatbot --checkpoint model/model-base-retrained.pth
+```
+
+The selected checkpoint has four attention heads and two Transformer layers. Its validation loss was 1.622, compared with 2.495 for the original base checkpoint on the same split. [Base retraining results](evaluations/oz_base_retraining_comparison.json)
 
 **Optional arguments:**
 
@@ -254,7 +266,7 @@ Softmax → sample next character
 Issue numbers refer to the project bug review. Complete each stage in this order.
 
 1. **Make base training safe · complete.** **#4** sample each sequence across its full split → **#7** give evaluation frequency and batch count separate flags → **#6** save training runs to new checkpoint paths.
-2. **Retrain the base model.** **#5** train and compare fresh base checkpoints on the same validation split. Measure the sampler change with the current architecture, then evaluate model capacity separately.
+2. **Retrain the base model · complete.** **#5** compared the samplers and model sizes on the same validation split and saved the selected base weights at `model/model-base-retrained.pth`. [Base retraining results](evaluations/oz_base_retraining_comparison.json)
 3. **Rebuild and evaluate the trained chat model.** **#2** create a clean validation set and audit repeated replies and near-duplicate conversations → **#8** match the history formatting used during training and real chat → **#3** train and record a fresh chat checkpoint → **#1** score factual replies and follow-ups and address the errors.
 4. **Improve book lookup and check it on fresh questions.** **#9** carry the resolved subject through multiple turns → **#11** fix pronouns, lowercase names, verb forms, and follow-up detection → **#12** normalize word variants for search → **#10** count distinct evidence for agreement and retune on development questions. Set aside fresh test questions before tuning and use them for the final score.
 
@@ -271,7 +283,7 @@ Keep the local `oz-*.json` reports for review. Handle the cleanup of tracked gen
 - Enhancing Modern Transformer Architectures
 - Enhancing efficient Training & Optimization   
 
-> **Tip:** For noticeably better text quality, increase `n_head` and `n_layer` in `model/model.py` (e.g., `n_head=4`, `n_layer=4`) and train with more iterations (`--max_iters 5000`).
+Use `--heads` and `--layers` to compare model sizes on the same corpus split. Load the resulting base checkpoint with `python -m model.chatbot --checkpoint path/to/checkpoint.pth`.
 
 
 ---

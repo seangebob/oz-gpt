@@ -7,8 +7,7 @@ from model.book_lookup import BookSession
 from model.chat_data import CHAT_CHECKPOINT, load_chat_checkpoint
 from model.chat_session import ChatSession, DEFAULT_MAX_TOKENS
 from model.model import (
-    GPTLanguageModel, vocab_size, encode, decode,
-    get_device, MODEL_PATH,
+    GPTLanguageModel, encode, decode, get_device, load_base_model, MODEL_PATH,
 )
 
 # CLI arguments
@@ -48,10 +47,9 @@ else:
         if args.chat:
             state, tokenizer = load_chat_checkpoint(checkpoint)
             model = GPTLanguageModel(len(tokenizer.characters))
+            model.load_state_dict(state)
         else:
-            state = torch.load(checkpoint, map_location='cpu', weights_only=True)
-            model = GPTLanguageModel(vocab_size)
-        model.load_state_dict(state)
+            model = load_base_model(checkpoint)
         model.to(device)
     except Exception as e:
         print(f"ERROR: Failed to load model — {e}")
