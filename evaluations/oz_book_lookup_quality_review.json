@@ -1,0 +1,1437 @@
+{
+  "audit_baseline_commit": "f29e838",
+  "separate_check_baseline_commit": "d003282",
+  "reader_model": "deepset/minilm-uncased-squad2",
+  "reader_revision": "934656cdda79824eabf503ed56e15c01ddbdbe3f",
+  "book_sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9",
+  "history": "generated",
+  "review_method": "Evidence ranks identify passages visible to the reader that support the intended answer. The primary failure reflects the step that best explains each miss. Some turns have more than one contributing problem.",
+  "audit": {
+    "test_file": "data/oz_book_lookup_test.jsonl",
+    "test_sha256": "fdb302e5e6c8fc12d6de0cde1f96d3489982657d0ddb97b23173a2b3d495b625",
+    "before": {
+      "turns": 29,
+      "correct": 17,
+      "correct_with_support": 16,
+      "correct_first_replies_with_support": 12,
+      "correct_later_replies_with_support": 4,
+      "abstentions": 6
+    },
+    "after": {
+      "turns": 29,
+      "correct": 18,
+      "correct_with_support": 18,
+      "correct_first_replies_with_support": 12,
+      "correct_later_replies_with_support": 6,
+      "abstentions": 5
+    },
+    "reviewed_misses": 13,
+    "misses_with_supporting_passages": 13,
+    "primary_failures": {
+      "span_extraction": 3,
+      "confidence_rejection": 3,
+      "answer_selection": 2,
+      "followup_rewrite": 4,
+      "citation_selection": 1
+    },
+    "cases": [
+      {
+        "conversation": 2,
+        "turn": 1,
+        "prompt": "Why didn't the horse move when Zeb first shook the reins?",
+        "expected": "It was still tied to a tree.",
+        "primary_failure": "span_extraction",
+        "supporting_candidates_before": [
+          {
+            "rank": 7,
+            "citation": {
+              "section": "Chapter 1",
+              "start_line": 210,
+              "end_line": 243
+            },
+            "reader_span": "The horse did not stir. Dorothy thought he just wiggled one of his drooping ears",
+            "reader_margin": 0.202611
+          },
+          {
+            "rank": 8,
+            "citation": {
+              "section": "Chapter 1",
+              "start_line": 230,
+              "end_line": 260
+            },
+            "reader_span": "earthquakes",
+            "reader_margin": 1.123352
+          }
+        ],
+        "before": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "Why didn't the horse move when Zeb first shook the reins?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "Why didn't the horse move when Zeb first shook the reins?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "after_supported": false,
+        "note": "The cited scene explains that Jim was still tied. The reader offered his reaction or the earthquakes."
+      },
+      {
+        "conversation": 3,
+        "turn": 1,
+        "prompt": "What was Jim's tail like when Dorothy first saw him?",
+        "expected": "Short and scraggly.",
+        "primary_failure": "confidence_rejection",
+        "supporting_candidates_before": [
+          {
+            "rank": 14,
+            "citation": {
+              "section": "Chapter 1",
+              "start_line": 185,
+              "end_line": 203
+            },
+            "reader_span": "short and scraggly",
+            "reader_margin": 1.931936
+          }
+        ],
+        "before": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "What was Jim's tail like when Dorothy first saw him?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "What was Jim's tail like when Dorothy first saw him?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "after_supported": false,
+        "note": "The reader found “short and scraggly” at rank 14. Its margin fell below the acceptance threshold."
+      },
+      {
+        "conversation": 5,
+        "turn": 1,
+        "prompt": "Who escaped the cave to get help for Jim and the piglets?",
+        "expected": "Eureka.",
+        "primary_failure": "answer_selection",
+        "supporting_candidates_before": [
+          {
+            "rank": 8,
+            "citation": {
+              "section": "Chapter 7",
+              "start_line": 1862,
+              "end_line": 1882
+            },
+            "reader_span": "Eureka",
+            "reader_margin": -1.018837
+          }
+        ],
+        "before": {
+          "answer": "Ozma",
+          "citation": {
+            "section": "Chapter 14",
+            "start_line": 3757,
+            "end_line": 3778
+          },
+          "query": "Who escaped the cave to get help for Jim and the piglets?",
+          "previous_answer": "",
+          "selected_rank": 4,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "Ozma",
+          "citation": {
+            "section": "Chapter 14",
+            "start_line": 3757,
+            "end_line": 3778
+          },
+          "query": "Who escaped the cave to get help for Jim and the piglets?",
+          "previous_answer": "",
+          "selected_rank": 4,
+          "rejected_query": null
+        },
+        "after_supported": false,
+        "note": "Rank 8 describes Eureka escaping to get help. The reader gave Eureka a low margin and picked Ozma from another cave scene."
+      },
+      {
+        "conversation": 5,
+        "turn": 2,
+        "prompt": "How high could she go while the Mangaboos chased her?",
+        "expected": "Nearly two hundred feet.",
+        "primary_failure": "followup_rewrite",
+        "supporting_candidates_before": [
+          {
+            "rank": 1,
+            "citation": {
+              "section": "Chapter 7",
+              "start_line": 1862,
+              "end_line": 1882
+            },
+            "reader_span": "two hundred feet",
+            "reader_margin": 1.632102
+          },
+          {
+            "rank": 2,
+            "citation": {
+              "section": "Chapter 7",
+              "start_line": 1876,
+              "end_line": 1890
+            },
+            "reader_span": "two hundred feet",
+            "reader_margin": -0.424553
+          }
+        ],
+        "before": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "How high could Ozma go while the Mangaboos chased Ozma?",
+          "previous_answer": "Ozma",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "two hundred feet",
+          "citation": {
+            "section": "Chapter 7",
+            "start_line": 1862,
+            "end_line": 1882
+          },
+          "query": "How high could she go while the Mangaboos chased her?",
+          "previous_answer": "Ozma",
+          "selected_rank": 1,
+          "rejected_query": "How high could Ozma go while the Mangaboos chased Ozma?"
+        },
+        "after_supported": true,
+        "note": "The previous wrong answer supplied Ozma for “she” and “her”. The retry preserved search context and found the distance."
+      },
+      {
+        "conversation": 6,
+        "turn": 2,
+        "prompt": "Could even Eureka get up to it?",
+        "expected": "No.",
+        "primary_failure": "followup_rewrite",
+        "supporting_candidates_before": [
+          {
+            "rank": 4,
+            "citation": {
+              "section": "Chapter 14",
+              "start_line": 3691,
+              "end_line": 3711
+            },
+            "reader_span": "if I got there",
+            "reader_margin": 5.730833
+          }
+        ],
+        "before": {
+          "answer": "if I got there",
+          "citation": {
+            "section": "Chapter 14",
+            "start_line": 3691,
+            "end_line": 3711
+          },
+          "query": "Could even Eureka get up to the thing that light did the travelers see through the roof of the cave where the path ended?",
+          "previous_answer": "a ray of sunshine",
+          "selected_rank": 4,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "if I got there",
+          "citation": {
+            "section": "Chapter 14",
+            "start_line": 3691,
+            "end_line": 3711
+          },
+          "query": "Could even Eureka get up to it (context: light did the travelers see through the roof of the cave where the path ended)?",
+          "previous_answer": "a ray of sunshine",
+          "selected_rank": 3,
+          "rejected_query": null
+        },
+        "after_supported": false,
+        "note": "The rewrite expanded “it” into a malformed description. The reader picked a fragment of the wrong clause. The new rewrite avoids the malformed description and the answer remains wrong."
+      },
+      {
+        "conversation": 7,
+        "turn": 1,
+        "prompt": "According to Ozma, what pointed to Eureka before anyone formally accused her?",
+        "expected": "Her actions alone accused her.",
+        "primary_failure": "span_extraction",
+        "supporting_candidates_before": [
+          {
+            "rank": 1,
+            "citation": {
+              "section": "Chapter 18",
+              "start_line": 4980,
+              "end_line": 5002
+            },
+            "reader_span": "guessing",
+            "reader_margin": 2.144068
+          },
+          {
+            "rank": 2,
+            "citation": {
+              "section": "Chapter 18",
+              "start_line": 4964,
+              "end_line": 4988
+            },
+            "reader_span": "I left my little pet in my dressing-room lying asleep upon the table",
+            "reader_margin": -4.069707
+          }
+        ],
+        "before": {
+          "answer": "guessing",
+          "citation": {
+            "section": "Chapter 18",
+            "start_line": 4995,
+            "end_line": 5019
+          },
+          "query": "According to Ozma, what pointed to Eureka before anyone formally accused her?",
+          "previous_answer": "",
+          "selected_rank": 3,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "guessing",
+          "citation": {
+            "section": "Chapter 18",
+            "start_line": 4995,
+            "end_line": 5019
+          },
+          "query": "According to Ozma, what pointed to Eureka before anyone formally accused her?",
+          "previous_answer": "",
+          "selected_rank": 3,
+          "rejected_query": null
+        },
+        "after_supported": false,
+        "note": "Ozma says Eureka’s actions were what accused her. The reader extracted guessing from Eureka’s reply in the same scene."
+      },
+      {
+        "conversation": 9,
+        "turn": 1,
+        "prompt": "What had the Braided Man invented that he thought would make his fortune?",
+        "expected": "A new Adjustable Post-hole.",
+        "primary_failure": "confidence_rejection",
+        "supporting_candidates_before": [
+          {
+            "rank": 1,
+            "citation": {
+              "section": "Chapter 10",
+              "start_line": 2729,
+              "end_line": 2744
+            },
+            "reader_span": "Adjustable Post-hole",
+            "reader_margin": -1.719771
+          }
+        ],
+        "before": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "What had the Braided Man invented that he thought would make his fortune?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "What had the Braided Man invented that he thought would make his fortune?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "after_supported": false,
+        "note": "The top passage yielded Adjustable Post-hole with a negative reader margin."
+      },
+      {
+        "conversation": 9,
+        "turn": 2,
+        "prompt": "How did he fall into it?",
+        "expected": "He leaned over to see the bottom and lost his balance.",
+        "primary_failure": "followup_rewrite",
+        "supporting_candidates_before": [
+          {
+            "rank": 1,
+            "citation": {
+              "section": "Chapter 10",
+              "start_line": 2729,
+              "end_line": 2744
+            },
+            "reader_span": "I lost my balance and tumbled in",
+            "reader_margin": -3.730798
+          }
+        ],
+        "before": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "How did the Braided Man fall into the thing that had the Braided Man invented that he thought would make his fortune?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "How did the Braided Man fall into the thing the Braided Man invented?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "after_supported": false,
+        "note": "The old rewrite inserted an entire question after “the thing that”. The cleaner rewrite still abstains."
+      },
+      {
+        "conversation": 10,
+        "turn": 2,
+        "prompt": "Who went down with him?",
+        "expected": "Eureka.",
+        "primary_failure": "citation_selection",
+        "supporting_candidates_before": [
+          {
+            "rank": 3,
+            "citation": {
+              "section": "Chapter 12",
+              "start_line": 3285,
+              "end_line": 3305
+            },
+            "reader_span": "Eureka",
+            "reader_margin": 8.011068
+          }
+        ],
+        "before": {
+          "answer": "Eureka",
+          "citation": {
+            "section": "Chapter 12",
+            "start_line": 3298,
+            "end_line": 3314
+          },
+          "query": "Who went down with Zeb?",
+          "previous_answer": "a wheel of the buggy",
+          "selected_rank": 1,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "Eureka",
+          "citation": {
+            "section": "Chapter 12",
+            "start_line": 3285,
+            "end_line": 3305
+          },
+          "query": "Who went down with Zeb?",
+          "previous_answer": "a wheel of the buggy",
+          "selected_rank": 3,
+          "rejected_query": null
+        },
+        "after_supported": true,
+        "note": "The answer was Eureka in both runs. The earlier citation describes her following Zeb back up. The new citation includes their descent."
+      },
+      {
+        "conversation": 13,
+        "turn": 1,
+        "prompt": "What did Jellia Jamb give Jim to stay in at the palace?",
+        "expected": "A room in the palace.",
+        "primary_failure": "answer_selection",
+        "supporting_candidates_before": [
+          {
+            "rank": 3,
+            "citation": {
+              "section": "Chapter 15",
+              "start_line": 4045,
+              "end_line": 4064
+            },
+            "reader_span": "a room",
+            "reader_margin": 5.491249
+          },
+          {
+            "rank": 4,
+            "citation": {
+              "section": "Chapter 15",
+              "start_line": 4057,
+              "end_line": 4078
+            },
+            "reader_span": "apartment",
+            "reader_margin": -2.717958
+          }
+        ],
+        "before": {
+          "answer": "apartments",
+          "citation": {
+            "section": "Chapter 15",
+            "start_line": 4020,
+            "end_line": 4041
+          },
+          "query": "What did Jellia Jamb give Jim to stay in at the palace?",
+          "previous_answer": "",
+          "selected_rank": 1,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "apartments",
+          "citation": {
+            "section": "Chapter 15",
+            "start_line": 4020,
+            "end_line": 4041
+          },
+          "query": "What did Jellia Jamb give Jim to stay in at the palace?",
+          "previous_answer": "",
+          "selected_rank": 1,
+          "rejected_query": null
+        },
+        "after_supported": false,
+        "note": "The reader preferred apartments from a greeting to Zeb and the Wizard. Further down the shortlist, the story gives Jim a room."
+      },
+      {
+        "conversation": 13,
+        "turn": 2,
+        "prompt": "What about the Wizard?",
+        "expected": "His old room behind the great Throne Room.",
+        "primary_failure": "followup_rewrite",
+        "supporting_candidates_before": [
+          {
+            "rank": 2,
+            "citation": {
+              "section": "Chapter 15",
+              "start_line": 4057,
+              "end_line": 4078
+            },
+            "reader_span": "apartment",
+            "reader_margin": -0.47716
+          }
+        ],
+        "before": {
+          "answer": "stables",
+          "citation": {
+            "section": "Chapter 15",
+            "start_line": 4034,
+            "end_line": 4053
+          },
+          "query": "What did the Wizard give Jim to stay in at the palace?",
+          "previous_answer": "apartments",
+          "selected_rank": 5,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "a room",
+          "citation": {
+            "section": "Chapter 19",
+            "start_line": 5235,
+            "end_line": 5258
+          },
+          "query": "What did Jellia Jamb give the Wizard to stay in at the palace?",
+          "previous_answer": "apartments",
+          "selected_rank": 8,
+          "rejected_query": null
+        },
+        "after_supported": false,
+        "note": "The rewrite replaced the giver instead of the recipient. The updated query changes the recipient. The reader still cites a room from the wrong scene."
+      },
+      {
+        "conversation": 16,
+        "turn": 1,
+        "prompt": "What color were the Hungry Tiger's stripes?",
+        "expected": "Purple.",
+        "primary_failure": "confidence_rejection",
+        "supporting_candidates_before": [
+          {
+            "rank": 1,
+            "citation": {
+              "section": "Chapter 16",
+              "start_line": 4520,
+              "end_line": 4537
+            },
+            "reader_span": "purple",
+            "reader_margin": 0.441268
+          },
+          {
+            "rank": 6,
+            "citation": {
+              "section": "Chapter 16",
+              "start_line": 4511,
+              "end_line": 4528
+            },
+            "reader_span": "purple",
+            "reader_margin": -5.502413
+          }
+        ],
+        "before": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "What color were the Hungry Tiger's stripes?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "What color were the Hungry Tiger's stripes?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "after_supported": false,
+        "note": "Two windows yielded purple. Neither span passed the margin threshold."
+      },
+      {
+        "conversation": 20,
+        "turn": 1,
+        "prompt": "Why did Ozma need no stables for the Sawhorse?",
+        "expected": "He lived in a room of the palace.",
+        "primary_failure": "span_extraction",
+        "supporting_candidates_before": [
+          {
+            "rank": 1,
+            "citation": {
+              "section": "Chapter 15",
+              "start_line": 4045,
+              "end_line": 4064
+            },
+            "reader_span": "much smaller and more natural in appearance",
+            "reader_margin": 6.249777
+          }
+        ],
+        "before": {
+          "answer": "unless some have been built since I went away",
+          "citation": {
+            "section": "Chapter 15",
+            "start_line": 4034,
+            "end_line": 4053
+          },
+          "query": "Why did Ozma need no stables for the Sawhorse?",
+          "previous_answer": "",
+          "selected_rank": 5,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "unless some have been built since I went away",
+          "citation": {
+            "section": "Chapter 15",
+            "start_line": 4034,
+            "end_line": 4053
+          },
+          "query": "Why did Ozma need no stables for the Sawhorse?",
+          "previous_answer": "",
+          "selected_rank": 5,
+          "rejected_query": null
+        },
+        "after_supported": false,
+        "note": "Jellia explains that the Sawhorse lives in a palace room. The reader selected a different clause and then preferred the Wizard’s remark about stables."
+      }
+    ]
+  },
+  "separate_check": {
+    "test_file": "data/oz_book_lookup_quality_test.jsonl",
+    "test_sha256": "2fdc91b949111fc3485cd984027240a4b56325f08f5282301f55ee7158166cca",
+    "procedure": "The set combines 16 questions previously used for trained-chat generalization with five new two-turn book conversations. Its first comparison exposed an unsafe retry on a vague pronoun question. The final retry guard was validated on the same set.",
+    "before": {
+      "turns": 26,
+      "correct": 12,
+      "correct_with_support": 12,
+      "correct_first_replies_with_support": 12,
+      "correct_later_replies_with_support": 0,
+      "abstentions": 6
+    },
+    "after": {
+      "turns": 26,
+      "correct": 12,
+      "correct_with_support": 12,
+      "correct_first_replies_with_support": 12,
+      "correct_later_replies_with_support": 0,
+      "abstentions": 6
+    },
+    "rows": [
+      {
+        "conversation": 1,
+        "turn": 1,
+        "prompt": "Why did Jim reach the glass street before Dorothy and Zeb?",
+        "expected": "His weight made him descend faster.",
+        "before": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "Why did Jim reach the glass street before Dorothy and Zeb?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "Why did Jim reach the glass street before Dorothy and Zeb?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "correct_with_support": false
+      },
+      {
+        "conversation": 2,
+        "turn": 1,
+        "prompt": "Where did the Mangaboo Prince wear the star when he first questioned Zeb?",
+        "expected": "In his hair, above his forehead.",
+        "before": {
+          "answer": "brow",
+          "citation": {
+            "section": "Chapter 5",
+            "start_line": 1381,
+            "end_line": 1402
+          },
+          "query": "Where did the Mangaboo Prince wear the star when he first questioned Zeb?",
+          "previous_answer": "",
+          "selected_rank": 4,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "brow",
+          "citation": {
+            "section": "Chapter 5",
+            "start_line": 1381,
+            "end_line": 1402
+          },
+          "query": "Where did the Mangaboo Prince wear the star when he first questioned Zeb?",
+          "previous_answer": "",
+          "selected_rank": 4,
+          "rejected_query": null
+        },
+        "correct_with_support": false
+      },
+      {
+        "conversation": 3,
+        "turn": 1,
+        "prompt": "What sound did Gwig produce when he first waved his hand at the contest?",
+        "expected": "Tinkling bells.",
+        "before": {
+          "answer": "tinkling of bells",
+          "citation": {
+            "section": "Chapter 3",
+            "start_line": 944,
+            "end_line": 972
+          },
+          "query": "What sound did Gwig produce when he first waved his hand at the contest?",
+          "previous_answer": "",
+          "selected_rank": 2,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "tinkling of bells",
+          "citation": {
+            "section": "Chapter 3",
+            "start_line": 944,
+            "end_line": 972
+          },
+          "query": "What sound did Gwig produce when he first waved his hand at the contest?",
+          "previous_answer": "",
+          "selected_rank": 2,
+          "rejected_query": null
+        },
+        "correct_with_support": true
+      },
+      {
+        "conversation": 4,
+        "turn": 1,
+        "prompt": "Why couldn't a Mangaboo lend the Wizard a hat for his trick?",
+        "expected": "The Mangaboos did not wear hats.",
+        "before": {
+          "answer": "the Mangaboos did not wear hats",
+          "citation": {
+            "section": "Chapter 3",
+            "start_line": 960,
+            "end_line": 985
+          },
+          "query": "Why couldn't a Mangaboo lend the Wizard a hat for his trick?",
+          "previous_answer": "",
+          "selected_rank": 6,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "the Mangaboos did not wear hats",
+          "citation": {
+            "section": "Chapter 3",
+            "start_line": 960,
+            "end_line": 985
+          },
+          "query": "Why couldn't a Mangaboo lend the Wizard a hat for his trick?",
+          "previous_answer": "",
+          "selected_rank": 6,
+          "rejected_query": null
+        },
+        "correct_with_support": true
+      },
+      {
+        "conversation": 5,
+        "turn": 1,
+        "prompt": "Which two fruits did the visitors find to eat in the Mangaboo gardens?",
+        "expected": "Strawberries and melons.",
+        "before": {
+          "answer": "strawberries",
+          "citation": {
+            "section": "Chapter 4",
+            "start_line": 1309,
+            "end_line": 1330
+          },
+          "query": "Which two fruits did the visitors find to eat in the Mangaboo gardens?",
+          "previous_answer": "",
+          "selected_rank": 8,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "strawberries",
+          "citation": {
+            "section": "Chapter 4",
+            "start_line": 1309,
+            "end_line": 1330
+          },
+          "query": "Which two fruits did the visitors find to eat in the Mangaboo gardens?",
+          "previous_answer": "",
+          "selected_rank": 8,
+          "rejected_query": null
+        },
+        "correct_with_support": false
+      },
+      {
+        "conversation": 6,
+        "turn": 1,
+        "prompt": "What did the piglets nibble when the Wizard set them on the grass?",
+        "expected": "Tender blades of grass.",
+        "before": {
+          "answer": "tender blades",
+          "citation": {
+            "section": "Chapter 5",
+            "start_line": 1460,
+            "end_line": 1489
+          },
+          "query": "What did the piglets nibble when the Wizard set them on the grass?",
+          "previous_answer": "",
+          "selected_rank": 8,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "tender blades",
+          "citation": {
+            "section": "Chapter 5",
+            "start_line": 1460,
+            "end_line": 1489
+          },
+          "query": "What did the piglets nibble when the Wizard set them on the grass?",
+          "previous_answer": "",
+          "selected_rank": 8,
+          "rejected_query": null
+        },
+        "correct_with_support": true
+      },
+      {
+        "conversation": 7,
+        "turn": 1,
+        "prompt": "Who held up the two lanterns in the glass tunnel while Zeb drove?",
+        "expected": "Dorothy and the Wizard each held one.",
+        "before": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "Who held up the two lanterns in the glass tunnel while Zeb drove?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "Who held up the two lanterns in the glass tunnel while Zeb drove?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "correct_with_support": false
+      },
+      {
+        "conversation": 8,
+        "turn": 1,
+        "prompt": "What sound did Zeb imitate to make Jim gallop faster on the way to the mountain?",
+        "expected": "A bear's growl.",
+        "before": {
+          "answer": "growl",
+          "citation": {
+            "section": "Chapter 9",
+            "start_line": 2526,
+            "end_line": 2545
+          },
+          "query": "What sound did Zeb imitate to make Jim gallop faster on the way to the mountain?",
+          "previous_answer": "",
+          "selected_rank": 2,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "growl",
+          "citation": {
+            "section": "Chapter 9",
+            "start_line": 2526,
+            "end_line": 2545
+          },
+          "query": "What sound did Zeb imitate to make Jim gallop faster on the way to the mountain?",
+          "previous_answer": "",
+          "selected_rank": 2,
+          "rejected_query": null
+        },
+        "correct_with_support": true
+      },
+      {
+        "conversation": 9,
+        "turn": 1,
+        "prompt": "How did Gargoyles communicate without making sounds?",
+        "expected": "Signals with their fingers or lips.",
+        "before": {
+          "answer": "quick signals made with their wooden fingers or lips",
+          "citation": {
+            "section": "Chapter 11",
+            "start_line": 2913,
+            "end_line": 2930
+          },
+          "query": "How did Gargoyles communicate without making sounds?",
+          "previous_answer": "",
+          "selected_rank": 1,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "quick signals made with their wooden fingers or lips",
+          "citation": {
+            "section": "Chapter 11",
+            "start_line": 2913,
+            "end_line": 2930
+          },
+          "query": "How did Gargoyles communicate without making sounds?",
+          "previous_answer": "",
+          "selected_rank": 1,
+          "rejected_query": null
+        },
+        "correct_with_support": true
+      },
+      {
+        "conversation": 10,
+        "turn": 1,
+        "prompt": "What did the Wizard take out of his satchel to attach the wings to Jim?",
+        "expected": "A spool of strong wire.",
+        "before": {
+          "answer": "a spool of strong wire",
+          "citation": {
+            "section": "Chapter 12",
+            "start_line": 3307,
+            "end_line": 3327
+          },
+          "query": "What did the Wizard take out of his satchel to attach the wings to Jim?",
+          "previous_answer": "",
+          "selected_rank": 1,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "a spool of strong wire",
+          "citation": {
+            "section": "Chapter 12",
+            "start_line": 3307,
+            "end_line": 3327
+          },
+          "query": "What did the Wizard take out of his satchel to attach the wings to Jim?",
+          "previous_answer": "",
+          "selected_rank": 1,
+          "rejected_query": null
+        },
+        "correct_with_support": true
+      },
+      {
+        "conversation": 11,
+        "turn": 1,
+        "prompt": "What size were the dragonettes' heads compared with barrels?",
+        "expected": "They were as big as barrels.",
+        "before": {
+          "answer": "as big",
+          "citation": {
+            "section": "Chapter 13",
+            "start_line": 3574,
+            "end_line": 3591
+          },
+          "query": "What size were the dragonettes' heads compared with barrels?",
+          "previous_answer": "",
+          "selected_rank": 1,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "as big",
+          "citation": {
+            "section": "Chapter 13",
+            "start_line": 3574,
+            "end_line": 3591
+          },
+          "query": "What size were the dragonettes' heads compared with barrels?",
+          "previous_answer": "",
+          "selected_rank": 1,
+          "rejected_query": null
+        },
+        "correct_with_support": false
+      },
+      {
+        "conversation": 12,
+        "turn": 1,
+        "prompt": "What did Ozma say the word Oz means in her language?",
+        "expected": "Great and Good.",
+        "before": {
+          "answer": "the Great and Terrible",
+          "citation": {
+            "section": "Chapter 3",
+            "start_line": 849,
+            "end_line": 871
+          },
+          "query": "What did Ozma say the word Oz means in her language?",
+          "previous_answer": "",
+          "selected_rank": 7,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "the Great and Terrible",
+          "citation": {
+            "section": "Chapter 3",
+            "start_line": 849,
+            "end_line": 871
+          },
+          "query": "What did Ozma say the word Oz means in her language?",
+          "previous_answer": "",
+          "selected_rank": 7,
+          "rejected_query": null
+        },
+        "correct_with_support": false
+      },
+      {
+        "conversation": 13,
+        "turn": 1,
+        "prompt": "What kept the Tin Woodman's heart from getting moldy?",
+        "expected": "His airtight chest.",
+        "before": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "What kept the Tin Woodman's heart from getting moldy?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "What kept the Tin Woodman's heart from getting moldy?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "correct_with_support": false
+      },
+      {
+        "conversation": 14,
+        "turn": 1,
+        "prompt": "What did the Woggle-Bug say H. M. stands for in his title?",
+        "expected": "Highly Magnified.",
+        "before": {
+          "answer": "Highly Magnified",
+          "citation": {
+            "section": "Chapter 15",
+            "start_line": 4293,
+            "end_line": 4315
+          },
+          "query": "What did the Woggle-Bug say H. M. stands for in his title?",
+          "previous_answer": "",
+          "selected_rank": 6,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "Highly Magnified",
+          "citation": {
+            "section": "Chapter 15",
+            "start_line": 4293,
+            "end_line": 4315
+          },
+          "query": "What did the Woggle-Bug say H. M. stands for in his title?",
+          "previous_answer": "",
+          "selected_rank": 6,
+          "rejected_query": null
+        },
+        "correct_with_support": true
+      },
+      {
+        "conversation": 15,
+        "turn": 1,
+        "prompt": "Where was the Gump's talking head hung in the palace?",
+        "expected": "Above the fireplace.",
+        "before": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "Where was the Gump's talking head hung in the palace?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "Where was the Gump's talking head hung in the palace?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "correct_with_support": false
+      },
+      {
+        "conversation": 16,
+        "turn": 1,
+        "prompt": "What was attached around the brim of the Munchkin wrestler's hat?",
+        "expected": "Little bells.",
+        "before": {
+          "answer": "little bells",
+          "citation": {
+            "section": "Chapter 17",
+            "start_line": 4736,
+            "end_line": 4750
+          },
+          "query": "What was attached around the brim of the Munchkin wrestler's hat?",
+          "previous_answer": "",
+          "selected_rank": 1,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "little bells",
+          "citation": {
+            "section": "Chapter 17",
+            "start_line": 4736,
+            "end_line": 4750
+          },
+          "query": "What was attached around the brim of the Munchkin wrestler's hat?",
+          "previous_answer": "",
+          "selected_rank": 1,
+          "rejected_query": null
+        },
+        "correct_with_support": true
+      },
+      {
+        "conversation": 17,
+        "turn": 1,
+        "prompt": "Who took Eureka away after Ozma ordered her held for trial?",
+        "expected": "The Captain-General.",
+        "before": {
+          "answer": "Captain-General",
+          "citation": {
+            "section": "Chapter 18",
+            "start_line": 4995,
+            "end_line": 5019
+          },
+          "query": "Who took Eureka away after Ozma ordered her held for trial?",
+          "previous_answer": "",
+          "selected_rank": 1,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "Captain-General",
+          "citation": {
+            "section": "Chapter 18",
+            "start_line": 4995,
+            "end_line": 5019
+          },
+          "query": "Who took Eureka away after Ozma ordered her held for trial?",
+          "previous_answer": "",
+          "selected_rank": 1,
+          "rejected_query": null
+        },
+        "correct_with_support": true
+      },
+      {
+        "conversation": 17,
+        "turn": 2,
+        "prompt": "Where did he take her?",
+        "expected": "To prison.",
+        "before": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "Where did Captain-General take Captain-General?",
+          "previous_answer": "Captain-General",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "Where did Captain-General take Captain-General?",
+          "previous_answer": "Captain-General",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "correct_with_support": false
+      },
+      {
+        "conversation": 18,
+        "turn": 1,
+        "prompt": "Who suggested taking the Royal Princess off her bush?",
+        "expected": "The Wizard.",
+        "before": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "Who suggested taking the Royal Princess off her bush?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "query": "Who suggested taking the Royal Princess off her bush?",
+          "previous_answer": "",
+          "selected_rank": null,
+          "rejected_query": null
+        },
+        "correct_with_support": false
+      },
+      {
+        "conversation": 18,
+        "turn": 2,
+        "prompt": "Why did he suggest it?",
+        "expected": "He hoped she would treat them better than the Prince.",
+        "before": {
+          "answer": "She is the Ruler destined to be my successor",
+          "citation": {
+            "section": "Chapter 4",
+            "start_line": 1243,
+            "end_line": 1265
+          },
+          "query": "Why did he suggest it (context: suggested taking the Royal Princess off her bush)?",
+          "previous_answer": "",
+          "selected_rank": 7,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "She is the Ruler destined to be my successor",
+          "citation": {
+            "section": "Chapter 4",
+            "start_line": 1243,
+            "end_line": 1265
+          },
+          "query": "Why did he suggest it (context: suggested taking the Royal Princess off her bush)?",
+          "previous_answer": "",
+          "selected_rank": 7,
+          "rejected_query": null
+        },
+        "correct_with_support": false
+      },
+      {
+        "conversation": 19,
+        "turn": 1,
+        "prompt": "Where did Jellia say Dorothy was when Zeb asked at the palace?",
+        "expected": "With Ozma in the private rooms.",
+        "before": {
+          "answer": "in the private rooms",
+          "citation": {
+            "section": "Chapter 15",
+            "start_line": 4020,
+            "end_line": 4041
+          },
+          "query": "Where did Jellia say Dorothy was when Zeb asked at the palace?",
+          "previous_answer": "",
+          "selected_rank": 3,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "in the private rooms",
+          "citation": {
+            "section": "Chapter 15",
+            "start_line": 4020,
+            "end_line": 4041
+          },
+          "query": "Where did Jellia say Dorothy was when Zeb asked at the palace?",
+          "previous_answer": "",
+          "selected_rank": 3,
+          "rejected_query": null
+        },
+        "correct_with_support": true
+      },
+      {
+        "conversation": 19,
+        "turn": 2,
+        "prompt": "Who was going to show him his room?",
+        "expected": "Jellia Jamb.",
+        "before": {
+          "answer": "the Wizard",
+          "citation": {
+            "section": "Chapter 15",
+            "start_line": 4068,
+            "end_line": 4087
+          },
+          "query": "Who was going to show Jellia Jellia's room?",
+          "previous_answer": "in the private rooms",
+          "selected_rank": 7,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "the Wizard",
+          "citation": {
+            "section": "Chapter 15",
+            "start_line": 4068,
+            "end_line": 4087
+          },
+          "query": "Who was going to show Jellia Jellia's room?",
+          "previous_answer": "in the private rooms",
+          "selected_rank": 7,
+          "rejected_query": null
+        },
+        "correct_with_support": false
+      },
+      {
+        "conversation": 20,
+        "turn": 1,
+        "prompt": "What did Zeb rub with the plant after doing his own feet?",
+        "expected": "Jim’s hoofs and the buggy tires.",
+        "before": {
+          "answer": "all four of Jim's hoofs and then upon the tires of the buggy-wheels",
+          "citation": {
+            "section": "Chapter 9",
+            "start_line": 2458,
+            "end_line": 2474
+          },
+          "query": "What did Zeb rub with the plant after doing his own feet?",
+          "previous_answer": "",
+          "selected_rank": 1,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "all four of Jim's hoofs and then upon the tires of the buggy-wheels",
+          "citation": {
+            "section": "Chapter 9",
+            "start_line": 2458,
+            "end_line": 2474
+          },
+          "query": "What did Zeb rub with the plant after doing his own feet?",
+          "previous_answer": "",
+          "selected_rank": 1,
+          "rejected_query": null
+        },
+        "correct_with_support": true
+      },
+      {
+        "conversation": 20,
+        "turn": 2,
+        "prompt": "Why did he do that?",
+        "expected": "So they could cross the water without sinking.",
+        "before": {
+          "answer": "carefully rubbed it upon all four of Jim's hoofs and then upon the tires of the buggy-wheels",
+          "citation": {
+            "section": "Chapter 9",
+            "start_line": 2458,
+            "end_line": 2474
+          },
+          "query": "Why did Zeb do that?",
+          "previous_answer": "all four of Jim's hoofs and then upon the tires of the buggy-wheels",
+          "selected_rank": 1,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "carefully rubbed it upon all four of Jim's hoofs and then upon the tires of the buggy-wheels",
+          "citation": {
+            "section": "Chapter 9",
+            "start_line": 2458,
+            "end_line": 2474
+          },
+          "query": "Why did Zeb do that?",
+          "previous_answer": "all four of Jim's hoofs and then upon the tires of the buggy-wheels",
+          "selected_rank": 1,
+          "rejected_query": null
+        },
+        "correct_with_support": false
+      },
+      {
+        "conversation": 21,
+        "turn": 1,
+        "prompt": "What did Ozma say she would do if Billina and Eureka kept quarrelling?",
+        "expected": "Use the Magic Belt to send them both home.",
+        "before": {
+          "answer": "take my Magic Belt and wish you both home again",
+          "citation": {
+            "section": "Chapter 15",
+            "start_line": 4265,
+            "end_line": 4289
+          },
+          "query": "What did Ozma say she would do if Billina and Eureka kept quarrelling?",
+          "previous_answer": "",
+          "selected_rank": 1,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "take my Magic Belt and wish you both home again",
+          "citation": {
+            "section": "Chapter 15",
+            "start_line": 4265,
+            "end_line": 4289
+          },
+          "query": "What did Ozma say she would do if Billina and Eureka kept quarrelling?",
+          "previous_answer": "",
+          "selected_rank": 1,
+          "rejected_query": null
+        },
+        "correct_with_support": true
+      },
+      {
+        "conversation": 21,
+        "turn": 2,
+        "prompt": "How did they react?",
+        "expected": "They were frightened and promised to be good.",
+        "before": {
+          "answer": "angry and indignant",
+          "citation": {
+            "section": "Chapter 18",
+            "start_line": 4928,
+            "end_line": 4956
+          },
+          "query": "How did they react (context: did Ozma say she would do if Billina and Eureka kept quarrelling)?",
+          "previous_answer": "take my Magic Belt and wish you both home again",
+          "selected_rank": 6,
+          "rejected_query": null
+        },
+        "after": {
+          "answer": "angry and indignant",
+          "citation": {
+            "section": "Chapter 18",
+            "start_line": 4928,
+            "end_line": 4956
+          },
+          "query": "How did they react (context: did Ozma say she would do if Billina and Eureka kept quarrelling)?",
+          "previous_answer": "take my Magic Belt and wish you both home again",
+          "selected_rank": 6,
+          "rejected_query": null
+        },
+        "correct_with_support": false
+      }
+    ]
+  },
+  "original_regression": {
+    "test_file": "data/oz_chat_test.jsonl",
+    "test_sha256": "1c29194de5fcf79db46c2097ba1fd8e150c205cddd22e33a9b1b0d96052755ea",
+    "before": {
+      "turns": 32,
+      "correct": 21,
+      "correct_with_support": 20,
+      "correct_first_replies_with_support": 16,
+      "correct_later_replies_with_support": 4,
+      "abstentions": 6
+    },
+    "after": {
+      "turns": 32,
+      "correct": 21,
+      "correct_with_support": 20,
+      "correct_first_replies_with_support": 16,
+      "correct_later_replies_with_support": 4,
+      "abstentions": 6
+    },
+    "jury_citation": {
+      "section": "Chapter 19",
+      "start_line": 5224,
+      "end_line": 5242
+    }
+  }
+}

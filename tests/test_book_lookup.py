@@ -173,6 +173,47 @@ The Wizard was born in Omaha.
         self.assertEqual(reply.source, actual)
         reader.read.assert_called_with('Who went with Dana when Dana returned?', [actual])
 
+    def test_followup_retries_without_an_unsupported_inferred_name(self):
+        passage = Passage('Chapter 1', 1, 3, 'The runner climbed twenty feet while the dogs chased her.')
+        index = Mock()
+        index.search.return_value = [(passage, 2.0)]
+        reader = Mock()
+        reader.read.side_effect = [[AnswerSpan('twenty feet', 0.1)], [AnswerSpan('twenty feet', 8.0)]]
+        session = BookSession(index, reader, trace_passages=True)
+        previous = 'Who escaped the dogs?'
+        session.remember(previous, 'Dana')
+        question = 'How high did she climb?'
+
+        reply = session.reply(question)
+
+        self.assertEqual(reply.source, passage)
+        self.assertTrue(reply.history_used)
+        self.assertEqual(reply.passage_trace.query, question)
+        self.assertEqual(reply.passage_trace.rejected_query, 'How high did Dana climb?')
+        index.search.assert_called_with(question, previous)
+
+    def test_generic_pronoun_followup_does_not_retry_without_the_name(self):
+        passage = Passage('Chapter 1', 1, 3, 'The runner took Alice to prison.')
+        index, reader = Mock(), Mock()
+        index.search.return_value = [(passage, 2.0)]
+        reader.read.return_value = [AnswerSpan('prison', 0.1)]
+        session = BookSession(index, reader)
+        session.remember('Who captured the spy?', 'Dana')
+
+        self.assertEqual(session.reply('Where did he take her?').text, NO_ANSWER)
+        reader.read.assert_called_once()
+
+    def test_same_answer_cites_the_trip_in_the_requested_direction(self):
+        up = Passage('Chapter 1', 1, 2, 'Dana climbed up and Alice followed her.')
+        down = Passage('Chapter 1', 3, 4, 'Dana climbed downward and Alice followed her.')
+        index, reader = Mock(), Mock()
+        index.search.return_value = [(up, 2.0), (down, 1.9)]
+        reader.read.return_value = [AnswerSpan('Alice', 8), AnswerSpan('Alice', 7.9)]
+        session = BookSession(index, reader)
+
+        self.assertEqual(session.reply('Who went down with Dana?').source, down)
+        self.assertEqual(session.reply('Who went up with Dana?').source, up)
+
     def test_trace_keeps_search_order_and_marks_the_selected_passage(self):
         index = Mock()
         index.search.return_value = [(self.passages[1], 3.0), (self.passages[2], 1.0)]
@@ -310,6 +351,10 @@ The Wizard was born in Omaha.
             ('Why?', 'Who shod the Sawhorse with gold?', 'Why did someone shoe the Sawhorse with gold?'),
             ('What about Zeb?', "What color was Dorothy's face under the suns?",
              "What color was Zeb's face under the suns?"),
+            ('What about the Wizard?', 'What did Jellia Jamb offer Jim to sleep in?',
+             'What did Jellia Jamb offer the Wizard to sleep in?'),
+            ('How did he fall into it?', 'What had the Braided Man invented for his business?',
+             'How did the Braided Man fall into the thing the Braided Man invented?'),
         ]
         for question, previous, expected in cases:
             with self.subTest(question=question, previous=previous):

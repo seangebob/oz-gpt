@@ -27,6 +27,8 @@ MIN_SINGLE_PASSAGE_MARGIN = 3.25
 ANSWER_AGREEMENT_BONUS = 0.5
 RETRIEVAL_SCORE_WEIGHT = 0.5
 ANSWER_SCORE_TOLERANCE = 0.02
+DIRECTION_SCORE_TOLERANCE = 0.25
+MIN_RETRY_TERMS = 2
 CHAPTER_HEADING_WEIGHT = 0.28
 
 CHAPTER_HEADING = re.compile(r'CHAPTER (\d+)\.', re.IGNORECASE)
@@ -50,8 +52,14 @@ QUESTION_ACTOR = re.compile(
     rf"(?i:did|does|was|were|is|has|had|could|would) ({NAME})(?= |'s\b|$)",
 )
 ABOUT_SUBJECT = re.compile(rf'(?i:what about) ({NAME})\W*')
+RECIPIENT = re.compile(rf'\b(?i:give|gave|offer|offered|lend|lent|send|sent|show|showed|bring|brought) ({NAME})(?= )')
 NAME_ANSWER = re.compile(r"(?:(?i:the) )?[A-Z][a-z][\w'-]*(?: [A-Z][a-z][\w'-]*){0,3}")
 PAST_ACTION = re.compile(rf'(?i:what did) (?P<actor>{NAME}) (?P<verb>[a-z]+)(?P<rest> .*)?')
+PAST_PERFECT_ACTION = re.compile(rf'(?i:what had) ({NAME}) ([a-z]+)(?: .*)?')
+OBJECT_QUESTION = re.compile(r'what (?:[a-z-]+ ){0,3}(?:do|did|does|had|is|are|was|were|can|could)\b', re.IGNORECASE)
+PERSONAL_REFERENCE = re.compile(r'\b(?:he|she|him|her|his|hers)\b', re.IGNORECASE)
+DIRECTION_QUESTION = re.compile(r'\b(?:go|went|come|came|walk(?:ed)?|climb(?:ed)?|slide|slid) (up|down)\b', re.IGNORECASE)
+DIRECTION_WORD = re.compile(r'\b(up|down)(?:wards?)?\b', re.IGNORECASE)
 CHOICE_SUBJECT = re.compile(
     r"which ((?!of\b)[\w'-]+(?: [\w'-]+){0,3}?) ((?:was|were|went|fell|came|had|got|[\w-]{3,}ed)\b.*)",
     re.IGNORECASE,
@@ -140,6 +148,10 @@ def followup_question(question, previous_question, previous_answer):
         return f'Why was {actor} given that name?'
 
     if about := ABOUT_SUBJECT.fullmatch(question):
+        subject = QUESTION_ACTOR.match(previous_question)
+        if subject and (recipient := RECIPIENT.search(previous_question, subject.end())):
+            start, end = recipient.span(1)
+            return previous_question[:start] + about[1] + previous_question[end:] + '?'
         prior_subject = actor if actor and actor in previous_question else ''
         if not prior_subject and (mentioned := BOOK_NAME.search(previous_question)):
             prior_subject = mentioned[0]
@@ -189,13 +201,14 @@ def followup_question(question, previous_question, previous_answer):
         if verb in {'show', 'reveal', 'display', 'produce'} and re.fullmatch(r'where was it\W*', question, re.IGNORECASE):
             return f'Where did {actor} produce the item from?'
         item = f'the item {actor} {_past_tense(verb)}{rest or ""}'
+    elif perfect := PAST_PERFECT_ACTION.fullmatch(previous_question):
+        actor, verb = perfect.groups()
+        item = f'the thing {actor} {verb.lower()}'
     elif choice:
         if location and MISSING_EVENT.fullmatch(choice[2]):
             return f'Where did the {choice[1]} really end up?'
         item = f'the {choice[1]} that {choice[2]}'
-    elif re.match(r'what\b', previous_question, re.IGNORECASE) and not re.match(
-        r'what (?:do|did|does|is|are|was|were|can|could)\b', previous_question, re.IGNORECASE,
-    ):
+    elif re.match(r'what\b', previous_question, re.IGNORECASE) and not OBJECT_QUESTION.match(previous_question):
         item = f'the thing that {previous_question[5:]}'
 
     plural = PLURAL_OBJECT.search(previous_question)
@@ -259,6 +272,7 @@ class PassageTrace:
     previous_answer: str
     candidates: tuple[tuple[Passage, float], ...]
     spans: tuple[AnswerSpan, ...]
+    rejected_query: str | None = None
 
 
 @dataclass(frozen=True)
@@ -464,8 +478,18 @@ def _independent_evidence(passage, span, other_passage, other_span):
     return passage.end_line < other_passage.start_line or other_passage.end_line < passage.start_line
 
 
-def _select_answer(candidates, spans):
+def _supports_direction(passage, span, direction):
+    start = passage.text.find(span.text) if span.start is None else span.start
+    end = start + len(span.text)
+    visible = passage.text[:span.context_end]
+    cues = DIRECTION_WORD.finditer(visible, max(0, start - 100), end + 100)
+    nearest = min(cues, key=lambda match: max(start - match.end(), match.start() - end), default=None)
+    return nearest is not None and nearest[1].lower() == direction
+
+
+def _select_answer(candidates, spans, question=''):
     strongest_search_score = candidates[0][1]
+    motion = DIRECTION_QUESTION.search(question)
     answers = {}
     for (passage, score), span in zip(candidates, spans):
         if not (span.margin >= MIN_ANSWER_MARGIN and span.text and span.text in passage.text[:span.context_end]):
@@ -479,6 +503,12 @@ def _select_answer(candidates, spans):
     ranked = []
     for matches in answers.values():
         strength, span, passage = max(matches, key=lambda match: match[0])
+        if motion and len(matches) > 1:
+            # Comparable extracts can refer to different trips. Prefer the one near the requested direction.
+            alternatives = [match for match in matches if strength - match[0] <= DIRECTION_SCORE_TOLERANCE
+                            and _supports_direction(match[2], match[1], motion[1].lower())]
+            if alternatives:
+                strength, span, passage = max(alternatives, key=lambda match: match[0])
         agrees = any(_independent_evidence(passage, span, other_passage, other_span)
                      for _, other_span, other_passage in matches)
         if agrees:
@@ -516,7 +546,7 @@ def _select_expanded_answer(question, candidates, spans, initial_count):
         if enough_terms or repeated_phrase:
             eligible.append(candidate)
             eligible_spans.append(span)
-    return _select_answer(eligible, eligible_spans)
+    return _select_answer(eligible, eligible_spans, question)
 
 
 class BookSession:
@@ -552,22 +582,14 @@ class BookSession:
         self.previous_question = resolved + '?' if annotation else question
         self.previous_answer = answer
 
-    def reply(self, question, *, remember=True):
-        question = question.strip()
-        if not question:
-            raise ValueError('Empty prompt — please enter text')
-        rewritten = self._followup(question)
-        history_used = rewritten is not None
-        earlier_question = self.previous_question if history_used else ''
-        earlier_answer = self.previous_answer if history_used else ''
-        reader_question = rewritten or question
+    def _read_question(self, reader_question, earlier_question):
         candidates = self.index.search(reader_question, earlier_question)
         text, source = NO_ANSWER, None
         spans = []
         if candidates:
             spans = self.reader.read(reader_question, [passage for passage, _ in candidates])
-            text, source = _select_answer(candidates, spans)
-            weak_followup = history_used and any(
+            text, source = _select_answer(candidates, spans, reader_question)
+            weak_followup = earlier_question and any(
                 passage == source and span.margin < FOLLOWUP_RECHECK_MARGIN
                 for (passage, _), span in zip(candidates, spans)
             )
@@ -579,9 +601,31 @@ class BookSession:
                     spans += self.reader.read(reader_question, extra_passages)
                     candidates = expanded
                     text, source = _select_expanded_answer(reader_question, candidates, spans, initial_count)
+        return text, source, candidates, spans
+
+    def reply(self, question, *, remember=True):
+        question = question.strip()
+        if not question:
+            raise ValueError('Empty prompt — please enter text')
+        rewritten = self._followup(question)
+        history_used = rewritten is not None
+        earlier_question = self.previous_question if history_used else ''
+        earlier_answer = self.previous_answer if history_used else ''
+        reader_question = rewritten or question
+        text, source, candidates, spans = self._read_question(reader_question, earlier_question)
+        rejected_query = None
+        if (source is None and rewritten and earlier_answer and PERSONAL_REFERENCE.search(question)
+                and len(set(search_terms(question))) >= MIN_RETRY_TERMS
+                and rewritten != followup_question(question, earlier_question, '')):
+            # Keep the earlier question as a search cue, without binding the pronoun to the extracted name.
+            fallback = self._read_question(question, earlier_question)
+            if fallback[1] is not None:
+                text, source, candidates, spans = fallback
+                rejected_query, reader_question = reader_question, question
         trace = None
         if self.trace_passages:
-            trace = PassageTrace(reader_question, earlier_question, earlier_answer, tuple(candidates), tuple(spans))
+            trace = PassageTrace(reader_question, earlier_question, earlier_answer, tuple(candidates), tuple(spans),
+                                 rejected_query=rejected_query)
         if remember:
             self._remember_resolved(reader_question, text if source else '')
         return BookReply(text, source, history_used, trace)

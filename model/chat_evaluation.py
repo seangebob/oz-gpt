@@ -48,11 +48,14 @@ def passage_trace_record(reply):
         if rank <= len(trace.spans):
             span = trace.spans[rank - 1]
             row.update(reader_span=span.text, reader_margin=round(span.margin, 6))
+            if span.start is not None:
+                row['reader_start'] = span.start
             if span.context_end is not None and span.context_end < len(passage.text):
                 row['reader_text'] = passage.text[:span.context_end]
         candidates.append(row)
     return {
         'query': trace.query,
+        'rejected_query': trace.rejected_query,
         'previous_question': trace.previous_question,
         'previous_answer': trace.previous_answer,
         'selected_rank': selected_rank,

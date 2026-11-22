@@ -349,7 +349,7 @@ Issue numbers refer to the project bug review. Complete each stage in this order
 ### Remaining repairs in order
 
 1. **#1 Improve factual accuracy in trained chat.** Compact history enabled context-dependent replies. The optional classifier improved first replies on both benchmarks by selecting answers learned during training. Generalization remains open at 0/16 on the latest fresh-fact test, and the generator alone still struggles on first replies. [First-reply and generalization results](evaluations/oz_chat_first_reply_generalization_comparison.json)
-2. **Improve book lookup on the misses from the fresh benchmark.** Review whether the retrieved passages contain the correct answer, then investigate when an incorrect first reply becomes the next turn’s subject. Use a new final set for the next tuning round. [Development questions](data/oz_book_lookup_dev.jsonl) · [Final questions](data/oz_book_lookup_test.jsonl)
+2. **Improve book lookup on the misses from the quality review.** The reader saw supporting text on all 13 audited misses. Follow-up and citation fixes raised the audited set from 16/29 to 18/29 correct answers with support. The separate 26-turn check scored 12/26 with support, including 0/5 follow-ups. The remaining work includes extracting the right span, handling low-confidence correct spans, and keeping track of the subject in longer conversations. [Case-by-case review](evaluations/oz_book_lookup_quality_review.json) · [Separate check questions](data/oz_book_lookup_quality_test.jsonl)
 
 ### Cleanup follow-ups
 
