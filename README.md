@@ -292,7 +292,7 @@ Issue numbers refer to the project bug review. Complete each stage in this order
 ### Remaining repairs in order
 
 1. **#1 Improve factual accuracy in trained chat.** First retain enough of the previous question and answer for follow-ups and check a development set where the same short question has different answers. The experiment packed history on 0 of 4 known-fact paraphrase follow-ups. Then compare additional paraphrases and broader supervised fact coverage across multiple seeds. Keep a fresh unseen-fact test for the next final comparison and score first replies and follow-ups separately.
-2. **Prepare fresh book lookup questions.** Freeze a development set and a separate final test set before tuning. Keep the existing 32-turn benchmark for regression checks.
+2. **Prepare fresh book lookup questions · complete.** The 20-turn development set and the 29-turn final set were frozen before tuning. Both include book line references for each expected answer. The original 32-turn benchmark remains the regression check. [Development questions](data/oz_book_lookup_dev.jsonl) · [Final questions](data/oz_book_lookup_test.jsonl)
 3. **#9 Retain the resolved subject across turns.** Test conversations with at least three turns where a later question refers back to a named character or event.
 4. **#11 Repair question rewriting.** Resolve `her` and lowercase names, handle irregular verbs such as `see` and `go`, and recognize short follow-ups such as “Why?” and “What about Zeb?” Check standalone questions that contain pronouns.
 5. **#12 Normalize search terms.** Make forms such as `rescue` and `rescued`, `live` and `lived`, and `name` and `named` match. Check that nearby unrelated words stay distinct.
