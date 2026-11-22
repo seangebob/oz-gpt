@@ -117,6 +117,64 @@ The Wizard was born in Omaha.
         index.search.return_value = [(first, 2.0), (second, 2.0)]
         self.assertEqual(session.reply('Who answered?').text, 'fox')
 
+    def test_weak_extract_can_be_confirmed_in_its_matching_sentence(self):
+        sentence = 'Dana listed a new spring-clock as her invention.'
+        passage = Passage('Chapter 1', 1, 2, sentence + ' Ezra bought a watch.', sentence_starts=(0, 8))
+        index = Mock(search=Mock(return_value=[(passage, 2.0)]))
+        reader = Mock()
+        weak = AnswerSpan('spring-clock', 0.1, start=sentence.index('spring-clock'))
+        question = 'What invention did Dana list?'
+        session = BookSession(index, reader, trace_passages=True)
+
+        reader.read.side_effect = [[weak], [AnswerSpan('a new spring-clock', 5, start=sentence.index('a new'))]]
+        reply = session.reply(question)
+        self.assertEqual((reply.text, reply.source), ('a new spring-clock', passage))
+        self.assertEqual(reply.passage_trace.reread.excerpt, sentence)
+        self.assertEqual(reply.passage_trace.spans[0], weak)
+
+        reader.read.side_effect = [[weak], [AnswerSpan('Dana', 9, start=0)]]
+        self.assertIsNone(session.reply(question).source)
+
+        reader.read.side_effect = [[AnswerSpan('spring-clock', 0.1, len(sentence) - 1, weak.start)]]
+        self.assertIsNone(session.reply(question).source)
+
+    def test_reaction_reread_quotes_the_previous_reply_and_stays_in_the_scene(self):
+        speech = 'The canal will flood the lower fields'
+        reaction = 'They were scared and ran to the hill.'
+        scene = Passage('Chapter 1', 1, 2, f'{speech}. {reaction}', sentence_starts=(0, len(speech.split())))
+        elsewhere = Passage('Chapter 1', 10, 12, 'Later the children were amused.')
+        index = Mock()
+        index.search.side_effect = [[(scene, 2.0)], [(scene, 4.0), (elsewhere, 3.0)]]
+        reader = Mock()
+        reader.read.side_effect = [[AnswerSpan(speech, 8)], [AnswerSpan('scared', 0), AnswerSpan('amused', 9)],
+                                   [AnswerSpan('scared', 5, start=scene.text.index('scared'))]]
+        session = BookSession(index, reader, trace_passages=True)
+
+        session.reply('What did Dana say to the children?')
+        reply = session.reply('How did they react?')
+
+        self.assertEqual((reply.text, reply.source), (reaction, scene))
+        reader.read.assert_called_with(f'How did they react when they heard "{speech}"?', [scene])
+        self.assertEqual(reply.passage_trace.reread.span.text, 'scared')
+        session.reset()
+        self.assertIsNone(session.previous_source)
+
+    def test_purpose_reread_asks_for_the_effect_when_the_reader_repeats_the_action(self):
+        action = 'all the long wooden panels'
+        effect = 'the wood would dry faster'
+        scene = Passage('Chapter 1', 1, 4, f'Dana brushed {action}. Then {effect}.')
+        index = Mock(search=Mock(return_value=[(scene, 2.0)]))
+        reader = Mock()
+        reader.read.side_effect = [[AnswerSpan(action, 8)], [AnswerSpan(f'brushed {action}', 10)],
+                                   [AnswerSpan(effect, 5)]]
+        session = BookSession(index, reader)
+
+        session.reply('What did Dana brush with the mixture after doing her own boots?')
+        reply = session.reply('Why did she do that?')
+
+        self.assertEqual((reply.text, reply.source), (effect, scene))
+        reader.read.assert_called_with('What was the effect of using the mixture?', [scene])
+
     @patch('model.book_lookup.PASSAGE_WORDS', 12)
     @patch('model.book_lookup.PASSAGE_STEP', 5)
     def test_overlapping_windows_vote_once_for_the_same_sentence(self):

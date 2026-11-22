@@ -1,0 +1,132 @@
+{
+  "baseline_code_commit": "2b41394ee04ce7ae9bfd63da978c1f1d074f1677",
+  "history": "generated",
+  "procedure": "Run identical fixtures on both versions. Preserve prior correctness labels for identical replies and citations. Review every changed reply against its citation. The known misses guided this change. The quality fixture still attributes the Magic Belt threat to Ozma in its first question. The first-turn score keeps the previous review’s correction for that attribution.",
+  "benchmarks": [
+    {
+      "test_file": "data/oz_book_lookup_quality_test.jsonl",
+      "test_sha256": "2fdc91b949111fc3485cd984027240a4b56325f08f5282301f55ee7158166cca",
+      "turns": 26,
+      "replies_or_citations_changed": 2,
+      "correct_with_support_before": 13,
+      "correct_with_support_after": 15,
+      "later_turns": 5,
+      "later_correct_with_support_before": 2,
+      "later_correct_with_support_after": 4
+    },
+    {
+      "test_file": "data/oz_book_lookup_test.jsonl",
+      "test_sha256": "fdb302e5e6c8fc12d6de0cde1f96d3489982657d0ddb97b23173a2b3d495b625",
+      "turns": 29,
+      "replies_or_citations_changed": 1,
+      "correct_with_support_before": 18,
+      "correct_with_support_after": 19,
+      "later_turns": 9,
+      "later_correct_with_support_before": 6,
+      "later_correct_with_support_after": 6
+    },
+    {
+      "test_file": "data/oz_chat_test.jsonl",
+      "test_sha256": "1c29194de5fcf79db46c2097ba1fd8e150c205cddd22e33a9b1b0d96052755ea",
+      "turns": 32,
+      "replies_or_citations_changed": 0,
+      "correct_with_support_before": 20,
+      "correct_with_support_after": 20,
+      "later_turns": 8,
+      "later_correct_with_support_before": 4,
+      "later_correct_with_support_after": 4
+    },
+    {
+      "test_file": "data/oz_book_lookup_dev.jsonl",
+      "test_sha256": "dad905b394e32445e8a3c744be8e00d61ad95692d63f5aa53a29d6ed27883608",
+      "turns": 20,
+      "replies_or_citations_changed": 0
+    }
+  ],
+  "changed_replies": [
+    {
+      "benchmark": "quality",
+      "conversation": 20,
+      "turn": 2,
+      "prompt": "Why did he do that?",
+      "expected": "So they could cross the water without sinking.",
+      "previous_reply": "carefully rubbed it upon all four of Jim's hoofs and then upon the tires of the buggy-wheels",
+      "reply": "They did not sink at all",
+      "first_reader_query": "Why did Zeb do that?",
+      "reread": {
+        "query": "What was the effect of using the plant?",
+        "span": "They did not sink at all",
+        "margin": 10.746545,
+        "excerpt": null
+      },
+      "selected_rank": 2,
+      "citation": {
+        "section": "Chapter 9",
+        "start_line": 2467,
+        "end_line": 2484
+      },
+      "review_note": "The cited paragraph says the buggy crossed the water without sinking because of the plant."
+    },
+    {
+      "benchmark": "quality",
+      "conversation": 21,
+      "turn": 2,
+      "prompt": "How did they react?",
+      "expected": "They were frightened and promised to be good.",
+      "previous_reply": "angry and indignant",
+      "reply": "They were both much frightened at the threat, and promised meekly to be good.",
+      "first_reader_query": "How did they react (context: did Ozma say she would do if Billina and Eureka kept quarrelling)?",
+      "reread": {
+        "query": "How did they react when they heard \"take my Magic Belt and wish you both home again\"?",
+        "span": "frightened",
+        "margin": 4.421495,
+        "excerpt": null
+      },
+      "selected_rank": 1,
+      "citation": {
+        "section": "Chapter 15",
+        "start_line": 4265,
+        "end_line": 4289
+      },
+      "review_note": "The reply quotes the reaction to Dorothy’s threat in the same scene."
+    },
+    {
+      "benchmark": "audit",
+      "conversation": 9,
+      "turn": 1,
+      "prompt": "What had the Braided Man invented that he thought would make his fortune?",
+      "expected": "A new Adjustable Post-hole.",
+      "previous_reply": "I couldn't find an answer supported by the book.",
+      "reply": "a new Adjustable Post-hole",
+      "first_reader_query": "What had the Braided Man invented that he thought would make his fortune?",
+      "reread": {
+        "query": "What had the Braided Man invented that he thought would make his fortune?",
+        "span": "a new Adjustable Post-hole",
+        "margin": 4.626941,
+        "excerpt": "Finally I invented a new Adjustable Post-hole, which I thought would make my fortune."
+      },
+      "selected_rank": 1,
+      "citation": {
+        "section": "Chapter 10",
+        "start_line": 2729,
+        "end_line": 2744
+      },
+      "review_note": "The Braided Man names the invention and says he thought it would make his fortune."
+    }
+  ],
+  "reader_model": "deepset/minilm-uncased-squad2",
+  "reader_revision": "934656cdda79824eabf503ed56e15c01ddbdbe3f",
+  "book_sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9",
+  "remaining_targeted_miss": {
+    "conversation": 18,
+    "question": "Why did he suggest it?",
+    "expected": "He hoped she would treat them better than the Prince.",
+    "reply": "I couldn't find an answer supported by the book.",
+    "query": "Why did someone suggest taking the Royal Princess off her bush?",
+    "supporting_passage_rank": 1,
+    "supporting_book_lines": [
+      1349,
+      1352
+    ]
+  }
+}

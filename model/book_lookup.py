@@ -82,6 +82,10 @@ TRANSFER_PARTICIPLE = {'bring': 'brought', 'carry': 'carried', 'drive': 'driven'
                        'lead': 'led', 'send': 'sent', 'take': 'taken'}
 REPEATED_ACTION_REASON = re.compile(r'why did (he|she) ([a-z]+) (?:it|that)\W*', re.IGNORECASE)
 ACTION_REASON = re.compile(r'why (?:was|were) (?:he|she|they) ([a-z]+)ing\W*', re.IGNORECASE)
+REACTION = re.compile(r'how did (he|she|they) (react|respond)\W*', re.IGNORECASE)
+REPORTED_SPEECH = re.compile(r'\b(?:say|said|tell|told|warn|warned|promise|promised|threaten|threatened)\b', re.IGNORECASE)
+REPEATED_PURPOSE = re.compile(r'why did (?:he|she|they) do (?:it|that)\W*', re.IGNORECASE)
+INSTRUMENT = re.compile(r' with ((?:a|an|the) .+?)(?: (?:after|before|when|while) .+)?$', re.IGNORECASE)
 LOST_ITEMS = re.compile(rf'(?i:where did) ({NAME}) (?i:lose them)\W*')
 PAST_TENSE = {
     'bring': 'brought', 'buy': 'bought', 'catch': 'caught', 'come': 'came', 'do': 'did', 'drink': 'drank',
@@ -332,6 +336,14 @@ class AnswerSpan:
 
 
 @dataclass(frozen=True)
+class PassageReread:
+    query: str
+    passage: Passage
+    span: AnswerSpan
+    excerpt: str | None = None
+
+
+@dataclass(frozen=True)
 class PassageTrace:
     query: str
     previous_question: str
@@ -339,6 +351,7 @@ class PassageTrace:
     candidates: tuple[tuple[Passage, float], ...]
     spans: tuple[AnswerSpan, ...]
     rejected_query: str | None = None
+    reread: PassageReread | None = None
 
 
 @dataclass(frozen=True)
@@ -615,6 +628,29 @@ def _select_expanded_answer(question, candidates, spans, initial_count):
     return _select_answer(eligible, eligible_spans, question)
 
 
+def _answer_sentence(passage, span):
+    if span.start is None or not passage.sentence_starts:
+        return '', 0
+    words = list(re.finditer(r'\S+', passage.text))
+    starts = [words[boundary - passage.word_start].start() for boundary in passage.sentence_starts
+              if 0 <= boundary - passage.word_start < len(words)]
+    sentence = bisect_right(starts, span.start)
+    if not sentence:
+        return '', 0
+    begin = starts[sentence - 1]
+    end = starts[sentence] if sentence < len(starts) else len(passage.text)
+    excerpt = passage.text[begin:end].rstrip()
+    visible_end = len(passage.text) if span.context_end is None else span.context_end
+    if not SENTENCE_END.search(excerpt) or not span.start + len(span.text) <= begin + len(excerpt) <= visible_end:
+        return '', 0
+    return excerpt, begin
+
+
+def _overlapping_passages(first, second):
+    return (first.section == second.section and first.start_line <= second.end_line
+            and second.start_line <= first.end_line)
+
+
 class BookSession:
     def __init__(self, index, reader, *, trace_passages=False):
         self.index = index
@@ -633,6 +669,7 @@ class BookSession:
     def reset(self):
         self.previous_question = ''
         self.previous_answer = ''
+        self.previous_source = None
 
     def remember(self, question, answer):
         self._remember_resolved(self._followup(question) or question, answer)
@@ -642,11 +679,12 @@ class BookSession:
             return followup_question(question, self.previous_question, self.previous_answer)
         return None
 
-    def _remember_resolved(self, question, answer):
+    def _remember_resolved(self, question, answer, source=None):
         # Avoid accumulating repeated context annotations across turns.
         resolved, annotation, _ = question.partition(' (context: ')
         self.previous_question = resolved + '?' if annotation else question
         self.previous_answer = answer
+        self.previous_source = source
 
     def _read_question(self, reader_question, earlier_question):
         candidates = self.index.search(reader_question, earlier_question)
@@ -669,6 +707,59 @@ class BookSession:
                     text, source = _select_expanded_answer(reader_question, candidates, spans, initial_count)
         return text, source, candidates, spans
 
+    def _reread_followup(self, question, text, source, candidates):
+        previous = self.previous_source
+        answer = self.previous_answer
+        if previous is None or len(set(search_terms(answer))) < 3:
+            return None
+
+        reaction = REACTION.fullmatch(question)
+        if reaction and REPORTED_SPEECH.search(self.previous_question):
+            if source is not None and _overlapping_passages(source, previous):
+                return None
+            person, verb = (part.lower() for part in reaction.groups())
+            query = f'How did {person} {verb} when {person} heard "{answer}"?'
+        elif REPEATED_PURPOSE.fullmatch(question) and answer.casefold() in text.casefold():
+            action = PAST_ACTION.fullmatch(self.previous_question.rstrip('?.!'))
+            instrument = INSTRUMENT.fullmatch(action['rest'] or '') if action else None
+            if not instrument:
+                return None
+            query = f'What was the effect of using {instrument[1]}?'
+        else:
+            return None
+
+        # The quoted words or action came from this scene. Recheck nearby evidence from the shortlist.
+        local = [(passage, score) for passage, score in candidates[:SEARCH_LIMIT]
+                 if _overlapping_passages(passage, previous)]
+        if not local:
+            return None
+        checked = self.reader.read(query, [passage for passage, _ in local])
+        candidates_and_spans = [(candidate, span) for candidate, span in zip(local, checked)
+                                if span.text and span.text.casefold() not in answer.casefold()
+                                and answer.casefold() not in span.text.casefold()]
+        if not candidates_and_spans:
+            return None
+        eligible, spans = zip(*candidates_and_spans)
+        _, source = _select_answer(eligible, spans, query)
+        return next((PassageReread(query, passage, span) for (passage, _), span in candidates_and_spans
+                     if passage == source), None)
+
+    def _reread_sentence(self, question, passage, span):
+        excerpt, offset = _answer_sentence(passage, span)
+        terms = set(search_terms(question))
+        if len(terms.intersection(search_terms(excerpt))) < max(2, len(terms) / 2):
+            return None
+
+        # Confirm a weak extract in its complete sentence without trusting a new, unrelated answer.
+        checked, = self.reader.read(question, [replace(passage, text=excerpt)])
+        if (checked.margin < MIN_SINGLE_PASSAGE_MARGIN or checked.start is None
+                or not checked.text or checked.text not in excerpt[:checked.context_end]):
+            return None
+        begin = offset + checked.start
+        if begin >= span.start + len(span.text) or span.start >= begin + len(checked.text):
+            return None
+        return PassageReread(question, passage, checked, excerpt=excerpt)
+
     def reply(self, question, *, remember=True):
         question = question.strip()
         if not question:
@@ -688,10 +779,19 @@ class BookSession:
             if fallback[1] is not None:
                 text, source, candidates, spans = fallback
                 rejected_query, reader_question = reader_question, question
+        reread = self._reread_followup(question, text, source, candidates) if history_used else None
+        if reread is None and source is None and candidates and spans:
+            reread = self._reread_sentence(reader_question, candidates[0][0], spans[0])
+        if reread is not None:
+            text, source = reread.span.text, reread.passage
+            if reread.excerpt is None and REACTION.fullmatch(question):
+                sentence, _ = _answer_sentence(source, reread.span)
+                if sentence and len(sentence.split()) <= 32:
+                    text = sentence
         trace = None
         if self.trace_passages:
             trace = PassageTrace(reader_question, earlier_question, earlier_answer, tuple(candidates), tuple(spans),
-                                 rejected_query=rejected_query)
+                                 rejected_query=rejected_query, reread=reread)
         if remember:
-            self._remember_resolved(reader_question, text if source else '')
+            self._remember_resolved(reader_question, text if source else '', source)
         return BookReply(text, source, history_used, trace)

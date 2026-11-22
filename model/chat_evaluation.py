@@ -56,6 +56,12 @@ def passage_trace_record(reply):
     return {
         'query': trace.query,
         'rejected_query': trace.rejected_query,
+        'reread': {
+            'query': trace.reread.query,
+            'span': trace.reread.span.text,
+            'margin': round(trace.reread.span.margin, 6),
+            'excerpt': trace.reread.excerpt,
+        } if trace.reread else None,
         'previous_question': trace.previous_question,
         'previous_answer': trace.previous_answer,
         'selected_rank': selected_rank,
