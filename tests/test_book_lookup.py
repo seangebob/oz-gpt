@@ -267,6 +267,37 @@ The Wizard was born in Omaha.
             with self.subTest(question=question, previous=previous):
                 self.assertEqual(followup_question(question, previous, answer), expected)
 
+    def test_rewrites_pronouns_lowercase_names_and_short_followups(self):
+        cases = [
+            ('Who helped her?', 'Where did Dorothy go?', 'Who helped Dorothy?'),
+            ('What was in her basket?', 'Where did Dorothy go?', "What was in Dorothy's basket?"),
+            ('Where did he go?', 'What did jim pull?', 'Where did jim go?'),
+            ('Where was it?', 'What did jim see?', 'Where was the item jim saw?'),
+            ('Was it far?', 'What did the wizard go to see?', 'Was the item the wizard went to see far?'),
+            ('Why?', 'Who shod the Sawhorse with gold?', 'Why did someone shoe the Sawhorse with gold?'),
+            ('What about Zeb?', "What color was Dorothy's face under the suns?",
+             "What color was Zeb's face under the suns?"),
+        ]
+        for question, previous, expected in cases:
+            with self.subTest(question=question, previous=previous):
+                session = BookSession(self.index, Mock(read=Mock(return_value=[])), trace_passages=True)
+                session.remember(previous, '')
+                self.assertEqual(session.reply(question).passage_trace.query, expected)
+
+    def test_standalone_questions_with_her_and_that_start_fresh(self):
+        questions = (
+            'In her throne room, what did Ozma hold in her hand?',
+            'Which gown did Dorothy wear to her party?',
+            'What did Ozma see that made Dorothy laugh?',
+        )
+        for question in questions:
+            with self.subTest(question=question):
+                session = BookSession(self.index, Mock(read=Mock(return_value=[])), trace_passages=True)
+                session.remember('Who is Dorothy?', '')
+                reply = session.reply(question)
+                self.assertEqual(reply.passage_trace.query, question)
+                self.assertFalse(reply.history_used)
+
 
 if __name__ == '__main__':
     unittest.main()

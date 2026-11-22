@@ -30,14 +30,24 @@ CHAPTER_HEADING_WEIGHT = 0.28
 CHAPTER_HEADING = re.compile(r'CHAPTER (\d+)\.', re.IGNORECASE)
 SENTENCE_END = re.compile(r"""[.!?]["'’”_\])]*$""")
 ABBREVIATION = re.compile(r'(?:[A-Z]|Mr|Mrs|Ms|Dr|St)\.$')
-FOLLOW_UP = re.compile(
-    r'\b(?:he|she|it|they|him|her|them|his|hers|its|their|there|that|those|too|else)\b'
-    r'|^(?:how many|what kind|which one)\W*$', re.IGNORECASE,
+SHORT_FOLLOW_UP = re.compile(
+    r'^(?:why|how many|what kind|which one)\W*$|^why (?:that|this) name\W*$'
+    r'|\b(?:there|that|those|too|else)\W*$', re.IGNORECASE,
 )
-PRONOUN = re.compile(r'\b(?:he|she|it|they|him|them|his|hers|its|their)\b', re.IGNORECASE)
-NAME = r"(?:(?i:the) )?[A-Z][\w'-]+(?: [A-Z][\w'-]+){0,3}"
+PRONOUN = re.compile(r'\b(?:he|she|it|they|him|her|them|his|hers|its|their)\b', re.IGNORECASE)
+BOOK_NAMES = (
+    r'Braided Man|Cowardly Lion|Hungry Tiger|Tin Woodman|Woggle-Bug|Nick Chopper|'
+    r'Uncle Henry|Uncle Bill|Aunt Em|Jellia Jamb|Dorothy|Eureka|Gwig|Jim|Ozma|'
+    r'Sawhorse|Scarecrow|Tik-tok|Wizard|Zeb(?:ediah)?'
+)
+BOOK_NAME = re.compile(rf'\b(?:{BOOK_NAMES})\b', re.IGNORECASE)
+NAME = rf"(?:(?i:the) )?(?:(?i:{BOOK_NAMES})\b|[A-Z][\w'-]+(?: [A-Z][\w'-]+){{0,3}})"
 NAMED_SUBJECT = re.compile(rf'(?i:who|what) (?i:is|was) ({NAME})')
-QUESTION_ACTOR = re.compile(rf'(?i:what|where|when|why|how) (?i:did|does|was|is) ({NAME})(?= |$)')
+QUESTION_ACTOR = re.compile(
+    rf"(?i:who|what|where|when|why|how(?: long| much| high| far| often)?) "
+    rf"(?i:did|does|was|were|is|has|had|could|would) ({NAME})(?= |'s\b|$)",
+)
+ABOUT_SUBJECT = re.compile(rf'(?i:what about) ({NAME})\W*')
 NAME_ANSWER = re.compile(r"(?:(?i:the) )?[A-Z][a-z][\w'-]*(?: [A-Z][a-z][\w'-]*){0,3}")
 PAST_ACTION = re.compile(rf'(?i:what did) (?P<actor>{NAME}) (?P<verb>[a-z]+)(?P<rest> .*)?')
 CHOICE_SUBJECT = re.compile(
@@ -56,9 +66,14 @@ ACTION_ACTOR = re.compile(r'who ([a-z]+)( .+)?', re.IGNORECASE)
 ACTION_REASON = re.compile(r'why (?:was|were) (?:he|she|they) ([a-z]+)ing\W*', re.IGNORECASE)
 LOST_ITEMS = re.compile(rf'(?i:where did) ({NAME}) (?i:lose them)\W*')
 PAST_TENSE = {
-    'bring': 'brought', 'buy': 'bought', 'do': 'did', 'find': 'found', 'get': 'got', 'give': 'gave',
-    'hide': 'hid', 'leave': 'left', 'make': 'made', 'put': 'put', 'take': 'took', 'wear': 'wore',
+    'bring': 'brought', 'buy': 'bought', 'catch': 'caught', 'come': 'came', 'do': 'did', 'drink': 'drank',
+    'eat': 'ate', 'fall': 'fell', 'find': 'found', 'fly': 'flew', 'get': 'got', 'give': 'gave', 'go': 'went',
+    'hide': 'hid', 'hold': 'held', 'leave': 'left', 'make': 'made', 'meet': 'met', 'put': 'put', 'run': 'ran',
+    'say': 'said', 'see': 'saw', 'set': 'set', 'shoe': 'shod', 'speak': 'spoke', 'take': 'took', 'wear': 'wore',
 }
+BASE_VERB = {past: verb for verb, past in PAST_TENSE.items()}
+AFTER_OBJECT = set('about after again along and around as at back before behind by down for from go in into leave '
+                   'near off on or out over through to under up with'.split())
 STOP_WORDS = set(
     'a an and are as at be been but by can could did do does for from had has have he her him his '
     'how i in is it its me of on or she should that the their them then there these they this those '
@@ -81,6 +96,26 @@ def _past_tense(verb):
     return PAST_TENSE.get(verb, re.sub(r'([^aeiou])y$', r'\1i', verb) + ('d' if verb.endswith('e') else 'ed'))
 
 
+def _possessive(question, match):
+    pronoun = match[0].lower()
+    if pronoun != 'her':
+        return pronoun in {'his', 'hers', 'its', 'their'}
+    following = re.match(r'\s+([a-z]+)\b', question[match.end():], re.IGNORECASE)
+    return following is not None and following[1].lower() not in AFTER_OBJECT
+
+
+def _uses_history(question):
+    if SHORT_FOLLOW_UP.search(question) or ABOUT_SUBJECT.fullmatch(question):
+        return True
+    pronouns = list(PRONOUN.finditer(question))
+    if not pronouns:
+        return False
+    main_question = question.rsplit(', ', 1)[-1].rstrip('?.!')
+    if all(_possessive(question, match) for match in pronouns):
+        return not (QUESTION_ACTOR.match(main_question) or BOOK_NAME.search(question[:pronouns[0].start()]))
+    return True
+
+
 def followup_question(question, previous_question, previous_answer):
     previous_question = previous_question.rstrip('?.!')
     named = NAMED_SUBJECT.fullmatch(previous_question)
@@ -89,9 +124,24 @@ def followup_question(question, previous_question, previous_answer):
     if not actor and re.match(r'who\b', previous_question, re.IGNORECASE) and NAME_ANSWER.fullmatch(name):
         actor = name
     if not actor and (subject := QUESTION_ACTOR.match(previous_question)):
-        actor = subject[1]
+        actor = subject[1].removesuffix("'s")
     if actor and re.fullmatch(r'why (?:that|this) name\W*', question, re.IGNORECASE):
         return f'Why was {actor} given that name?'
+
+    if about := ABOUT_SUBJECT.fullmatch(question):
+        prior_subject = actor if actor and actor in previous_question else ''
+        if not prior_subject and (mentioned := BOOK_NAME.search(previous_question)):
+            prior_subject = mentioned[0]
+        if prior_subject:
+            return re.sub(rf'\b{re.escape(prior_subject)}\b', lambda _: about[1], previous_question) + '?'
+
+    if re.fullmatch(r'why\W*', question, re.IGNORECASE):
+        if prior_action := ACTION_ACTOR.fullmatch(previous_question):
+            verb, rest = prior_action.groups()
+            if base := BASE_VERB.get(verb.lower()):
+                return f"Why did {actor or 'someone'} {base}{rest or ''}?"
+        if re.match(r'(?:what|where|when|how) (?:did|does|was|were|is|could)\b', previous_question, re.IGNORECASE):
+            return 'Why ' + previous_question.split(' ', 1)[1] + '?'
 
     returning = RETURN_QUESTION.fullmatch(previous_question)
     if returning and re.fullmatch(r'who (?:went|came) (?:too|along)\W*', question, re.IGNORECASE):
@@ -156,7 +206,7 @@ def followup_question(question, previous_question, previous_answer):
             referent = actor
         if not referent:
             return match[0]
-        return f"{referent}'s" if pronoun in {'his', 'hers', 'its', 'their'} else referent
+        return f"{referent}'s" if _possessive(question, match) else referent
 
     expanded = PRONOUN.sub(replace_pronoun, question)
     if expanded != question:
@@ -450,12 +500,12 @@ class BookSession:
         self._remember_resolved(self._followup(question) or question, answer)
 
     def _followup(self, question):
-        if self.previous_question and FOLLOW_UP.search(question):
+        if self.previous_question and _uses_history(question):
             return followup_question(question, self.previous_question, self.previous_answer)
         return None
 
     def _remember_resolved(self, question, answer):
-        # Reader-only context is already in the preceding question.
+        # Avoid accumulating repeated context annotations across turns.
         resolved, annotation, _ = question.partition(' (context: ')
         self.previous_question = resolved + '?' if annotation else question
         self.previous_answer = answer
