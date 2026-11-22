@@ -169,6 +169,25 @@ python -m model.chat_training --answer-class --sampling uniform --steps 1600 \
   --dev-data data/oz_chat_paraphrase_dev.jsonl --output model/model-chat-facts-repeat.pth
 ```
 
+### Try the compact-history checkpoint
+
+The compact-history experiment added 108 sourced conversations. Its final memory test uses three follow-up questions. Each follows six different earlier questions and calls for a different answer in each conversation. The first questions use wording held out of training.
+
+```bash
+python -m model.chatbot --chat model/model-chat-memory-experiment.pth
+```
+
+Ask `What did the Wizard wear when he joined the others for dinner?` followed by `What color was it?`. After `/reset`, try `What did Zeb change into at the palace?` and ask `What color was it?` again. Both first replies describe a velvet costume. The Wizard wore black and Zeb wore maroon.
+
+On the final memory test the selected checkpoint scored 7/18 first replies and 9/18 follow-ups. It kept history on all 18 follow-ups. The same weights scored 0/18 follow-ups with history disabled and 11/18 with the expected previous replies supplied. The default checkpoint scored 0/18 follow-ups. The compact checkpoint remains opt-in because performance varied across seeds and it scored 0/11 on facts absent from the chat data. [Reviewed memory benchmark and training runs](evaluations/oz_chat_compact_history_comparison.json)
+
+```bash
+python -m model.chat_training --compact-history --history-answer-dropout 0.5 \
+  --answer-class --sampling uniform --steps 3200 --eval-every 800 \
+  --batch-size 8 --lr 0.00015 --seed 7 --dev-data data/oz_chat_memory_dev.jsonl \
+  --output model/model-chat-memory-repeat.pth
+```
+
 ### Look up answers in the Oz book
 
 Install the optional answer reader dependency and start book lookup mode.
@@ -301,7 +320,7 @@ Issue numbers refer to the project bug review. Complete each stage in this order
 
 ### Remaining repairs in order
 
-1. **#1 Improve factual accuracy in trained chat.** First retain enough of the previous question and answer for follow-ups and check a development set where the same short question has different answers. The experiment packed history on 0 of 4 known-fact paraphrase follow-ups. Then compare additional paraphrases and broader supervised fact coverage across multiple seeds. Keep a fresh unseen-fact test for the next final comparison and score first replies and follow-ups separately.
+1. **#1 Improve factual accuracy in trained chat.** The compact-history checkpoint retained prior context on all 18 paired test follow-ups and answered 9 correctly. It also retained context on all four follow-ups in the earlier paraphrase test, where it scored 0/4. Next improve factual first replies and broaden the kinds of follow-ups taught in training. Test broader fact coverage across seeds and reserve a fresh set of facts absent from chat training before promoting a new default. [Memory benchmark results](evaluations/oz_chat_compact_history_comparison.json)
 2. **Improve book lookup on the misses from the fresh benchmark.** Review whether the retrieved passages contain the correct answer, then investigate when an incorrect first reply becomes the next turn’s subject. Use a new final set for the next tuning round. [Development questions](data/oz_book_lookup_dev.jsonl) · [Final questions](data/oz_book_lookup_test.jsonl)
 
 ### Cleanup follow-ups
