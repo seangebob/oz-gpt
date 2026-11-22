@@ -19,6 +19,7 @@ modes = parser.add_mutually_exclusive_group()
 modes.add_argument('--chat', nargs='?', const=CHAT_CHECKPOINT, type=Path, metavar='CHECKPOINT',
                    help='Use an Oz chat checkpoint (default path: model/model-chat.pth)')
 modes.add_argument('--book', action='store_true', help='Look up answers in the bundled Oz book')
+modes.add_argument('--checkpoint', type=Path, help='Use a different base checkpoint for text completion')
 args = parser.parse_args()
 if args.chat and args.max_tokens < 1:
     parser.error('--max_tokens must be positive in chat mode.')
@@ -32,11 +33,14 @@ if args.book:
     device = 'cpu'
 else:
     device = get_device(allow_mps=args.chat is not None)
-    checkpoint = args.chat or Path(MODEL_PATH)
-    train_command = 'python -m model.chat_training' if args.chat else 'python -m model.training -batch_size 32'
+    checkpoint = args.chat or args.checkpoint or Path(MODEL_PATH)
+    train_hint = (
+        'Train a chat model with python -m model.chat_training.' if args.chat
+        else 'Train with python -m model.training -batch_size 32 and pass the output path to --checkpoint.'
+    )
     if not checkpoint.is_file():
         print(f"ERROR: No model file found at {checkpoint}")
-        print(f"Train a model with {train_command}")
+        print(train_hint)
         sys.exit(1)
 
     print("Loading model parameters...")
@@ -51,7 +55,7 @@ else:
         model.to(device)
     except Exception as e:
         print(f"ERROR: Failed to load model — {e}")
-        print(f"Train a model with {train_command}")
+        print(train_hint)
         sys.exit(1)
 
     model.eval()

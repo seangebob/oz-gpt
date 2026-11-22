@@ -25,7 +25,7 @@ A character-level language model built from scratch using PyTorch. The base Tran
 ├── model/                # Core code & data
 │   ├── __init__.py       # Package marker
 │   ├── model.py          # Model architecture & shared config (hyperparameters, vocab, paths)
-│   ├── training.py       # Training loop — trains and saves model weights to model-01.pth
+│   ├── training.py       # Trains a new base checkpoint on the bundled book
 │   ├── chatbot.py        # Interactive CLI for book completions and chat replies
 │   ├── book_lookup.py    # Searches the Oz book and extracts answers with citations
 │   ├── chat_session.py   # Chat history and generation shared by the CLI and evaluator
@@ -66,20 +66,24 @@ pip install torch tqdm
 python -m model.training -batch_size 32
 ```
 
-This trains on `wizard_of_oz.txt` and saves the weights to `model-01.pth`.
+This trains a new model on the first 90% of `wizard_of_oz.txt` and uses the final 10% for validation. Each sequence starts at an independently sampled position in its split. The command saves a new checkpoint at `model/model-base-experiment.pth`. Use a new `--output` path for each experiment. The trainer protects the bundled checkpoint and refuses to replace existing output files.
 
-**Optional arguments:**
+**Training arguments**
 
 | Flag | Default | Description |
 |---|---|---|
-| `-batch_size` | *(required)* | Number of sequences per training step |
+| `--batch-size`, `-batch_size` | *(required)* | Number of sequences per training step |
 | `--max_iters` | `200` | Total number of training iterations |
-| `--eval_iters` | `100` | How often to print the loss |
+| `--eval-every`, `--eval_iters` | `100` | Number of training steps between evaluations |
+| `--eval-batches` | `20` | Number of batches per split in each evaluation |
 | `--lr` | `3e-4` | Learning rate |
+| `--output` | `model/model-base-experiment.pth` | Path for a new checkpoint |
 
-Example with custom settings:
+Example with custom settings
+
 ```bash
-python -m model.training -batch_size 64 --max_iters 5000 --eval_iters 500 --lr 1e-3
+python -m model.training --batch-size 64 --max_iters 5000 --eval-every 500 \
+  --eval-batches 20 --lr 1e-3 --output model/model-base-5000.pth
 ```
 
 ### 2. Try book-style completions
@@ -88,7 +92,7 @@ python -m model.training -batch_size 64 --max_iters 5000 --eval_iters 500 --lr 1
 python -m model.chatbot
 ```
 
-Type any prompt and the model will auto-regressively complete it. Type `quit` or `exit` to stop.
+Type any prompt and the bundled checkpoint will continue it. To try the checkpoint you just trained, run `python -m model.chatbot --checkpoint model/model-base-experiment.pth`. Type `quit` or `exit` to stop.
 
 **Optional arguments:**
 
@@ -245,9 +249,20 @@ Softmax → sample next character
 
 ---
 
+## Repair roadmap
+
+Issue numbers refer to the project bug review. Complete each stage in this order.
+
+1. **Make base training safe · complete.** **#4** sample each sequence across its full split → **#7** give evaluation frequency and batch count separate flags → **#6** save training runs to new checkpoint paths.
+2. **Retrain the base model.** **#5** train and compare fresh base checkpoints on the same validation split. Measure the sampler change with the current architecture, then evaluate model capacity separately.
+3. **Rebuild and evaluate the trained chat model.** **#2** create a clean validation set and audit repeated replies and near-duplicate conversations → **#8** match the history formatting used during training and real chat → **#3** train and record a fresh chat checkpoint → **#1** score factual replies and follow-ups and address the errors.
+4. **Improve book lookup and check it on fresh questions.** **#9** carry the resolved subject through multiple turns → **#11** fix pronouns, lowercase names, verb forms, and follow-up detection → **#12** normalize word variants for search → **#10** count distinct evidence for agreement and retune on development questions. Set aside fresh test questions before tuning and use them for the final score.
+
+Keep the local `oz-*.json` reports for review. Handle the cleanup of tracked generated files and obsolete files, the corpus extraction fixes, and the remaining device and vocabulary work separately.
+
 ## Future Improvements
 
-- **Expand the Oz chat examples first.** Start with 50–100 new conversations grounded in [the bundled book](model/wizard_of_oz.txt). Prioritize questions the model has handled inconsistently, including who wrote the book, who the characters are, and what happened in key scenes.
+- **Expand the Oz chat examples.** Start with 50–100 new conversations grounded in [the bundled book](model/wizard_of_oz.txt). Prioritize questions the model has handled inconsistently, including who wrote the book, who the characters are, and what happened in key scenes.
   1. Set aside 20–30 complete conversations for a final test. Keep them and near-duplicate exchanges out of the [training](data/oz_chat_train.jsonl) and [validation](data/oz_chat_val.jsonl) sets.
   2. Add several natural phrasings for each training question, with short, fact-checked answers. Include pairs of conversations where the same follow-up, such as `What kind?`, calls for different answers based on the previous turn.
   3. Use the existing JSONL format and character vocabulary. Keep each formatted exchange short enough for the 128-character context, including space for the reply and end marker.
