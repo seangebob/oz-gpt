@@ -149,6 +149,8 @@ The trainer formats each turn with `User:` and `Assistant:` labels and appends `
 
 Training starts from `model/model-base-retrained.pth`. Use `--base-checkpoint` to start from different base weights. Training saves the weights with the lowest validation reply loss, model settings, and ordered character vocabulary to a new file. The default training output is `model/model-chat-experiment.pth`. Pass `--train-data` and `--val-data` to use your own files, `--steps` to change the default 1,600 training steps, or `--output` to choose a new path. By default, the trainer balances examples by distinct reply. Use `--sampling uniform` to compare uniform sampling. The trainer selects CUDA, Apple MPS, or CPU automatically, and `--device` can override that choice.
 
+Use `--compact-history` to train with short `Q:` and `A:` labels on earlier turns. The current turn keeps the `User:` and `Assistant:` labels. If space is tight, the trainer and chat session shorten the previous question and reply at word boundaries. The checkpoint selects its history format automatically when you load it. During training, `--history-answer-dropout 0.5` hides the earlier assistant replies on half the sampled examples so the model can practice using the previous question on its own.
+
 ### Try the chat accuracy experiment
 
 The expanded data includes 92 new conversations with book line references. The experimental checkpoint used an additional training objective that predicts the complete answer from the question and any packed history. It uses the same character-level generator when you chat.

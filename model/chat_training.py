@@ -8,7 +8,7 @@ import torch
 from torch.nn import functional as F
 
 from model.chat_data import (
-    CHAT_TRAIN_OUTPUT, CHAT_FORMAT_VERSION, IGNORE_TARGET, MODEL_CONFIG,
+    CHAT_TRAIN_OUTPUT, CHAT_FORMAT_VERSION, COMPACT_CHAT_FORMAT_VERSION, IGNORE_TARGET, MODEL_CONFIG,
     ChatTokenizer, collate_examples, conversation_turns, encode_conversations, load_examples,
     read_conversations, reference_matches,
 )
@@ -39,7 +39,7 @@ def save_checkpoint(path, model, tokenizer):
     weights = model.state_dict()
     heads, layers = model_dimensions(weights)
     save_new_checkpoint(path, {
-        'chat_format': CHAT_FORMAT_VERSION,
+        'chat_format': COMPACT_CHAT_FORMAT_VERSION if tokenizer.compact_history else CHAT_FORMAT_VERSION,
         'model_config': {**MODEL_CONFIG, 'n_head': heads, 'n_layer': layers},
         'characters': list(tokenizer.characters),
         'model_state_dict': weights,
@@ -101,12 +101,18 @@ def main():
                         help='Balance distinct replies or sample training examples uniformly')
     parser.add_argument('--answer-class', action='store_true',
                         help='Experiment with predicting the entire reply from the question during training')
+    parser.add_argument('--compact-history', action='store_true',
+                        help='Train with shorter labels for previous questions and replies')
+    parser.add_argument('--history-answer-dropout', type=float, default=0,
+                        help='Probability of hiding previous assistant replies during training')
     parser.add_argument('--seed', type=int, default=7)
     parser.add_argument('--device', choices=('cpu', 'cuda', 'mps'), default=get_device(allow_mps=True))
     args = parser.parse_args()
 
     if min(args.steps, args.batch_size, args.eval_every) < 1 or not 0 < args.lr < float('inf'):
         parser.error('Steps, batch size, evaluation interval, and learning rate must be positive and finite.')
+    if not 0 <= args.history_answer_dropout <= 1:
+        parser.error('--history-answer-dropout must be between 0 and 1.')
     datasets = [args.train_data, args.val_data]
     if args.dev_data is not None:
         datasets.append(args.dev_data)
@@ -119,8 +125,10 @@ def main():
         parser.error('The output path already exists. Choose a new path with --output.')
 
     try:
-        tokenizer = ChatTokenizer(chars)
+        tokenizer = ChatTokenizer(chars, compact_history=args.compact_history)
         train_examples = load_examples(args.train_data, tokenizer)
+        masked_examples = (load_examples(args.train_data, tokenizer, mask_history_replies=True)
+                           if args.history_answer_dropout else None)
         val_examples = load_examples(args.val_data, tokenizer)
         dev_conversations = []
         if args.dev_data is not None:
@@ -133,6 +141,7 @@ def main():
         parser.exit(1, f'Error preparing chat training: {error}\n')
 
     rng = random.Random(args.seed)
+    history_rng = random.Random(args.seed + 40)
     weights = reply_sampling_weights(train_examples) if args.sampling == 'balanced' else None
     parameters = list(model.parameters())
     if args.answer_class:
@@ -152,7 +161,9 @@ def main():
     best_state = None
     model.train()
     for step in range(1, args.steps + 1):
-        batch = rng.choices(train_examples, weights=weights, k=args.batch_size)
+        indices = rng.choices(range(len(train_examples)), weights=weights, k=args.batch_size)
+        batch = [masked_examples[index] if masked_examples and history_rng.random() < args.history_answer_dropout
+                 else train_examples[index] for index in indices]
         if args.answer_class:
             labels = torch.tensor([reply_classes[reply_tokens(targets)] for _, targets in batch], device=args.device)
             batch = [pad_prompt(example, newline_id, offset_rng) for example in batch]

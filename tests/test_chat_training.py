@@ -12,7 +12,7 @@ import torch
 
 from model.chat_data import (
     END_OF_TURN, IGNORE_TARGET, ChatTokenizer, collate_examples, format_prompt,
-    format_turn, load_chat_checkpoint, load_examples, with_history,
+    encode_conversations, format_turn, load_chat_checkpoint, load_examples, pack_history, with_history,
 )
 from model.chat_training import DATA_DIR, save_checkpoint
 from model.chat_session import ChatSession
@@ -37,7 +37,7 @@ class ChatTrainingTests(unittest.TestCase):
     def setUp(self):
         self.tokenizer = ChatTokenizer(chars)
 
-    def load_conversation(self, *turns):
+    def load_conversation(self, *turns, tokenizer=None):
         messages = []
         for prompt, reply in turns:
             messages.extend([
@@ -47,7 +47,7 @@ class ChatTrainingTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             path = Path(directory) / 'chat.jsonl'
             path.write_text(json.dumps({'messages': messages}), encoding='utf-8')
-            return load_examples(path, self.tokenizer)
+            return load_examples(path, tokenizer or self.tokenizer)
 
     def test_only_current_reply_and_stop_marker_are_targets(self):
         first, second = self.load_conversation(('Hi', 'Hello!'), ('Who is Jim?', 'A horse.'))
@@ -95,6 +95,30 @@ class ChatTrainingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, r'chat.jsonl:1: Turn 1 exceeds'):
             self.load_conversation(('Hi', 'a' * block_size))
 
+    def test_memory_benchmarks_hold_out_first_questions_and_reuse_followup_wording(self):
+        training = chat_split('train')
+        earlier = training + sum((chat_split(name) for name in (
+            'val', 'test', 'paraphrase_dev', 'paraphrase_test', 'unseen_facts_test',
+        )), [])
+        prompts = normalized_messages(earlier, 'user', first_only=True)
+        pairs = {(row['fact_family'], row['messages'][2]['content']) for row in training if 'followup_group' in row}
+        for name in ('memory_dev', 'memory_test', 'memory_unseen'):
+            split = chat_split(name)
+            questions = normalized_messages(split, 'user', first_only=True)
+            self.assertEqual(len(questions), len(split))
+            self.assertFalse(prompts & questions)
+            prompts.update(questions)
+            load_examples(DATA_DIR / f'oz_chat_{name}.jsonl', ChatTokenizer(chars, compact_history=True))
+            if name == 'memory_unseen':
+                self.assertFalse(normalized_messages(earlier, 'assistant') & normalized_messages(split, 'assistant'))
+            else:
+                by_question = {}
+                for row in split:
+                    followup, answer = (message['content'] for message in row['messages'][2:])
+                    self.assertIn((row['fact_family'], followup), pairs)
+                    by_question.setdefault(followup, set()).add(answer)
+                self.assertTrue(all(len(answers) > 1 for answers in by_question.values()))
+
     def test_history_keeps_only_consecutive_recent_turns(self):
         first = format_turn('Hi', 'Hello!')
         second = format_turn('Who is Jim?', 'Jim is the cab-horse.')
@@ -121,6 +145,48 @@ class ChatTrainingTests(unittest.TestCase):
             self.assertTrue(session.reply(follow_up).history_compacted)
         self.assertEqual(self.tokenizer.decode(generate.call_args.args[0][0].tolist()), prompt)
         self.assertEqual(self.tokenizer.decode([token for token in targets if token != IGNORE_TARGET]), reply)
+
+    def test_compact_history_preserves_both_parts_when_the_legacy_turn_will_not_fit(self):
+        first = 'What did Zeb use when he climbed down after the wooden wings?'
+        answer = 'A strap from the harness on the buggy.'
+        followup = 'What was it made of?'
+        current = format_prompt(followup)
+        tokenizer = ChatTokenizer(chars, compact_history=True)
+        _, (inputs, targets) = self.load_conversation((first, answer), (followup, 'Leather.'), tokenizer=tokenizer)
+        reply_start = next(index for index, target in enumerate(targets) if target != IGNORE_TARGET)
+        prompt = tokenizer.decode(inputs[:reply_start + 1])
+        self.assertIn('Q: What did Zeb', prompt)
+        self.assertIn('\nA: A strap', prompt)
+        self.assertTrue(prompt.endswith(current))
+        self.assertEqual(pack_history(current, [(first, answer)], 97), (current, False))
+        self.assertEqual(pack_history(current, [(first, answer)], len(current), compact_history=True), (current, False))
+
+        with patch.object(GPTLanguageModel, 'generate') as generate:
+            generate.side_effect = lambda context, *_args, **_kwargs: torch.cat(
+                (context, torch.tensor([tokenizer.encode('Leather.' + END_OF_TURN)])), dim=1,
+            )
+            session = ChatSession(GPTLanguageModel(len(chars)), tokenizer)
+            session.remember(first, answer)
+            reply = session.reply(followup)
+        self.assertTrue(reply.history_used)
+        self.assertTrue(reply.history_compacted)
+        self.assertEqual(tokenizer.decode(generate.call_args.args[0][0].tolist()), prompt)
+
+    def test_hiding_history_replies_preserves_all_reply_targets(self):
+        conversation = [(1, {'messages': [
+            {'role': 'user', 'content': 'What did Zeb wear?'},
+            {'role': 'assistant', 'content': 'A velvet costume.'},
+            {'role': 'user', 'content': 'What color was it?'},
+            {'role': 'assistant', 'content': 'Maroon.'},
+        ]})]
+        tokenizer = ChatTokenizer(chars, compact_history=True)
+        unmasked = encode_conversations(conversation, tokenizer, 'memory')
+        masked = encode_conversations(conversation, tokenizer, 'memory', mask_history_replies=True)
+        self.assertEqual(unmasked[0], masked[0])
+        inputs, targets = masked[1]
+        self.assertIn('\nA: ?\n', tokenizer.decode(inputs))
+        self.assertEqual(tokenizer.decode([target for target in targets if target != IGNORE_TARGET]),
+                         'Maroon.' + END_OF_TURN)
 
     def test_cli_uses_history_and_resets_it(self):
         replies = ('Jim is the cab-horse.' + END_OF_TURN, 'A horse.' + END_OF_TURN, 'Ask me about Oz.' + END_OF_TURN)
@@ -156,15 +222,17 @@ class ChatTrainingTests(unittest.TestCase):
         self.assertNotIn(END_OF_TURN.strip(), stdout.getvalue())
 
     def test_checkpoint_restores_token_order(self):
-        tokenizer = ChatTokenizer(list(reversed(chars)))
         model = GPTLanguageModel(len(chars), heads=4, layers=2)
-        with TemporaryDirectory() as directory:
-            path = Path(directory) / 'chat.pth'
-            save_checkpoint(path, model, tokenizer)
-            weights, loaded_tokenizer = load_chat_checkpoint(path)
-        self.assertEqual(loaded_tokenizer.characters, tokenizer.characters)
-        self.assertEqual(loaded_tokenizer.encode('Hello'), tokenizer.encode('Hello'))
-        self.assertTrue(torch.equal(weights['lm_head.weight'], model.lm_head.weight))
+        for compact in (False, True):
+            with self.subTest(compact=compact), TemporaryDirectory() as directory:
+                tokenizer = ChatTokenizer(list(reversed(chars)), compact_history=compact)
+                path = Path(directory) / 'chat.pth'
+                save_checkpoint(path, model, tokenizer)
+                weights, loaded_tokenizer = load_chat_checkpoint(path)
+                self.assertEqual(loaded_tokenizer.characters, tokenizer.characters)
+                self.assertEqual(loaded_tokenizer.encode('Hello'), tokenizer.encode('Hello'))
+                self.assertEqual(loaded_tokenizer.compact_history, compact)
+                self.assertTrue(torch.equal(weights['lm_head.weight'], model.lm_head.weight))
 
     def test_generation_only_stops_on_a_newly_generated_marker(self):
         model = GPTLanguageModel(4)

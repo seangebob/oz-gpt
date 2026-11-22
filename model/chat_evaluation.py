@@ -12,7 +12,7 @@ from model.chat_data import (
     CHAT_CHECKPOINT, ChatTokenizer, conversation_turns, encode_conversations, load_chat_checkpoint, read_conversations,
     reference_matches,
 )
-from model.chat_session import ChatSession, DEFAULT_MAX_TOKENS, HISTORY_PACKING, REPLY_RESERVE
+from model.chat_session import ChatSession, DEFAULT_MAX_TOKENS, REPLY_RESERVE
 from model.chat_training import DATA_DIR, evaluate
 from model.model import MODEL_PATH, RETRAINED_BASE_PATH, block_size, chars, model_from_state
 
@@ -157,8 +157,6 @@ def print_summary(path, report):
     if any(run.get('mode') != 'book' for run in report['runs']):
         print(f'  Chat context: {report["block_size"]} | max new tokens: {report["max_tokens"]} '
               f'| reply reserve: {report["reply_reserve"]}')
-        packing = report.get('history_packing', 'complete_turns').replace('_', ' ')
-        print(f'  History packing:      {packing}')
     for run in report['runs']:
         rows = run['predictions']
         first = [row for row in rows if row['turn'] == 1]
@@ -168,6 +166,8 @@ def print_summary(path, report):
             print(f'\nBook lookup ({run["reader_model"]}) | history: {run["history"]}')
         else:
             print(f'\n{run["checkpoint"]} ({run["checkpoint_sha256"][:12]}) | history: {run["history"]}')
+            packing = run.get('history_packing', report.get('history_packing', 'complete_turns')).replace('_', ' ')
+            print(f'  History packing:      {packing}')
         print(f'  Correct first replies: {correctness(first)}')
         print(f'  Correct follow-ups:    {correctness(followups)}')
         print(f'  Reference matches:     {sum(row["reference_match"] for row in first)}/{len(first)} first replies, '
@@ -215,7 +215,6 @@ def run_evaluation(args):
         'block_size': block_size,
         'max_tokens': args.max_tokens,
         'reply_reserve': REPLY_RESERVE,
-        'history_packing': HISTORY_PACKING,
         'runs': [],
     }
     for path in checkpoints:
@@ -234,6 +233,7 @@ def run_evaluation(args):
                 'checkpoint': str(path),
                 'checkpoint_sha256': hashlib.sha256(checkpoint_bytes).hexdigest(),
                 'history': history,
+                'history_packing': tokenizer.history_packing,
                 'reference_reply_loss': round(loss, 6),
                 'predictions': generate_predictions(model, tokenizer, conversations, history, args.max_tokens),
             })

@@ -3,12 +3,11 @@ from dataclasses import dataclass
 
 import torch
 
-from model.chat_data import END_MARKER, END_OF_TURN, REPLY_RESERVE, format_prompt, format_turn, pack_history
+from model.chat_data import END_MARKER, END_OF_TURN, REPLY_RESERVE, format_compact_turn, format_prompt, format_turn, pack_history
 from model.model import block_size
 
 
 DEFAULT_MAX_TOKENS = 150
-HISTORY_PACKING = 'shorten_latest_reply_if_needed'
 
 
 @dataclass(frozen=True)
@@ -33,7 +32,8 @@ class ChatSession:
 
     def remember(self, user_text, reply):
         self.history.append((user_text.strip(), reply.strip()))
-        while len(self.history) > 1 and sum(len(format_turn(*turn)) for turn in self.history) > block_size:
+        formatter = format_compact_turn if self.tokenizer.compact_history else format_turn
+        while len(self.history) > 1 and sum(len(formatter(*turn)) for turn in self.history) > block_size:
             self.history.popleft()
 
     @torch.inference_mode()
@@ -49,7 +49,8 @@ class ChatSession:
         if remaining <= len(self.stop_ids):
             raise ValueError('Prompt is too long for the chat context. Try a shorter message.')
         reserve = min(self.max_tokens, REPLY_RESERVE, remaining)
-        formatted, compacted = pack_history(prompt, self.history, block_size + 1 - reserve)
+        formatted, compacted = pack_history(prompt, self.history, block_size + 1 - reserve,
+                                            compact_history=self.tokenizer.compact_history)
         token_ids = self.tokenizer.encode(formatted)
         remaining = block_size + 1 - len(token_ids)
         context = torch.tensor([token_ids], dtype=torch.long, device=self.device)

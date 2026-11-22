@@ -1,0 +1,11 @@
+{"fact_family":"memory-unseen-01","source_lines":[155,165],"messages":[{"role":"user","content":"When was the late train scheduled to reach the siding?"},{"role":"assistant","content":"At midnight."}]}
+{"fact_family":"memory-unseen-02","source_lines":[4347,4356],"messages":[{"role":"user","content":"What fish did the servants bring to Jim on a silver platter?"},{"role":"assistant","content":"Turbot."}]}
+{"fact_family":"memory-unseen-03","source_lines":[4358,4364],"messages":[{"role":"user","content":"What birds did the palace serve Jim on toast?"},{"role":"assistant","content":"Roasted quail."}]}
+{"fact_family":"memory-unseen-04","source_lines":[3497,3509],"messages":[{"role":"user","content":"What had the dragonettes' mother gone to hunt?"},{"role":"assistant","content":"Their dinner."}]}
+{"fact_family":"memory-unseen-05","source_lines":[1160,1168],"messages":[{"role":"user","content":"What did the Mangaboos sprinkle over the buried Sorcerer?"},{"role":"assistant","content":"Water from a brook."}]}
+{"fact_family":"memory-unseen-06","source_lines":[2731,2746],"messages":[{"role":"user","content":"What did the Braided Man invent to make his fortune?"},{"role":"assistant","content":"An Adjustable Post-hole."}]}
+{"fact_family":"memory-unseen-07","source_lines":[5369,5378],"messages":[{"role":"user","content":"What did Tik-tok dance on the last evening in Oz?"},{"role":"assistant","content":"A jig."}]}
+{"fact_family":"memory-unseen-08","source_lines":[5369,5376],"messages":[{"role":"user","content":"What song did the Tin Woodman sing on the last evening?"},{"role":"assistant","content":"A love song."}]}
+{"fact_family":"memory-unseen-09","source_lines":[5094,5103],"messages":[{"role":"user","content":"What did Ozma hold in her hand during the trial?"},{"role":"assistant","content":"A jewelled sceptre."}]}
+{"fact_family":"memory-unseen-10","source_lines":[5094,5103],"messages":[{"role":"user","content":"What did Ozma wear on her brow during the trial?"},{"role":"assistant","content":"A sparkling coronet."}]}
+{"fact_family":"memory-unseen-11","source_lines":[865,876],"messages":[{"role":"user","content":"Why could the Wizard's balloon not rise after he fell?"},{"role":"assistant","content":"He had let out too much gas."}]}

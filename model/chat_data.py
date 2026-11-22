@@ -10,6 +10,9 @@ from model.model import block_size, dropout, model_dimensions, n_embd
 CHAT_CHECKPOINT = Path(__file__).with_name('model-chat-retrained.pth')
 CHAT_TRAIN_OUTPUT = Path(__file__).with_name('model-chat-experiment.pth')
 CHAT_FORMAT_VERSION = 1
+COMPACT_CHAT_FORMAT_VERSION = 2
+LEGACY_HISTORY_PACKING = 'shorten_latest_reply_if_needed'
+COMPACT_HISTORY_PACKING = 'compact_question_and_reply'
 REPLY_RESERVE = 32
 END_MARKER = '[END]'
 END_OF_TURN = '\n' + END_MARKER
@@ -22,7 +25,7 @@ MODEL_CONFIG = {
 
 
 class ChatTokenizer:
-    def __init__(self, characters):
+    def __init__(self, characters, *, compact_history=False):
         if (
             not isinstance(characters, (list, tuple))
             or not characters
@@ -32,7 +35,11 @@ class ChatTokenizer:
             raise ValueError('Expected an ordered vocabulary of distinct characters.')
         self.characters = tuple(characters)
         self.ids = {char: index for index, char in enumerate(characters)}
+        self.compact_history = compact_history
+        self.history_packing = COMPACT_HISTORY_PACKING if compact_history else LEGACY_HISTORY_PACKING
         self.encode(format_prompt('') + END_OF_TURN)
+        if compact_history:
+            self.encode(format_compact_turn('', ''))
 
     def encode(self, text):
         unknown = sorted(set(text).difference(self.ids))
@@ -52,6 +59,10 @@ def format_turn(user_text, reply):
     return format_prompt(user_text) + reply + END_OF_TURN + '\n'
 
 
+def format_compact_turn(user_text, reply):
+    return f'Q: {user_text}\nA: {reply}\n'
+
+
 def reference_matches(reply, expected):
     reply_key = ' '.join(reply.casefold().split()).rstrip('.!?').rstrip()
     expected_key = ' '.join(expected.casefold().split()).rstrip('.!?').rstrip()
@@ -67,12 +78,26 @@ def with_history(prompt, history, max_prompt_chars):
     return prompt
 
 
-def pack_history(prompt, history, budget):
-    formatted = with_history(prompt, [format_turn(*turn) for turn in history], budget)
+def pack_history(prompt, history, budget, *, compact_history=False):
+    formatter = format_compact_turn if compact_history else format_turn
+    formatted = with_history(prompt, [formatter(*turn) for turn in history], budget)
     if formatted != prompt or not history:
         return formatted, False
 
     user_text, previous_reply = history[-1]
+    if compact_history:
+        available = budget - len(prompt) - len(format_compact_turn('', ''))
+        first_reply_word = next(iter(previous_reply.split()), '')
+        if available <= len(first_reply_word):
+            return prompt, False
+        # Leave room for both parts. Short answers give their unused space to the question.
+        reply_width = min(len(previous_reply), max(available // 3, len(first_reply_word)))
+        question = shorten(user_text, width=available - reply_width, placeholder='', break_on_hyphens=False)
+        reply = shorten(previous_reply, width=available - len(question), placeholder='', break_on_hyphens=False)
+        if question and reply:
+            return format_compact_turn(question, reply) + prompt, True
+        return prompt, False
+
     reply_budget = budget - len(prompt) - len(format_turn(user_text, ''))
     if reply_budget <= 0:
         return prompt, False
@@ -101,7 +126,7 @@ def conversation_turns(conversation):
         yield _message_text(messages[index], 'user'), _message_text(messages[index + 1], 'assistant')
 
 
-def _conversation_examples(conversation, tokenizer):
+def _conversation_examples(conversation, tokenizer, *, mask_history_replies=False):
     history = []
     for turn, (user_text, assistant_text) in enumerate(conversation_turns(conversation), start=1):
         reply = assistant_text + END_OF_TURN
@@ -110,13 +135,14 @@ def _conversation_examples(conversation, tokenizer):
         if len(prompt) + len(reply) > block_size + 1:
             raise ValueError(f'Turn {turn} exceeds the {block_size}-character context. Shorten the prompt or reply.')
         reserve = min(block_size + 1 - len(prompt), max(REPLY_RESERVE, len(reply)))
-        prompt, _ = pack_history(prompt, history, block_size + 1 - reserve)
+        prompt, _ = pack_history(prompt, history, block_size + 1 - reserve,
+                                 compact_history=tokenizer.compact_history)
 
         tokens = tokenizer.encode(prompt + reply)
         # The final prompt character predicts the first character of the reply.
         targets = [IGNORE_TARGET] * (len(prompt) - 1) + tokens[len(prompt):]
         yield tokens[:-1], targets
-        history.append((user_text, assistant_text))
+        history.append((user_text, '?' if mask_history_replies else assistant_text))
 
 
 def read_conversations(source, path):
@@ -130,11 +156,11 @@ def read_conversations(source, path):
         yield line_number, conversation
 
 
-def encode_conversations(conversations, tokenizer, path):
+def encode_conversations(conversations, tokenizer, path, *, mask_history_replies=False):
     examples = []
     for line_number, conversation in conversations:
         try:
-            examples.extend(_conversation_examples(conversation, tokenizer))
+            examples.extend(_conversation_examples(conversation, tokenizer, mask_history_replies=mask_history_replies))
         except ValueError as error:
             raise ValueError(f'{path}:{line_number}: {error}') from error
     if not examples:
@@ -142,9 +168,10 @@ def encode_conversations(conversations, tokenizer, path):
     return examples
 
 
-def load_examples(path, tokenizer):
+def load_examples(path, tokenizer, *, mask_history_replies=False):
     with path.open(encoding='utf-8') as source:
-        return encode_conversations(read_conversations(source, path), tokenizer, path)
+        return encode_conversations(read_conversations(source, path), tokenizer, path,
+                                    mask_history_replies=mask_history_replies)
 
 
 def collate_examples(examples):
@@ -159,11 +186,11 @@ def collate_examples(examples):
 
 def load_chat_checkpoint(path):
     state = torch.load(path, map_location='cpu', weights_only=True)
-    if not isinstance(state, dict) or state.get('chat_format') != CHAT_FORMAT_VERSION:
+    if not isinstance(state, dict) or state.get('chat_format') not in (CHAT_FORMAT_VERSION, COMPACT_CHAT_FORMAT_VERSION):
         raise ValueError('Expected a chat checkpoint created by model.chat_training.')
     weights = state.get('model_state_dict')
     heads, layers = model_dimensions(weights)
     if state.get('model_config') != {**MODEL_CONFIG, 'n_head': heads, 'n_layer': layers}:
         raise ValueError('The checkpoint architecture differs from model/model.py.')
-    tokenizer = ChatTokenizer(state.get('characters'))
+    tokenizer = ChatTokenizer(state.get('characters'), compact_history=state['chat_format'] == COMPACT_CHAT_FORMAT_VERSION)
     return weights, tokenizer
