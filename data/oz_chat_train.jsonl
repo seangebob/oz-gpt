@@ -237,3 +237,95 @@
 {"messages":[{"role":"user","content":"What did the Wizard conjure?"},{"role":"assistant","content":"Tiny piglets."},{"role":"user","content":"How many?"},{"role":"assistant","content":"Nine."}]}
 {"messages":[{"role":"user","content":"Who went on trial in Oz?"},{"role":"assistant","content":"Eureka."},{"role":"user","content":"What was the charge?"},{"role":"assistant","content":"Eating Ozma's piglet."}]}
 {"messages":[{"role":"user","content":"What are dragonettes?"},{"role":"assistant","content":"Young dragons."},{"role":"user","content":"Were they hungry?"},{"role":"assistant","content":"Yes, very hungry."}]}
+{"fact_family":"cage-cover","source_lines":[166,170],"messages":[{"role":"user","content":"What covered Dorothy's cage on the train?"},{"role":"assistant","content":"Newspapers."}]}
+{"fact_family":"cage-cover","source_lines":[166,170],"messages":[{"role":"user","content":"How was the birdcage wrapped?"},{"role":"assistant","content":"Newspapers."}]}
+{"fact_family":"station-seat","source_lines":[181,186],"messages":[{"role":"user","content":"What seat was at Hugson's Siding?"},{"role":"assistant","content":"An old wooden bench."}]}
+{"fact_family":"station-seat","source_lines":[181,186],"messages":[{"role":"user","content":"What furniture was in the station shed?"},{"role":"assistant","content":"An old wooden bench."}]}
+{"fact_family":"harness-mending","source_lines":[189,194],"messages":[{"role":"user","content":"What held the broken harness together?"},{"role":"assistant","content":"Cords and wire."}]}
+{"fact_family":"harness-mending","source_lines":[189,194],"messages":[{"role":"user","content":"How was the harness patched?"},{"role":"assistant","content":"Cords and wire."}]}
+{"fact_family":"suns-heat","source_lines":[447,453],"messages":[{"role":"user","content":"Did the colored suns give off heat?"},{"role":"assistant","content":"They gave no heat."}]}
+{"fact_family":"suns-heat","source_lines":[447,453],"messages":[{"role":"user","content":"Were the underground suns hot?"},{"role":"assistant","content":"They gave no heat."}]}
+{"fact_family":"roof-landing","source_lines":[490,499],"messages":[{"role":"user","content":"Where did the buggy first land below ground?"},{"role":"assistant","content":"On a flat roof."}]}
+{"fact_family":"roof-landing","source_lines":[490,499],"messages":[{"role":"user","content":"What surface stopped the falling buggy?"},{"role":"assistant","content":"On a flat roof."}]}
+{"fact_family":"sorcerer-coat","source_lines":[760,767],"messages":[{"role":"user","content":"What color were the sorcerer's clothes?"},{"role":"assistant","content":"Bright yellow."}]}
+{"fact_family":"sorcerer-coat","source_lines":[760,767],"messages":[{"role":"user","content":"What color did Gwig wear?"},{"role":"assistant","content":"Bright yellow."}]}
+{"fact_family":"sorcerer-charm","source_lines":[1042,1054],"messages":[{"role":"user","content":"What did Gwig try to stop?"},{"role":"assistant","content":"He tried to stop the Wizard's breathing."}]}
+{"fact_family":"sorcerer-charm","source_lines":[1042,1054],"messages":[{"role":"user","content":"How was Gwig's spell to hurt the Wizard?"},{"role":"assistant","content":"He tried to stop the Wizard's breathing."}]}
+{"fact_family":"sword-pieces","source_lines":[1050,1057],"messages":[{"role":"user","content":"What pieces made the Wizard's sword?"},{"role":"assistant","content":"Sharp knives."}]}
+{"fact_family":"sword-pieces","source_lines":[1050,1057],"messages":[{"role":"user","content":"What did the Wizard join to make his sword?"},{"role":"assistant","content":"Sharp knives."}]}
+{"fact_family":"growing-bridges","source_lines":[1118,1129],"messages":[{"role":"user","content":"How did the glass bridges get there?"},{"role":"assistant","content":"They grew."}]}
+{"fact_family":"growing-bridges","source_lines":[1118,1129],"messages":[{"role":"user","content":"Who built the Mangaboo bridges?"},{"role":"assistant","content":"They grew."}]}
+{"fact_family":"sorcerer-burial-tools","source_lines":[1160,1167],"messages":[{"role":"user","content":"What tools dug Gwig's grave?"},{"role":"assistant","content":"Glass spades."}]}
+{"fact_family":"sorcerer-burial-tools","source_lines":[1160,1167],"messages":[{"role":"user","content":"How did the people dig the planting hole?"},{"role":"assistant","content":"Glass spades."}]}
+{"fact_family":"no-stairs","source_lines":[1180,1186],"messages":[{"role":"user","content":"Why did Mangaboo houses have no stairs?"},{"role":"assistant","content":"They walked through the air."}]}
+{"fact_family":"no-stairs","source_lines":[1180,1186],"messages":[{"role":"user","content":"How did people go upstairs without stairs?"},{"role":"assistant","content":"They walked through the air."}]}
+{"fact_family":"hook","source_lines":[1518,1525],"messages":[{"role":"user","content":"What did the Wizard use as a fishhook?"},{"role":"assistant","content":"A bent pin."}]}
+{"fact_family":"hook","source_lines":[1518,1525],"messages":[{"role":"user","content":"What did the Wizard bend to catch fish?"},{"role":"assistant","content":"A bent pin."}]}
+{"fact_family":"bait","source_lines":[1518,1526],"messages":[{"role":"user","content":"What bait did the Wizard use for fishing?"},{"role":"assistant","content":"A red flower."}]}
+{"fact_family":"bait","source_lines":[1518,1526],"messages":[{"role":"user","content":"What did he offer the fish as bait?"},{"role":"assistant","content":"A red flower."}]}
+{"fact_family":"piglet-crackers","source_lines":[1553,1559],"messages":[{"role":"user","content":"What did Dorothy feed the tiny pigs?"},{"role":"assistant","content":"Crackers."}]}
+{"fact_family":"piglet-crackers","source_lines":[1553,1559],"messages":[{"role":"user","content":"Which snack did the piglets eat?"},{"role":"assistant","content":"Crackers."}]}
+{"fact_family":"wizard-lodging","source_lines":[1573,1584],"messages":[{"role":"user","content":"Where did the Wizard decide to stay in the glass city?"},{"role":"assistant","content":"The Sorcerer's house."}]}
+{"fact_family":"wizard-lodging","source_lines":[1573,1584],"messages":[{"role":"user","content":"Whose house did the Wizard take over?"},{"role":"assistant","content":"The Sorcerer's house."}]}
+{"fact_family":"wizard-lanterns","source_lines":[1639,1645],"messages":[{"role":"user","content":"How many lanterns did Zeb fetch?"},{"role":"assistant","content":"Two lanterns."}]}
+{"fact_family":"wizard-lanterns","source_lines":[1639,1645],"messages":[{"role":"user","content":"How many lamps did the Wizard tell Zeb to bring?"},{"role":"assistant","content":"Two lanterns."}]}
+{"fact_family":"lantern-fuel","source_lines":[1639,1645],"messages":[{"role":"user","content":"What fuel did Zeb get from the basket?"},{"role":"assistant","content":"Kerosene oil."}]}
+{"fact_family":"lantern-fuel","source_lines":[1639,1645],"messages":[{"role":"user","content":"What was in the can under the balloon seat?"},{"role":"assistant","content":"Kerosene oil."}]}
+{"fact_family":"oil-floor","source_lines":[1733,1740],"messages":[{"role":"user","content":"Where did the Wizard pour the oil?"},{"role":"assistant","content":"On the glass floor."}]}
+{"fact_family":"oil-floor","source_lines":[1733,1740],"messages":[{"role":"user","content":"What surface held the pool of burning oil?"},{"role":"assistant","content":"On the glass floor."}]}
+{"fact_family":"tunnel-direction","source_lines":[1942,1954],"messages":[{"role":"user","content":"Which way did the dark cave slope?"},{"role":"assistant","content":"It slanted upward."}]}
+{"fact_family":"tunnel-direction","source_lines":[1942,1954],"messages":[{"role":"user","content":"Did the tunnel go up or down in the glass mountain?"},{"role":"assistant","content":"It slanted upward."}]}
+{"fact_family":"bears-river","source_lines":[2438,2447],"messages":[{"role":"user","content":"Where could they escape the Voe bears?"},{"role":"assistant","content":"In the river."}]}
+{"fact_family":"bears-river","source_lines":[2438,2447],"messages":[{"role":"user","content":"Where would the bears refuse to follow?"},{"role":"assistant","content":"In the river."}]}
+{"fact_family":"voe-champion","source_lines":[2407,2414],"messages":[{"role":"user","content":"How many bears did the Champion kill?"},{"role":"assistant","content":"Eleven bears."}]}
+{"fact_family":"voe-champion","source_lines":[2407,2414],"messages":[{"role":"user","content":"What was the Champion's count of slain bears?"},{"role":"assistant","content":"Eleven bears."}]}
+{"fact_family":"voe-boy","source_lines":[2268,2284],"messages":[{"role":"user","content":"What was the invisible boy's name?"},{"role":"assistant","content":"Ianu."}]}
+{"fact_family":"voe-boy","source_lines":[2268,2284],"messages":[{"role":"user","content":"Name the boy Dorothy met in Voe."},{"role":"assistant","content":"Ianu."}]}
+{"fact_family":"cloud-fairies","source_lines":[2631,2644],"messages":[{"role":"user","content":"Who were the figures on the clouds?"},{"role":"assistant","content":"The Cloud Fairies."}]}
+{"fact_family":"cloud-fairies","source_lines":[2631,2644],"messages":[{"role":"user","content":"What did Dorothy call the cloudy figures?"},{"role":"assistant","content":"The Cloud Fairies."}]}
+{"fact_family":"flutters","source_lines":[2680,2688],"messages":[{"role":"user","content":"What did the Braided Man invent for flags?"},{"role":"assistant","content":"Assorted Flutters."}]}
+{"fact_family":"flutters","source_lines":[2680,2688],"messages":[{"role":"user","content":"Which product was made for bunting?"},{"role":"assistant","content":"Assorted Flutters."}]}
+{"fact_family":"rustles-box-count","source_lines":[2694,2703],"messages":[{"role":"user","content":"How many rustles came in one box?"},{"role":"assistant","content":"Twelve dozen."}]}
+{"fact_family":"rustles-box-count","source_lines":[2694,2703],"messages":[{"role":"user","content":"What quantity of rustles did the man offer?"},{"role":"assistant","content":"Twelve dozen."}]}
+{"fact_family":"wooden-ground","source_lines":[2883,2892],"messages":[{"role":"user","content":"What covered the Gargoyle ground?"},{"role":"assistant","content":"Sawdust."}]}
+{"fact_family":"wooden-ground","source_lines":[2883,2892],"messages":[{"role":"user","content":"What was the surface in the wooden country?"},{"role":"assistant","content":"Sawdust."}]}
+{"fact_family":"gargoyle-king-strap","source_lines":[3019,3026],"messages":[{"role":"user","content":"What did Zeb tie the Gargoyle king with?"},{"role":"assistant","content":"A strap."}]}
+{"fact_family":"gargoyle-king-strap","source_lines":[3019,3026],"messages":[{"role":"user","content":"How did Zeb bind the wooden king?"},{"role":"assistant","content":"A strap."}]}
+{"fact_family":"gargoyle-gun-shots","source_lines":[3041,3053],"messages":[{"role":"user","content":"How many shots could each revolver fire?"},{"role":"assistant","content":"Six shots."}]}
+{"fact_family":"gargoyle-gun-shots","source_lines":[3041,3053],"messages":[{"role":"user","content":"How many bullets did one of the Wizard's guns hold?"},{"role":"assistant","content":"Six shots."}]}
+{"fact_family":"gargoyle-king-club","source_lines":[3060,3070],"messages":[{"role":"user","content":"What did Zeb swing as a club?"},{"role":"assistant","content":"The Gargoyle king."}]}
+{"fact_family":"gargoyle-king-club","source_lines":[3060,3070],"messages":[{"role":"user","content":"Who served as Zeb's club in the fight?"},{"role":"assistant","content":"The Gargoyle king."}]}
+{"fact_family":"gargoyle-wing-hinges","source_lines":[3195,3228],"messages":[{"role":"user","content":"How did Gargoyles remove their wings?"},{"role":"assistant","content":"They unhooked the hinges."}]}
+{"fact_family":"gargoyle-wing-hinges","source_lines":[3195,3228],"messages":[{"role":"user","content":"How did the wooden people take their wings off?"},{"role":"assistant","content":"They unhooked the hinges."}]}
+{"fact_family":"flight-creak","source_lines":[3348,3357],"messages":[{"role":"user","content":"Why did the flying wings creak?"},{"role":"assistant","content":"They had not been oiled."}]}
+{"fact_family":"flight-creak","source_lines":[3348,3357],"messages":[{"role":"user","content":"What made the wings squeak in flight?"},{"role":"assistant","content":"They had not been oiled."}]}
+{"fact_family":"mother-dragon-age","source_lines":[3530,3537],"messages":[{"role":"user","content":"How old was the mother dragon?"},{"role":"assistant","content":"About two thousand years."}]}
+{"fact_family":"mother-dragon-age","source_lines":[3530,3537],"messages":[{"role":"user","content":"How many years had the old dragon lived?"},{"role":"assistant","content":"About two thousand years."}]}
+{"fact_family":"tied-tails","source_lines":[3541,3549],"messages":[{"role":"user","content":"What were the baby dragons' tails tied to?"},{"role":"assistant","content":"Around rocks."}]}
+{"fact_family":"tied-tails","source_lines":[3541,3549],"messages":[{"role":"user","content":"Where did the mother dragon fasten their tails?"},{"role":"assistant","content":"Around rocks."}]}
+{"fact_family":"pivot-jam","source_lines":[3644,3653],"messages":[{"role":"user","content":"What jammed the revolving rock?"},{"role":"assistant","content":"A loose stone."}]}
+{"fact_family":"pivot-jam","source_lines":[3644,3653],"messages":[{"role":"user","content":"What blocked the pivot of the turn-table?"},{"role":"assistant","content":"A loose stone."}]}
+{"fact_family":"zeb-velvet","source_lines":[4084,4093],"messages":[{"role":"user","content":"What did Zeb wear to meet Ozma?"},{"role":"assistant","content":"Maroon velvet."}]}
+{"fact_family":"zeb-velvet","source_lines":[4084,4093],"messages":[{"role":"user","content":"What cloth and color did Zeb choose for dinner?"},{"role":"assistant","content":"Maroon velvet."}]}
+{"fact_family":"zeb-buttons","source_lines":[4087,4092],"messages":[{"role":"user","content":"What were Zeb's new buttons made of?"},{"role":"assistant","content":"Silver."}]}
+{"fact_family":"zeb-buttons","source_lines":[4087,4092],"messages":[{"role":"user","content":"What metal was on Zeb's velvet costume?"},{"role":"assistant","content":"Silver."}]}
+{"fact_family":"wizard-ornaments","source_lines":[4102,4108],"messages":[{"role":"user","content":"What gems decorated the Wizard's coat?"},{"role":"assistant","content":"Emeralds."}]}
+{"fact_family":"wizard-ornaments","source_lines":[4102,4108],"messages":[{"role":"user","content":"Which jewels were on the Wizard's black velvet?"},{"role":"assistant","content":"Emeralds."}]}
+{"fact_family":"jim-oatmeal","source_lines":[4375,4391],"messages":[{"role":"user","content":"What did the palace feed Jim?"},{"role":"assistant","content":"Oatmeal."}]}
+{"fact_family":"jim-oatmeal","source_lines":[4375,4391],"messages":[{"role":"user","content":"What meal did the servants bring the horse?"},{"role":"assistant","content":"Oatmeal."}]}
+{"fact_family":"jim-meal-cooking","source_lines":[4377,4391],"messages":[{"role":"user","content":"Did Jim want his oatmeal cooked?"},{"role":"assistant","content":"No, he wanted it uncooked."}]}
+{"fact_family":"jim-meal-cooking","source_lines":[4377,4391],"messages":[{"role":"user","content":"How did Jim tell the servants to prepare the oats?"},{"role":"assistant","content":"No, he wanted it uncooked."}]}
+{"fact_family":"jim-bed","source_lines":[4391,4394],"messages":[{"role":"user","content":"What made Jim's bed at the palace?"},{"role":"assistant","content":"A pile of rugs."}]}
+{"fact_family":"jim-bed","source_lines":[4391,4394],"messages":[{"role":"user","content":"What did the servants pile up for Jim to sleep on?"},{"role":"assistant","content":"A pile of rugs."}]}
+{"fact_family":"tiger-stripes","source_lines":[4519,4525],"messages":[{"role":"user","content":"What color were the Hungry Tiger's stripes?"},{"role":"assistant","content":"Purple."}]}
+{"fact_family":"tiger-stripes","source_lines":[4519,4525],"messages":[{"role":"user","content":"What color bands marked the tiger's body?"},{"role":"assistant","content":"Purple."}]}
+{"fact_family":"jim-birthplace","source_lines":[4775,4787],"messages":[{"role":"user","content":"Where was Jim born?"},{"role":"assistant","content":"Kentucky."}]}
+{"fact_family":"jim-birthplace","source_lines":[4775,4787],"messages":[{"role":"user","content":"Which state was Jim the horse from?"},{"role":"assistant","content":"Kentucky."}]}
+{"fact_family":"parade-star","source_lines":[4642,4649],"messages":[{"role":"user","content":"What color was the star on the Oz banner?"},{"role":"assistant","content":"Emerald green."}]}
+{"fact_family":"parade-star","source_lines":[4642,4649],"messages":[{"role":"user","content":"What color was the middle star on the flag?"},{"role":"assistant","content":"Emerald green."}]}
+{"fact_family":"palace-picture-place","source_lines":[5337,5348],"messages":[{"role":"user","content":"Where was Dorothy taken to see the enchanted picture?"},{"role":"assistant","content":"In Ozma's room."}]}
+{"fact_family":"palace-picture-place","source_lines":[5337,5348],"messages":[{"role":"user","content":"In what room did Ozma show Dorothy the picture?"},{"role":"assistant","content":"In Ozma's room."}]}
+{"fact_family":"wizard-fishing","source_lines":[1518,1526],"messages":[{"role":"user","content":"What was the Wizard's fishing hook?"},{"role":"assistant","content":"A bent pin."},{"role":"user","content":"What bait did he put on it?"},{"role":"assistant","content":"A red flower."}]}
+{"fact_family":"balloon-supplies","source_lines":[1639,1645],"messages":[{"role":"user","content":"What lamps did Zeb get from the balloon?"},{"role":"assistant","content":"Two lanterns."},{"role":"user","content":"What fuel was there?"},{"role":"assistant","content":"Kerosene oil."}]}
+{"fact_family":"zeb-palace-clothes","source_lines":[4085,4093],"messages":[{"role":"user","content":"What did Zeb dress in for dinner?"},{"role":"assistant","content":"Maroon velvet."},{"role":"user","content":"What metal were the buttons?"},{"role":"assistant","content":"Silver."}]}
+{"fact_family":"jim-palace-meal","source_lines":[4375,4391],"messages":[{"role":"user","content":"What did Jim eat at the palace?"},{"role":"assistant","content":"Oatmeal."},{"role":"user","content":"Was it cooked?"},{"role":"assistant","content":"No, he wanted it uncooked."}]}

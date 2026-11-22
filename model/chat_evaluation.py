@@ -11,6 +11,7 @@ import torch
 from model.book_lookup import BOOK_PATH, READER_MODEL, READER_REVISION, BookReply, BookSession
 from model.chat_data import (
     CHAT_CHECKPOINT, ChatTokenizer, conversation_turns, encode_conversations, load_chat_checkpoint, read_conversations,
+    reference_matches,
 )
 from model.chat_session import ChatSession, DEFAULT_MAX_TOKENS, HISTORY_PACKING, REPLY_RESERVE
 from model.chat_training import DATA_DIR, evaluate
@@ -19,12 +20,6 @@ from model.model import MODEL_PATH, RETRAINED_BASE_PATH, block_size, chars, mode
 
 HISTORY_MODES = ('generated', 'none', 'reference')
 REPORT_VERSION = 1
-
-
-def reference_matches(reply, expected):
-    reply_key = ' '.join(reply.casefold().split()).rstrip('.!?').rstrip()
-    expected_key = ' '.join(expected.casefold().split()).rstrip('.!?').rstrip()
-    return bool(expected_key) and reply_key == expected_key
 
 
 def generate_predictions(model, tokenizer, conversations, history_mode, max_tokens):

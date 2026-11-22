@@ -1,0 +1,13 @@
+{"fact_family":"buggy-luggage","source_lines":[207,211],"messages":[{"role":"user","content":"Where did Zeb put Dorothy's suit-case?"},{"role":"assistant","content":"Under the seat."},{"role":"user","content":"And where did he put her cage?"},{"role":"assistant","content":"On the floor in front."}]}
+{"fact_family":"suns-cover","source_lines":[447,451],"messages":[{"role":"user","content":"How did the children shield their faces from the suns?"},{"role":"assistant","content":"With their hands."}]}
+{"fact_family":"sorcerer-seat","source_lines":[759,765],"messages":[{"role":"user","content":"What was Gwig sitting on when the smoke cleared?"},{"role":"assistant","content":"A glass throne."}]}
+{"fact_family":"grass-taste","source_lines":[1144,1157],"messages":[{"role":"user","content":"Did Jim mind the taste of the rainbow grass?"},{"role":"assistant","content":"He liked it."}]}
+{"fact_family":"fish-line","source_lines":[1518,1525],"messages":[{"role":"user","content":"What did the Wizard use for a fishing line?"},{"role":"assistant","content":"A piece of string."}]}
+{"fact_family":"sorcerer-rooms-beds","source_lines":[1592,1606],"messages":[{"role":"user","content":"What sleeping furniture did the rooms lack?"},{"role":"assistant","content":"There were no beds."}]}
+{"fact_family":"vines-punishment","source_lines":[1738,1754],"messages":[{"role":"user","content":"What happened to the Princess's advisors in the fire?"},{"role":"assistant","content":"They were scorched."}]}
+{"fact_family":"flutters-storage","source_lines":[2692,2697],"messages":[{"role":"user","content":"What containers did the Braided Man use?"},{"role":"assistant","content":"Cardboard boxes."}]}
+{"fact_family":"tree-pebbles","source_lines":[2885,2890],"messages":[{"role":"user","content":"What were the pebbles in the Gargoyle country?"},{"role":"assistant","content":"Knots from trees."}]}
+{"fact_family":"gargoyle-protect","source_lines":[3056,3064],"messages":[{"role":"user","content":"What did the Wizard tell Dorothy to open in the fight?"},{"role":"assistant","content":"Her parasol."}]}
+{"fact_family":"zeb-bath","source_lines":[4085,4091],"messages":[{"role":"user","content":"What did Zeb bathe in at the palace?"},{"role":"assistant","content":"A marble tub."}]}
+{"fact_family":"jim-height","source_lines":[4370,4376],"messages":[{"role":"user","content":"How tall did the Steward say Jim was?"},{"role":"assistant","content":"At least six feet."}]}
+{"fact_family":"tiger-restraint","source_lines":[4531,4536],"messages":[{"role":"user","content":"What kept the Hungry Tiger from eating babies?"},{"role":"assistant","content":"His conscience."}]}

@@ -52,6 +52,12 @@ def format_turn(user_text, reply):
     return format_prompt(user_text) + reply + END_OF_TURN + '\n'
 
 
+def reference_matches(reply, expected):
+    reply_key = ' '.join(reply.casefold().split()).rstrip('.!?').rstrip()
+    expected_key = ' '.join(expected.casefold().split()).rstrip('.!?').rstrip()
+    return bool(expected_key) and reply_key == expected_key
+
+
 def with_history(prompt, history, max_prompt_chars):
     """Prepend the newest consecutive complete turns that fit the prompt budget."""
     for turn in reversed(history):

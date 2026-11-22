@@ -139,7 +139,7 @@ Chat loads `model/model-chat-retrained.pth` by default. In the 32-turn benchmark
 
 Try `Who is Jim?` followed by `What kind?` in the same session. Chat keeps the newest turns that fit in its 128-character context. If the latest turn is too long, it keeps the previous question and uses the start of the previous answer when they fit with room for a new reply. Type `/reset` to clear the conversation. Rerun chat training after adding new follow-up examples. The starter dataset focuses on short exchanges about Oz.
 
-To fine-tune your own copy, run `python -m model.chat_training` and open it with `python -m model.chatbot --chat model/model-chat-experiment.pth`. Each line in the training and validation files is a complete conversation in JSONL format. Messages alternate between `user` and `assistant`. Keep related conversations and their paraphrases in the same split, and check for duplicate replies across training and validation.
+To fine-tune your own copy, run `python -m model.chat_training` and open it with `python -m model.chatbot --chat model/model-chat-experiment.pth`. Each line in the training and validation files is a complete conversation in JSONL format. Messages alternate between `user` and `assistant`. Keep each fact and its paraphrases together when building a split for unseen facts, and check for duplicate replies across training and validation. A separate paraphrase benchmark can deliberately test new wording for a fact taught in training.
 
 ```json
 {"messages":[{"role":"user","content":"Who is Eureka?"},{"role":"assistant","content":"Eureka is Dorothy's kitten."}]}
@@ -148,6 +148,24 @@ To fine-tune your own copy, run `python -m model.chat_training` and open it with
 The trainer formats each turn with `User:` and `Assistant:` labels and appends `[END]` to the reply. It uses the same history packing and shortening as live chat. When a training reply is longer than the usual live reserve, it reserves enough room for the whole target. Only the current assistant reply and its end marker contribute to the loss. Keep each formatted turn short enough for the model's 128-character context and use characters from the base vocabulary.
 
 Training starts from `model/model-base-retrained.pth`. Use `--base-checkpoint` to start from different base weights. Training saves the weights with the lowest validation reply loss, model settings, and ordered character vocabulary to a new file. The default training output is `model/model-chat-experiment.pth`. Pass `--train-data` and `--val-data` to use your own files, `--steps` to change the default 1,600 training steps, or `--output` to choose a new path. By default, the trainer balances examples by distinct reply. Use `--sampling uniform` to compare uniform sampling. The trainer selects CUDA, Apple MPS, or CPU automatically, and `--device` can override that choice.
+
+### Try the chat accuracy experiment
+
+The expanded data includes 92 new conversations with book line references. The experimental checkpoint used an additional training objective that predicts the complete answer from the question and any packed history. It uses the same character-level generator when you chat.
+
+```bash
+python -m model.chatbot --chat model/model-chat-facts-experiment.pth
+```
+
+Try `What was the number of lamps Zeb brought?` or `What was underfoot in the Gargoyle country?`. The experimental checkpoint answered 3 of 22 new phrasings of training facts correctly. It answered 0 of 14 turns about facts absent from chat training and 0 of 32 turns on the original benchmark. Plain `--chat` still loads the default checkpoint. [Reviewed experiment and per-turn results](evaluations/oz_chat_fact_expansion_comparison.json)
+
+To repeat the training recipe, run the command below. `--dev-data` selects the checkpoint by reference matches on generated replies and breaks ties with validation loss. Keep the final test files reserved for scoring. A repeat on Apple MPS produced 1/12 development matches compared with 2/12 for the bundled experiment.
+
+```bash
+python -m model.chat_training --answer-class --sampling uniform --steps 1600 \
+  --eval-every 800 --batch-size 8 --lr 0.00015 --seed 7 \
+  --dev-data data/oz_chat_paraphrase_dev.jsonl --output model/model-chat-facts-repeat.pth
+```
 
 ### Look up answers in the Oz book
 
@@ -268,12 +286,12 @@ Issue numbers refer to the project bug review. Complete each stage in this order
 
 1. **Make base training safe · complete.** **#4** sample each sequence across its full split → **#7** give evaluation frequency and batch count separate flags → **#6** save training runs to new checkpoint paths.
 2. **Retrain the base model · complete.** **#5** compared the samplers and model sizes on the same validation split and saved the selected base weights at `model/model-base-retrained.pth`. [Base retraining results](evaluations/oz_base_retraining_comparison.json)
-3. **Rebuild and evaluate the trained chat model.** **#2** held out complete conversation families and removed validation reply overlap → **#8** shared history formatting between training and live chat → **#3** trained and published a fresh checkpoint → **#1** measured factual replies and follow-ups. Factual accuracy remains open at 0/32. [Reviewed chat comparison](evaluations/oz_chat_repair_comparison.json)
+3. **Rebuild and evaluate the trained chat model.** **#2** held out complete conversation families and removed validation reply overlap → **#8** shared history formatting between training and live chat → **#3** trained and published a fresh checkpoint → **#1** expanded training and tested new phrasings and unseen facts separately. Unseen-fact accuracy remains open at 0/14. [Reviewed chat comparison](evaluations/oz_chat_repair_comparison.json) · [Fact expansion results](evaluations/oz_chat_fact_expansion_comparison.json)
 4. **Improve book lookup and check it on fresh questions.** **#9** → **#11** → **#12** → **#10**. Use the order below.
 
 ### Remaining repairs in order
 
-1. **#1 Improve factual accuracy in trained chat.** Expand book-grounded training examples and keep fact families together when splitting the data. Develop on one set and reserve a separate set of unseen facts for final scoring. Track familiar prompts, new phrasings of known facts, and unseen facts separately. Compare checkpoints by reviewed factual first replies and follow-ups, alongside reply loss and clean stops.
+1. **#1 Improve factual accuracy in trained chat.** First retain enough of the previous question and answer for follow-ups and check a development set where the same short question has different answers. The experiment packed history on 0 of 4 known-fact paraphrase follow-ups. Then compare additional paraphrases and broader supervised fact coverage across multiple seeds. Keep a fresh unseen-fact test for the next final comparison and score first replies and follow-ups separately.
 2. **Prepare fresh book lookup questions.** Freeze a development set and a separate final test set before tuning. Keep the existing 32-turn benchmark for regression checks.
 3. **#9 Retain the resolved subject across turns.** Test conversations with at least three turns where a later question refers back to a named character or event.
 4. **#11 Repair question rewriting.** Resolve `her` and lowercase names, handle irregular verbs such as `see` and `go`, and recognize short follow-ups such as “Why?” and “What about Zeb?” Check standalone questions that contain pronouns.

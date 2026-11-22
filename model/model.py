@@ -140,16 +140,17 @@ class GPTLanguageModel(nn.Module):
         elif isinstance(module, nn.Embedding):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
-    def forward(self, index, targets=None):
+    def hidden_states(self, index):
         device = index.device
-        B, T = index.shape
+        length = index.size(1)
 
         tok_emb = self.token_embedding_table(index)                        # (B, T, C)
-        pos_emb = self.position_embedding_table(torch.arange(T, device=device))  # (T, C)
+        pos_emb = self.position_embedding_table(torch.arange(length, device=device))
         x = tok_emb + pos_emb   # (B, T, C)
-        x = self.blocks(x)      # (B, T, C)
-        x = self.ln_f(x)        # (B, T, C)
-        logits = self.lm_head(x)  # (B, T, vocab_size)
+        return self.ln_f(self.blocks(x))
+
+    def forward(self, index, targets=None):
+        logits = self.lm_head(self.hidden_states(index))
 
         if targets is None:
             loss = None

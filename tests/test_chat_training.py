@@ -14,9 +14,23 @@ from model.chat_data import (
     END_OF_TURN, IGNORE_TARGET, ChatTokenizer, collate_examples, format_prompt,
     format_turn, load_chat_checkpoint, load_examples, with_history,
 )
-from model.chat_training import save_checkpoint
+from model.chat_training import DATA_DIR, save_checkpoint
 from model.chat_session import ChatSession
 from model.model import GPTLanguageModel, block_size, chars
+
+
+def chat_split(split):
+    path = DATA_DIR / f'oz_chat_{split}.jsonl'
+    return [json.loads(line) for line in path.read_text(encoding='utf-8').splitlines() if line.strip()]
+
+
+def normalized_messages(conversations, role, *, first_only=False):
+    return {
+        ' '.join(re.findall(r'[a-z0-9]+', message['content'].casefold()))
+        for conversation in conversations
+        for message in (conversation['messages'][:1] if first_only else conversation['messages'])
+        if message['role'] == role
+    }
 
 
 class ChatTrainingTests(unittest.TestCase):
@@ -48,16 +62,30 @@ class ChatTrainingTests(unittest.TestCase):
         self.assertTrue(padded_targets[0, len(first[1]):].eq(IGNORE_TARGET).all())
 
     def test_default_validation_replies_are_disjoint_from_training(self):
-        def normalized_replies(split):
-            path = Path(__file__).resolve().parents[1] / 'data' / f'oz_chat_{split}.jsonl'
-            return {
-                ' '.join(re.findall(r'[a-z0-9]+', message['content'].casefold()))
-                for line in path.read_text(encoding='utf-8').splitlines()
-                for message in json.loads(line)['messages']
-                if message['role'] == 'assistant'
-            }
+        self.assertFalse(normalized_messages(chat_split('train'), 'assistant') &
+                         normalized_messages(chat_split('val'), 'assistant'))
 
-        self.assertFalse(normalized_replies('train') & normalized_replies('val'))
+    def test_fact_benchmarks_keep_novel_questions_and_unseen_answers_separate(self):
+        training = chat_split('train')
+        development = chat_split('paraphrase_dev')
+        paraphrases = chat_split('paraphrase_test')
+        unseen = chat_split('unseen_facts_test')
+        earlier = training + chat_split('val') + chat_split('test')
+        families = {conversation.get('fact_family') for conversation in training}
+        self.assertTrue({row['fact_family'] for row in development + paraphrases} <= families)
+        self.assertFalse({row['fact_family'] for row in unseen} & families)
+        self.assertFalse(normalized_messages(earlier + development + paraphrases, 'assistant') &
+                         normalized_messages(unseen, 'assistant'))
+
+        prompts = normalized_messages(earlier, 'user', first_only=True)
+        for split in (development, paraphrases, unseen):
+            questions = normalized_messages(split, 'user', first_only=True)
+            self.assertEqual(len(questions), len(split))
+            self.assertFalse(questions & prompts)
+            prompts.update(questions)
+
+        for name in ('train', 'paraphrase_dev', 'paraphrase_test', 'unseen_facts_test'):
+            load_examples(DATA_DIR / f'oz_chat_{name}.jsonl', self.tokenizer)
 
     def test_context_trimming_keeps_current_turn_and_rejects_oversize_turns(self):
         _, second = self.load_conversation(('Hi', 'a' * 70), ('Hello', 'b' * 50))

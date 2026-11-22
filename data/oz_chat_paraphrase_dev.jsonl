@@ -1,0 +1,12 @@
+{"fact_family":"harness-mending","source_lines":[189,194],"messages":[{"role":"user","content":"What materials fastened up the harness?"},{"role":"assistant","content":"Cords and wire."}]}
+{"fact_family":"suns-heat","source_lines":[447,453],"messages":[{"role":"user","content":"Could the strange suns warm anyone?"},{"role":"assistant","content":"They gave no heat."}]}
+{"fact_family":"sorcerer-charm","source_lines":[1042,1054],"messages":[{"role":"user","content":"What did the sorcerer try to do to the Wizard's breathing?"},{"role":"assistant","content":"He tried to stop the Wizard's breathing."}]}
+{"fact_family":"growing-bridges","source_lines":[1118,1129],"messages":[{"role":"user","content":"How were the bridges formed in the glass city?"},{"role":"assistant","content":"They grew."}]}
+{"fact_family":"bait","source_lines":[1518,1526],"messages":[{"role":"user","content":"What lured the fish onto the hook?"},{"role":"assistant","content":"A red flower."}]}
+{"fact_family":"voe-champion","source_lines":[2407,2414],"messages":[{"role":"user","content":"How many bears had Voe's hero defeated?"},{"role":"assistant","content":"Eleven bears."}]}
+{"fact_family":"flutters","source_lines":[2680,2688],"messages":[{"role":"user","content":"What did the Braided Man sell to help flags flutter?"},{"role":"assistant","content":"Assorted Flutters."}]}
+{"fact_family":"gargoyle-gun-shots","source_lines":[3041,3053],"messages":[{"role":"user","content":"How often could each gun fire before reloading?"},{"role":"assistant","content":"Six shots."}]}
+{"fact_family":"mother-dragon-age","source_lines":[3530,3537],"messages":[{"role":"user","content":"What age did the young dragon give for its mother?"},{"role":"assistant","content":"About two thousand years."}]}
+{"fact_family":"zeb-velvet","source_lines":[4084,4093],"messages":[{"role":"user","content":"What fabric did Zeb dress in at the palace?"},{"role":"assistant","content":"Maroon velvet."}]}
+{"fact_family":"jim-meal-cooking","source_lines":[4377,4391],"messages":[{"role":"user","content":"Did the horse ask for a cooked meal?"},{"role":"assistant","content":"No, he wanted it uncooked."}]}
+{"fact_family":"parade-star","source_lines":[4642,4649],"messages":[{"role":"user","content":"Give the central star's color on the banner."},{"role":"assistant","content":"Emerald green."}]}
