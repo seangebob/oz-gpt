@@ -86,6 +86,19 @@ REACTION = re.compile(r'how did (he|she|they) (react|respond)\W*', re.IGNORECASE
 REPORTED_SPEECH = re.compile(r'\b(?:say|said|tell|told|warn|warned|promise|promised|threaten|threatened)\b', re.IGNORECASE)
 REPEATED_PURPOSE = re.compile(r'why did (?:he|she|they) do (?:it|that)\W*', re.IGNORECASE)
 INSTRUMENT = re.compile(r' with ((?:a|an|the) .+?)(?: (?:after|before|when|while) .+)?$', re.IGNORECASE)
+ASK_INSTRUMENT = re.compile(
+    r'what (?:did|does|do|would|could|will|can) .+\bwith(?: (?:when|after|before|while|as) .+)?\?*',
+    re.IGNORECASE,
+)
+WITH_INSTRUMENT = re.compile(r'\bwith (?:(?:a|an|the|his|her|their) )?$', re.IGNORECASE)
+INSTRUMENT_DETAIL = re.compile(r" (?:on|in|of|from) (?:a|an|the) [\w'-]+(?=[\"',.!?;:])", re.IGNORECASE)
+COLLECTIVE = re.compile(r'(?:a|the) (?:(?:great|large|small|whole) )?(band|cloud|crowd|flock|herd|swarm)', re.IGNORECASE)
+GROUP_OBSERVATION = re.compile(
+    rf'(?i:what did) ({NAME}) (?i:see) ((?i:coming|approaching|flying|following|rushing|running)\b[^?]*?)'
+    r'(?: (?i:when|as) [^?]+)?\?*',
+)
+IN_COLLECTIVE = re.compile(r'\b(?:they|them)\b.*\bin $', re.IGNORECASE)
+SYMBOL_MEANING = re.compile(r'what (did|does) it (represent|stand for|symbolize)\W*', re.IGNORECASE)
 LOST_ITEMS = re.compile(rf'(?i:where did) ({NAME}) (?i:lose them)\W*')
 PAST_TENSE = {
     'bring': 'brought', 'buy': 'bought', 'catch': 'caught', 'come': 'came', 'do': 'did', 'drink': 'drank',
@@ -651,6 +664,16 @@ def _overlapping_passages(first, second):
             and second.start_line <= first.end_line)
 
 
+def _instrument_answer(question, passage, span):
+    if not ASK_INSTRUMENT.fullmatch(question) or not re.fullmatch(r"(?:(?i:a|an|the) )?[a-z][\w'-]*", span.text):
+        return span.text
+    if not WITH_INSTRUMENT.search(passage.text[:span.start]):
+        return span.text
+    end = span.start + len(span.text)
+    detail = INSTRUMENT_DETAIL.match(passage.text[:span.context_end], end)
+    return passage.text[span.start:detail.end()] if detail else span.text
+
+
 class BookSession:
     def __init__(self, index, reader, *, trace_passages=False):
         self.index = index
@@ -710,11 +733,17 @@ class BookSession:
     def _reread_followup(self, question, text, source, candidates):
         previous = self.previous_source
         answer = self.previous_answer
-        if previous is None or len(set(search_terms(answer))) < 3:
+        if previous is None:
             return None
 
+        meaning = SYMBOL_MEANING.fullmatch(question)
         reaction = REACTION.fullmatch(question)
-        if reaction and REPORTED_SPEECH.search(self.previous_question):
+        if meaning and MEANS_ANSWER.fullmatch(answer):
+            referent = re.sub(r'^(?:a|an|the) ', '', answer, flags=re.IGNORECASE)
+            query = f'What {meaning[1].lower()} the {referent} {meaning[2].lower()}?'
+        elif len(set(search_terms(answer))) < 3:
+            return None
+        elif reaction and REPORTED_SPEECH.search(self.previous_question):
             if source is not None and _overlapping_passages(source, previous):
                 return None
             person, verb = (part.lower() for part in reaction.groups())
@@ -743,6 +772,26 @@ class BookSession:
         _, source = _select_answer(eligible, spans, query)
         return next((PassageReread(query, passage, span) for (passage, _), span in candidates_and_spans
                      if passage == source), None)
+
+    def _reread_collective(self, question, passage, span):
+        collective = COLLECTIVE.fullmatch(span.text)
+        observation = GROUP_OBSERVATION.fullmatch(question)
+        if not collective or not observation:
+            return None
+
+        sentence, offset = _answer_sentence(passage, span)
+        if not IN_COLLECTIVE.search(sentence[:span.start - offset]):
+            return None
+
+        query = f'Who made up the {collective[1].lower()} that {observation[1]} saw {observation[2]}?'
+        checked, = self.reader.read(query, [passage])
+        if (checked.margin < MIN_SINGLE_PASSAGE_MARGIN or checked.text not in sentence
+                or not set(search_terms(checked.text))
+                or checked.text.casefold() in span.text.casefold()
+                or _person_key(checked.text) == _person_key(observation[1])
+                or _answer_sentence(passage, checked) != (sentence, offset)):
+            return None
+        return PassageReread(query, passage, checked)
 
     def _reread_sentence(self, question, passage, span):
         excerpt, offset = _answer_sentence(passage, span)
@@ -782,6 +831,12 @@ class BookSession:
         reread = self._reread_followup(question, text, source, candidates) if history_used else None
         if reread is None and source is None and candidates and spans:
             reread = self._reread_sentence(reader_question, candidates[0][0], spans[0])
+        elif reread is None and source is not None:
+            selected = next((span for (passage, _), span in zip(candidates, spans) if passage == source), None)
+            if selected is not None and selected.start is not None:
+                reread = self._reread_collective(question, source, selected)
+                if reread is None:
+                    text = _instrument_answer(question, source, selected)
         if reread is not None:
             text, source = reread.span.text, reread.passage
             if reread.excerpt is None and REACTION.fullmatch(question):

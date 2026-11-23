@@ -175,6 +175,53 @@ The Wizard was born in Omaha.
         self.assertEqual((reply.text, reply.source), (effect, scene))
         reader.read.assert_called_with('What was the effect of using the mixture?', [scene])
 
+    def test_instrument_answer_keeps_the_attached_detail_visible_to_the_reader(self):
+        text = 'Clara said to steer with the oars on the raft, since the spare oars were broken.'
+        passage = Passage('Chapter 1', 1, 2, text)
+        index = Mock(search=Mock(return_value=[(passage, 2.0)]))
+        reader = Mock(read=Mock(return_value=[AnswerSpan('oars', 8, start=text.index('oars'))]))
+        session = BookSession(index, reader)
+        question = 'What did Clara say to steer with when they left?'
+
+        reply = session.reply(question)
+        self.assertEqual((reply.text, reply.source), ('oars on the raft', passage))
+
+        reader.read.return_value = [AnswerSpan('oars', 8, context_end=text.index('raf'), start=text.index('oars'))]
+        self.assertEqual(session.reply(question).text, 'oars')
+
+    def test_collective_answer_names_members_from_the_same_sentence(self):
+        sentence = 'Pale riders swept toward the shore, and Clara saw them coming in a great crowd.'
+        text = sentence + ' People watched from the pier.'
+        passage = Passage('Chapter 1', 1, 3, text, sentence_starts=(0, len(sentence.split())))
+        index = Mock(search=Mock(return_value=[(passage, 2.0)]))
+        reader = Mock()
+        session = BookSession(index, reader, trace_passages=True)
+        collective = AnswerSpan('a great crowd', 8, start=text.index('a great crowd'))
+        question = 'What did Clara see coming toward the shore when she came outside?'
+
+        reader.read.side_effect = [[collective], [AnswerSpan('Pale riders', 7, start=0)]]
+        reply = session.reply(question)
+        self.assertEqual((reply.text, reply.source), ('Pale riders', passage))
+        self.assertEqual(reply.passage_trace.reread.query, 'Who made up the crowd that Clara saw coming toward the shore?')
+
+        reader.read.side_effect = [[collective], [AnswerSpan('People', 10, start=text.index('People'))]]
+        self.assertEqual(session.reply(question).text, 'a great crowd')
+
+    def test_symbol_followup_rereads_the_meaning_of_the_cited_object(self):
+        passage = Passage('Chapter 1', 1, 4,
+                          'On the banner was a silver bell. Red stood for the farms, and the bell for the town hall.')
+        index = Mock(search=Mock(return_value=[(passage, 2.0)]))
+        reader = Mock()
+        reader.read.side_effect = [[AnswerSpan('a silver bell', 8)], [AnswerSpan('the farms', 9)],
+                                   [AnswerSpan('the town hall', 6)]]
+        session = BookSession(index, reader)
+
+        session.reply('What was painted on the banner?')
+        reply = session.reply('What did it represent?')
+
+        self.assertEqual((reply.text, reply.source), ('the town hall', passage))
+        reader.read.assert_called_with('What did the silver bell represent?', [passage])
+
     @patch('model.book_lookup.PASSAGE_WORDS', 12)
     @patch('model.book_lookup.PASSAGE_STEP', 5)
     def test_overlapping_windows_vote_once_for_the_same_sentence(self):

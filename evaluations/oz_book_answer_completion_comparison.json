@@ -1,0 +1,306 @@
+{
+  "baseline_code_commit": "3523093",
+  "history": "generated",
+  "review_method": "The 40-turn set supplied the known misses for this repair. A correct reply must include the detail requested by the question and cite a passage that supports it. The separate check was frozen before its first run and used to measure transfer to new questions about the same bundled book.",
+  "known_cases": {
+    "fixture": "data/oz_book_lookup_generalization_test.jsonl",
+    "test_sha256": "9fff016f4c4d293ca411ca9afeabb3f1613daf39f7efb46b24c7dc601a2f25c8",
+    "turns": 40,
+    "correct_first_replies_with_support": {
+      "before": 16,
+      "after": 17,
+      "total": 20
+    },
+    "correct_followups_with_support": {
+      "before": 10,
+      "after": 12,
+      "total": 20
+    },
+    "abstentions_before_and_after": 9,
+    "changed_replies": [
+      {
+        "conversation": 14,
+        "turn": 1,
+        "prompt": "What did Zeb say they would steer with when Jim flew away from the Gargoyles?",
+        "expected": "The wings on the buggy.",
+        "before": {
+          "reply": "wings",
+          "citation": {
+            "section": "Chapter 12",
+            "start_line": 3330,
+            "end_line": 3352
+          },
+          "reread": null
+        },
+        "after": {
+          "reply": "wings on the buggy",
+          "citation": {
+            "section": "Chapter 12",
+            "start_line": 3330,
+            "end_line": 3352
+          },
+          "reread": null
+        },
+        "review_note": "The selected span keeps the qualifier that distinguishes the buggy’s wings from Jim’s wings."
+      },
+      {
+        "conversation": 14,
+        "turn": 2,
+        "prompt": "What did Dorothy see coming after them when she looked back?",
+        "expected": "A great cloud of pursuing Gargoyles.",
+        "before": {
+          "reply": "a great cloud",
+          "citation": {
+            "section": "Chapter 12",
+            "start_line": 3355,
+            "end_line": 3368
+          },
+          "reread": null
+        },
+        "after": {
+          "reply": "Gargoyles",
+          "citation": {
+            "section": "Chapter 12",
+            "start_line": 3355,
+            "end_line": 3368
+          },
+          "reread": {
+            "query": "Who made up the cloud that Dorothy saw coming after them?",
+            "span": "Gargoyles",
+            "margin": 6.139569,
+            "excerpt": null
+          }
+        },
+        "review_note": "The reread identifies the pursuing creatures in the same sentence as the cloud."
+      },
+      {
+        "conversation": 17,
+        "turn": 2,
+        "prompt": "What did it represent?",
+        "expected": "The Emerald City.",
+        "before": {
+          "reply": "the four countries of Oz",
+          "citation": {
+            "section": "Chapter 17",
+            "start_line": 4640,
+            "end_line": 4655
+          },
+          "reread": null
+        },
+        "after": {
+          "reply": "the Emerald City",
+          "citation": {
+            "section": "Chapter 17",
+            "start_line": 4640,
+            "end_line": 4655
+          },
+          "reread": {
+            "query": "What did the large emerald-green star represent?",
+            "span": "the Emerald City",
+            "margin": 8.222284,
+            "excerpt": null
+          }
+        },
+        "review_note": "The reread uses the star named in the earlier cited reply and picks the meaning of that specific symbol."
+      }
+    ]
+  },
+  "regressions": [
+    {
+      "fixture": "data/oz_book_lookup_quality_test.jsonl",
+      "test_sha256": "2fdc91b949111fc3485cd984027240a4b56325f08f5282301f55ee7158166cca",
+      "turns": 26,
+      "all_replies_and_citations_match_baseline": true,
+      "correct_with_support_before_and_after": 15
+    },
+    {
+      "fixture": "data/oz_book_lookup_test.jsonl",
+      "test_sha256": "fdb302e5e6c8fc12d6de0cde1f96d3489982657d0ddb97b23173a2b3d495b625",
+      "turns": 29,
+      "all_replies_and_citations_match_baseline": true,
+      "correct_with_support_before_and_after": 19
+    },
+    {
+      "fixture": "data/oz_chat_test.jsonl",
+      "test_sha256": "1c29194de5fcf79db46c2097ba1fd8e150c205cddd22e33a9b1b0d96052755ea",
+      "turns": 32,
+      "all_replies_and_citations_match_baseline": true,
+      "correct_with_support_before_and_after": 20
+    },
+    {
+      "fixture": "data/oz_book_lookup_dev.jsonl",
+      "test_sha256": "dad905b394e32445e8a3c744be8e00d61ad95692d63f5aa53a29d6ed27883608",
+      "turns": 20,
+      "all_replies_and_citations_match_baseline": true
+    }
+  ],
+  "separate_check": {
+    "fixture": "data/oz_book_lookup_completion_check.jsonl",
+    "test_sha256": "4f4a837be34798205d7300011e2f2b95c85f3920bc1bc3d19cd72b6db35675ca",
+    "turns": 11,
+    "correct_first_replies_with_support_before_and_after": 4,
+    "first_replies": 6,
+    "correct_followups_with_support_before_and_after": 1,
+    "followups": 5,
+    "abstentions_before_and_after": 2,
+    "rows": [
+      {
+        "conversation": 1,
+        "turn": 1,
+        "prompt": "What did Dorothy poke the sleeping boy at the station with?",
+        "expected": "Her parasol.",
+        "reply": "HER PARASOL",
+        "citation": {
+          "section": "Chapter 1",
+          "start_line": 230,
+          "end_line": 260
+        },
+        "reread": null,
+        "result": "correct_with_support",
+        "review_note": "The illustration caption identifies the parasol."
+      },
+      {
+        "conversation": 1,
+        "turn": 2,
+        "prompt": "What did he do as he woke up?",
+        "expected": "He sat up and rubbed his eyes.",
+        "reply": "I couldn't find an answer supported by the book.",
+        "citation": null,
+        "reread": null,
+        "result": "abstained",
+        "review_note": ""
+      },
+      {
+        "conversation": 2,
+        "turn": 1,
+        "prompt": "What did the Tin Woodman smash the vase with to free the prisoner?",
+        "expected": "His axe.",
+        "reply": "his axe",
+        "citation": {
+          "section": "Chapter 19",
+          "start_line": 5297,
+          "end_line": 5317
+        },
+        "reread": null,
+        "result": "correct_with_support",
+        "review_note": "The cited text says the Tin Woodman smashed the vase with his axe."
+      },
+      {
+        "conversation": 2,
+        "turn": 2,
+        "prompt": "Which animal had he freed?",
+        "expected": "Ozma's lost piglet.",
+        "reply": "piglet",
+        "citation": {
+          "section": "Chapter 19",
+          "start_line": 5297,
+          "end_line": 5317
+        },
+        "reread": null,
+        "result": "correct_with_support",
+        "review_note": "The cited text identifies the freed animal as the piglet from the vase."
+      },
+      {
+        "conversation": 3,
+        "turn": 1,
+        "prompt": "What did Jim see flying toward them when the talking stopped?",
+        "expected": "The Gargoyles.",
+        "reply": "I couldn't find an answer supported by the book.",
+        "citation": null,
+        "reread": null,
+        "result": "abstained",
+        "review_note": ""
+      },
+      {
+        "conversation": 3,
+        "turn": 2,
+        "prompt": "How did he make them scatter in that first attack?",
+        "expected": "He kicked them.",
+        "reply": "knocking them in all directions and sending the others scattering to escape his iron heels",
+        "citation": {
+          "section": "Chapter 6",
+          "start_line": 1831,
+          "end_line": 1845
+        },
+        "reread": null,
+        "result": "wrong_scene",
+        "review_note": "The citation describes Jim kicking Mangaboos in an earlier chapter."
+      },
+      {
+        "conversation": 4,
+        "turn": 1,
+        "prompt": "What did the Mangaboo Prince place on the Princess's forehead at her command?",
+        "expected": "The Star of Royalty.",
+        "reply": "the Star of Royalty",
+        "citation": {
+          "section": "Chapter 5",
+          "start_line": 1381,
+          "end_line": 1402
+        },
+        "reread": null,
+        "result": "correct_with_support",
+        "review_note": "The citation names the Star of Royalty and shows the Prince handing it over."
+      },
+      {
+        "conversation": 4,
+        "turn": 2,
+        "prompt": "What did it stand for?",
+        "expected": "The authority of the Mangaboo ruler.",
+        "reply": "Star of Royalty",
+        "citation": {
+          "section": "Chapter 5",
+          "start_line": 1381,
+          "end_line": 1402
+        },
+        "reread": null,
+        "result": "incomplete",
+        "review_note": "The reply repeats the object’s name. The scene establishes the transfer of authority."
+      },
+      {
+        "conversation": 5,
+        "turn": 1,
+        "prompt": "What mark did the Wizard paint on his balloon and circus gear?",
+        "expected": "His initials, O. Z.",
+        "reply": "initials",
+        "citation": {
+          "section": "Chapter 15",
+          "start_line": 4145,
+          "end_line": 4162
+        },
+        "reread": null,
+        "result": "incomplete",
+        "review_note": "The reply says initials and leaves out O. Z."
+      },
+      {
+        "conversation": 5,
+        "turn": 2,
+        "prompt": "What was the mark meant to show?",
+        "expected": "The balloon and gear belonged to the Wizard.",
+        "reply": "her soft, padded little hands",
+        "citation": {
+          "section": "Chapter 19",
+          "start_line": 5187,
+          "end_line": 5205
+        },
+        "reread": null,
+        "result": "incorrect",
+        "review_note": "The reply comes from the trial and gives no reason for the Wizard’s mark."
+      },
+      {
+        "conversation": 6,
+        "turn": 1,
+        "prompt": "What happened to the Wizard's sword on the first blow against the wooden people?",
+        "expected": "Its blade snapped into a dozen pieces.",
+        "reply": "snapped into a dozen pieces",
+        "citation": {
+          "section": "Chapter 12",
+          "start_line": 3079,
+          "end_line": 3095
+        },
+        "reread": null,
+        "result": "correct_with_support",
+        "review_note": "The citation says the sword blade snapped into a dozen pieces."
+      }
+    ]
+  }
+}
