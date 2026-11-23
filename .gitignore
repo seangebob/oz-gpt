@@ -13,3 +13,4 @@ __pycache__/
 /model/output.val.txt
 /model/vocab.txt
 /model/model-01.pkl
+/model/extracted-corpus/

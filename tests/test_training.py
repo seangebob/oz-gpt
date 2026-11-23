@@ -1,3 +1,5 @@
+import json
+import lzma
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -5,8 +7,8 @@ from unittest.mock import Mock, patch
 
 import torch
 
-from model import training
-from model.model import GPTLanguageModel, encode, load_base_model, vocab_size
+from model import data_extract, training
+from model.model import CUSTOM_BASE_FORMAT, GPTLanguageModel, encode, load_base_model, load_completion_model, vocab_size
 
 
 class BaseTrainingTests(unittest.TestCase):
@@ -60,6 +62,80 @@ class BaseTrainingTests(unittest.TestCase):
                 self.assertEqual(len(restored.blocks), layers)
                 self.assertEqual(len(restored.blocks[0].sa.heads), heads)
                 self.assertTrue(torch.equal(restored.lm_head.weight, model.lm_head.weight))
+
+
+class CustomCorpusTests(unittest.TestCase):
+    @patch('model.data_extract.CHUNK_SIZE', 17)
+    def test_single_shard_splits_unicode_text_and_trainer_reads_both_files_verbatim(self):
+        text = 'abc 🪴\n' * 270 + 'é' * 180
+        boundary = len(text) * 9 // 10
+        with TemporaryDirectory() as directory:
+            source = Path(directory)
+            (source / 'document.xz').write_bytes(lzma.compress(text.encode('utf-8')))
+            extracted = source / 'extracted'
+            counts = data_extract.extract_corpus(source, extracted)
+            splits, tokenizer = training.load_extracted_splits(extracted)
+
+        self.assertEqual(counts, (boundary, len(text) - boundary))
+        self.assertEqual(tokenizer.characters, tuple(sorted(set(text))))
+        self.assertEqual(tokenizer.decode(splits['train'].tolist()), text[:boundary])
+        self.assertEqual(tokenizer.decode(splits['val'].tolist()), text[boundary:])
+        self.assertNotIn('é', text[:boundary])
+
+    def test_extraction_splits_whole_shards_by_name(self):
+        with TemporaryDirectory() as directory:
+            source = Path(directory)
+            (source / '02.xz').write_bytes(lzma.compress(b'validation'))
+            (source / '01.xz').write_bytes(lzma.compress(b'training'))
+            extracted = source / 'extracted'
+            data_extract.extract_corpus(source, extracted)
+
+            self.assertEqual((extracted / data_extract.TRAIN_FILE).read_text(), 'training')
+            self.assertEqual((extracted / data_extract.VAL_FILE).read_text(), 'validation')
+            with self.assertRaises(FileExistsError):
+                data_extract.extract_corpus(source, extracted)
+            self.assertEqual((extracted / data_extract.TRAIN_FILE).read_text(), 'training')
+
+    def test_corrupt_shard_leaves_no_partial_corpus_directory(self):
+        with TemporaryDirectory() as directory:
+            source = Path(directory)
+            good = source / '01.xz'
+            bad = source / '02.xz'
+            good.write_bytes(lzma.compress(b'training'))
+            bad.write_bytes(b'invalid')
+            extracted = source / 'extracted'
+
+            with self.assertRaises(lzma.LZMAError):
+                data_extract.extract_corpus(source, extracted)
+
+            self.assertEqual(set(source.iterdir()), {good, bad})
+
+    def test_trainer_rejects_validation_text_missing_from_the_saved_vocabulary(self):
+        with TemporaryDirectory() as directory:
+            corpus = Path(directory)
+            (corpus / data_extract.TRAIN_FILE).write_text('a' * 130, encoding='utf-8')
+            (corpus / data_extract.VAL_FILE).write_text('é' * 130, encoding='utf-8')
+            (corpus / data_extract.VOCAB_FILE).write_text(json.dumps(['a']), encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, r'output\.val\.txt: Characters outside'):
+                training.load_extracted_splits(corpus)
+
+    def test_completion_restores_custom_token_order_and_oz_fine_tuning_rejects_it(self):
+        characters = ['🪴', '\n', 'é', 'a']
+        model = GPTLanguageModel(len(characters), heads=2)
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / 'custom.pth'
+            training.save_checkpoint(path, {
+                'base_format': CUSTOM_BASE_FORMAT,
+                'characters': characters,
+                'model_state_dict': model.state_dict(),
+            })
+
+            restored, tokenizer = load_completion_model(path)
+            self.assertEqual(tokenizer.encode('a🪴'), [3, 0])
+            self.assertEqual(tokenizer.decode([1, 2]), '\né')
+            self.assertTrue(torch.equal(restored.lm_head.weight, model.lm_head.weight))
+            with self.assertRaisesRegex(ValueError, 'bundled Oz vocabulary'):
+                load_base_model(path)
 
 
 if __name__ == '__main__':

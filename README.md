@@ -46,12 +46,11 @@ A character-level language model built from scratch using PyTorch. The base Tran
 
 - Python 3.9+
 - PyTorch 2.0+ (with optional CUDA support)
-- `tqdm` (only needed for `data_extract.py`)
 
 Install dependencies:
 
 ```bash
-pip install torch tqdm
+pip install torch
 ```
 
 > **CUDA**: If you have an NVIDIA GPU, install the CUDA-enabled PyTorch wheel from [pytorch.org](https://pytorch.org/get-started/locally/) for significantly faster training.
@@ -81,6 +80,7 @@ This trains a new model on the first 90% of `wizard_of_oz.txt` and uses the fina
 | `--device` | automatic | Use `cuda`, `mps`, or `cpu` |
 | `--heads` | `1` | Attention heads per layer |
 | `--layers` | `1` | Number of Transformer layers |
+| `--corpus-dir` | bundled book | Use the train, validation, and vocabulary files from the extractor |
 | `--output` | `model/model-base-experiment.pth` | Path for a new checkpoint |
 
 Example with custom settings
@@ -317,16 +317,18 @@ For each missed reply, open its `passage_trace`. Check each candidate's `reader_
 
 ## Training Your Own Corpus
 
-If you want to train on a **larger dataset** (e.g., OpenWebText `.xz` shards), use `data_extract.py`:
+Put one or more UTF-8 text shards compressed with `.xz` in a directory, then extract, train, and run text completion.
 
-1. Place at least two `.xz`-compressed text files in the `model/` directory.
-2. Run:
-   ```bash
-   python -m model.data_extract
-   ```
-3. The extractor sorts shards by name and aims for a 90/10 split by file count. It writes `output.train.txt`, `output.val.txt`, and `vocab.txt` as local files.
+```bash
+python -m model.data_extract --input-dir path/to/shards
+python -m model.training --corpus-dir model/extracted-corpus --batch-size 8 \
+  --output model/extracted-corpus/custom-base.pth
+python -m model.chatbot --checkpoint model/extracted-corpus/custom-base.pth
+```
 
-The base trainer currently reads `DATA_PATH` in `model/model.py`, builds its vocabulary from that source, and creates its own validation split. Using the extractor’s separate validation and vocabulary files is still open.
+The extractor defaults to reading shards from `model/` and publishing to `model/extracted-corpus/`. Use `--output-dir` to choose a different new directory for another run. It splits one shard at the 90% character boundary. With multiple shards, it sorts by filename and splits by file count, keeping every shard whole. The extractor saves `output.train.txt`, `output.val.txt`, and `vocab.txt`, a JSON array of distinct characters found across both splits.
+
+Each split needs at least 129 characters for the model's 128-character context. The trainer loads both splits into memory and uses the saved vocabulary. Custom checkpoints include their vocabulary so you can run text completion from the checkpoint alone. For Oz chat fine-tuning, use a base checkpoint with the bundled Oz vocabulary.
 
 ---
 
@@ -390,7 +392,7 @@ Issue numbers refer to the project bug review. Complete each stage in this order
 ### Cleanup follow-ups
 
 - **Generated-file cleanup · complete.** Git ignores Python bytecode, macOS metadata, notebook checkpoints, and local corpus outputs. The empty extractor outputs and the legacy Python source named `model-01.pkl` were retired from Git. The source remains available in Git history.
-- Fix `model/data_extract.py` so one `.xz` shard can produce usable training and validation splits. Connect the extracted text and vocabulary to the optional custom-corpus training workflow.
+- **Custom-corpus training · complete.** The extractor handles single-shard and multi-shard corpora, and the base trainer reads the separate splits and vocabulary. Its checkpoints work with the text completion CLI. [Run the workflow](#training-your-own-corpus)
 - Plan removal of the book’s byte-order mark together with vocabulary migration and checkpoint retraining. Keep the local `oz-*.json` reports for manual review. Apple MPS support for base training shipped with Step 2.
 
 ## Future Improvements

@@ -29,6 +29,33 @@ def get_device(*, allow_mps=False):
 
 
 
+CUSTOM_BASE_FORMAT = 1
+
+
+class CharacterTokenizer:
+    def __init__(self, characters):
+        if (
+            not isinstance(characters, (list, tuple))
+            or not characters
+            or any(not isinstance(char, str) or len(char) != 1 for char in characters)
+            or len(set(characters)) != len(characters)
+        ):
+            raise ValueError('Expected an ordered vocabulary of distinct characters.')
+        self.characters = tuple(characters)
+        self.ids = {char: index for index, char in enumerate(characters)}
+
+    def encode(self, text, *, ignore_unknown=False):
+        if ignore_unknown:
+            return [self.ids[char] for char in text if char in self.ids]
+        unknown = sorted(set(text).difference(self.ids))
+        if unknown:
+            raise ValueError(f'Characters outside the checkpoint vocabulary: {unknown!r}')
+        return [self.ids[char] for char in text]
+
+    def decode(self, ids):
+        return ''.join(self.characters[index] for index in ids)
+
+
 # Vocabulary & encoding  (built from wizard_of_oz.txt)
 chars = ""
 with open(DATA_PATH, 'r', encoding='utf-8') as f:
@@ -201,6 +228,22 @@ def model_from_state(state, vocabulary_size):
     return model
 
 
-def load_base_model(checkpoint):
+def _load_base_checkpoint(checkpoint):
     state = torch.load(checkpoint, map_location='cpu', weights_only=True)
+    if isinstance(state, dict) and 'base_format' in state:
+        if state['base_format'] != CUSTOM_BASE_FORMAT:
+            raise ValueError('Unsupported custom-corpus checkpoint format.')
+        return state.get('model_state_dict'), CharacterTokenizer(state.get('characters'))
+    return state, CharacterTokenizer(chars)
+
+
+def load_completion_model(checkpoint):
+    state, tokenizer = _load_base_checkpoint(checkpoint)
+    return model_from_state(state, len(tokenizer.characters)), tokenizer
+
+
+def load_base_model(checkpoint):
+    state, tokenizer = _load_base_checkpoint(checkpoint)
+    if tokenizer.characters != tuple(chars):
+        raise ValueError('Oz chat training requires a base checkpoint with the bundled Oz vocabulary.')
     return model_from_state(state, vocab_size)

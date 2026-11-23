@@ -4,7 +4,7 @@ from textwrap import shorten
 
 import torch
 
-from model.model import block_size, dropout, model_dimensions, n_embd
+from model.model import CharacterTokenizer, block_size, dropout, model_dimensions, n_embd
 
 
 CHAT_CHECKPOINT = Path(__file__).with_name('model-chat-retrained.pth')
@@ -24,31 +24,14 @@ MODEL_CONFIG = {
 }
 
 
-class ChatTokenizer:
+class ChatTokenizer(CharacterTokenizer):
     def __init__(self, characters, *, compact_history=False):
-        if (
-            not isinstance(characters, (list, tuple))
-            or not characters
-            or any(not isinstance(char, str) or len(char) != 1 for char in characters)
-            or len(set(characters)) != len(characters)
-        ):
-            raise ValueError('Expected an ordered vocabulary of distinct characters.')
-        self.characters = tuple(characters)
-        self.ids = {char: index for index, char in enumerate(characters)}
+        super().__init__(characters)
         self.compact_history = compact_history
         self.history_packing = COMPACT_HISTORY_PACKING if compact_history else LEGACY_HISTORY_PACKING
         self.encode(format_prompt('') + END_OF_TURN)
         if compact_history:
             self.encode(format_compact_turn('', ''))
-
-    def encode(self, text):
-        unknown = sorted(set(text).difference(self.ids))
-        if unknown:
-            raise ValueError(f'Characters outside the checkpoint vocabulary: {unknown!r}')
-        return [self.ids[char] for char in text]
-
-    def decode(self, ids):
-        return ''.join(self.characters[index] for index in ids)
 
 
 def format_prompt(user_text):

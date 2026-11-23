@@ -8,7 +8,7 @@ from model.chat_data import CHAT_CHECKPOINT, load_chat_checkpoint
 from model.chat_session import ChatSession, DEFAULT_MAX_TOKENS
 from model.first_reply import FIRST_REPLY_CHECKPOINT, load_first_reply_classifier
 from model.model import (
-    encode, decode, get_device, load_base_model, model_from_state, MODEL_PATH,
+    get_device, load_completion_model, model_from_state, MODEL_PATH,
 )
 
 # CLI arguments
@@ -57,7 +57,7 @@ else:
             state, tokenizer = load_chat_checkpoint(checkpoint)
             model = model_from_state(state, len(tokenizer.characters))
         else:
-            model = load_base_model(checkpoint)
+            model, tokenizer = load_completion_model(checkpoint)
         model.to(device)
     except Exception as e:
         print(f"ERROR: Failed to load model — {e}")
@@ -121,7 +121,7 @@ while True:
             print()
             continue
 
-        context = torch.tensor(encode(prompt), dtype=torch.long, device=device)
+        context = torch.tensor(tokenizer.encode(prompt, ignore_unknown=True), dtype=torch.long, device=device)
         if context.numel() == 0:
             print("(No recognizable characters in prompt — "
                   "try using letters found in the training text.)\n")
@@ -130,7 +130,7 @@ while True:
         with torch.no_grad():
             generated = model.generate(context.unsqueeze(0),
                                        max_new_tokens=args.max_tokens)
-        output_text = decode(generated[0].tolist())
+        output_text = tokenizer.decode(generated[0].tolist())
         print(f"\nCompletion:\n{output_text}\n")
 
     except (KeyboardInterrupt, EOFError):
