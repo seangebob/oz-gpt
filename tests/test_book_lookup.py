@@ -786,6 +786,11 @@ Dana wanted to hear from the council.
             'What did Ozma say at the trial when it was found?',
             'Where did the party go after the fire was lit to stop them?',
             'What did Zeb shout at the hearings when they ended?',
+            'What did Ozma say while the crowd watched when it was found?',
+            'What did Ozma say as the guards waited when they were found?',
+            'What did Ozma tell the guards when they were found?',
+            'What did Ozma say while Zeb watched when he was found?',
+            'What did Ozma say at the Mangaboo Palace when he was found?',
         )
         for question in questions:
             with self.subTest(question=question):

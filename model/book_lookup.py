@@ -158,11 +158,13 @@ INFINITIVE = re.compile(r'\bto (?!(?:a|an|the|his|her|their|its)\b)[a-z]+\b')
 IMPERSONAL_IT = re.compile(
     r'it (?:take|cost|(?:is|was) (?:so |very |too )?(?:easy|hard|difficult|possible|impossible))\b', re.IGNORECASE,
 )
-CAPITALIZED_WORD = re.compile(r"(?<=[\s(\"'])[A-Z][a-z]+(?:-[A-Z]?[a-z]+)*")
+CAPITALIZED_WORD = re.compile(r"(?<=[\s(\"'])[A-Z][a-z]+(?:-[A-Z]?[a-z]+)*(?: [A-Z][a-z]+(?:-[A-Z]?[a-z]+)*)*")
 PLACE_PREPOSITION = re.compile(r'\b(?:across|at|from|in|into|near|of|through|to|toward)\s+(?:the\s+)?$', re.IGNORECASE)
-SCENE_PREPOSITION = re.compile(
+NON_REFERENT_LEAD = re.compile(
     r'\b(?:across|after|at|before|beside|by|during|from|in|inside|into|near|on|outside|over|since|through|'
-    r'throughout|to|toward|under|until)\s+$',
+    r'throughout|to|toward|under|until|'
+    r'ask|asked|bring|brought|give|gave|lend|lent|offer|offered|promise|promised|send|sent|show|showed|'
+    r'teach|taught|tell|told|warn|warned)\s+$',
     re.IGNORECASE,
 )
 NON_NOUN_WORD = r'am|and|are|did|does|had|has|her|his|is|its|or|the|their|was|were'
@@ -213,15 +215,22 @@ def _possessive(question, match):
     return following is not None and following[1].lower() not in AFTER_OBJECT
 
 
-def _object_scope(before, pronoun):
-    """Return text that can hold an object's referent and whether it must directly precede "to"."""
+def _referent_scope(before, pronoun, possessive):
+    """Return text that can hold a referent and whether that referent must directly precede "to"."""
+    if possessive and pronoun != 'its':
+        return before, False
+    # Nouns in a time clause set the scene. When unsure, keep the conversation's referent.
+    clause = SUBORDINATE_CLAUSE.search(before)
+    if clause:
+        return before[:clause.start()], False
+    if pronoun in {'he', 'she', 'they', 'its'}:
+        return before, False
     # An object pronoun normally cannot refer to the subject of its own clause.
-    clause = max((match.start() for match in SUBORDINATE_CLAUSE.finditer(before)), default=-1)
     infinitive = max((match.start() for match in INFINITIVE.finditer(before)
                       if pronoun in {'them', 'it'} or CAPITALIZED_WORD.search(before, match.end())), default=-1)
-    if infinitive > clause:
-        return before[:infinitive].rstrip(), pronoun in {'them', 'it'}
-    return (before[:clause] if clause >= 0 else ''), False
+    if infinitive < 0:
+        return '', False
+    return before[:infinitive].rstrip(), pronoun in {'them', 'it'}
 
 
 def _can_name_person(text, pronoun):
@@ -238,16 +247,19 @@ def _can_name_person(text, pronoun):
 
 def _can_name_group(text, at_end):
     pattern = PLURAL_AT_END if at_end else PLURAL_GROUP
-    # A scene such as "at the hearings" sets the time or place. It is not the group being discussed.
-    return any(not SCENE_PREPOSITION.search(text[:match.start()]) for match in pattern.finditer(text))
+    # A scene or listener, such as "at the hearings" or "tell the guards", is not a reliable referent.
+    return any(not NON_REFERENT_LEAD.search(text[:match.start()]) for match in pattern.finditer(text))
 
 
 def _can_name_thing(text, pronoun, at_end):
+    # Plain "it" is ambiguous unless it is the object of a purpose clause: "hide the lantern to keep it dry".
+    if pronoun == 'it' and not at_end:
+        return False
     matches = list(DEFINITE_NOUN.finditer(text))
     if at_end:
         matches = [match for match in matches[-1:] if len(text[match.end(1):].split()) <= 2]
     for match in matches:
-        if SCENE_PREPOSITION.search(text[:match.start()]):
+        if NON_REFERENT_LEAD.search(text[:match.start()]):
             continue
         word = match[1]
         if word == 'Sawhorse' or (word.islower() and word not in COMMON_PERSON_NOUNS):
@@ -262,10 +274,7 @@ def _has_antecedent(question, match):
     pronoun = match[0].lower()
     if pronoun == 'it' and IMPERSONAL_IT.match(question, match.start()):
         return True
-    before = question[:match.start()]
-    at_end = False
-    if pronoun in {'him', 'them', 'it'} or (pronoun == 'her' and not _possessive(question, match)):
-        before, at_end = _object_scope(before, pronoun)
+    before, at_end = _referent_scope(question[:match.start()], pronoun, _possessive(question, match))
     if pronoun in {'they', 'them', 'their'}:
         return _can_name_group(before, at_end)
     if pronoun in {'it', 'its'}:
