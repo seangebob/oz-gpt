@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 
 from model.book_lookup import (
     AnswerSpan, BookIndex, BookSession, NO_ANSWER, Passage, book_passages, followup_question, search_terms,
+    uses_book_history,
 )
 from model.chat_evaluation import generate_session_predictions, grounded_correctness, passage_review_counts
 
@@ -755,6 +756,59 @@ Dana wanted to hear from the council.
                 reply = session.reply(question)
                 self.assertEqual(reply.passage_trace.query, question)
                 self.assertFalse(reply.history_used)
+
+    def test_pronouns_with_a_referent_in_the_question_ignore_the_previous_turn(self):
+        questions = (
+            'Where did the Mangaboo Prince wear the star when he first questioned Zeb?',
+            'What did the Sorcerer call the rain when the Prince challenged him?',
+            "In the preface, what job does Baum say he'd rather take?",
+            'What did Ozma say she would do?',
+            'What did the piglets nibble when the Wizard set them on the grass?',
+            'Where did the Wizard hide the lantern to keep it dry?',
+            'How long did it take to reach the Emerald City?',
+        )
+        for question in questions:
+            with self.subTest(question=question):
+                session = BookSession(self.index, Mock(read=Mock(return_value=[])), trace_passages=True)
+                session.remember('Where was the Wizard born?', 'Omaha')
+                reply = session.reply(question)
+                self.assertEqual(reply.passage_trace.query, question)
+                self.assertFalse(reply.history_used)
+
+    def test_pronouns_without_a_referent_in_the_question_use_history(self):
+        questions = (
+            'What did Zeb give him?',
+            'What did Dorothy tell her?',
+            'What did Ozma give them?',
+            'What did Dorothy say about it?',
+            'Where did the Prince and his people go to see them?',
+            'How high could she go while the Mangaboos chased her?',
+            'What did Ozma say at the trial when it was found?',
+            'Where did the party go after the fire was lit to stop them?',
+            'What did Zeb shout at the hearings when they ended?',
+            'What did Ozma say while the crowd watched when it was found?',
+            'What did Ozma say as the guards waited when they were found?',
+            'What did Ozma tell the guards when they were found?',
+            'What did Ozma say while Zeb watched when he was found?',
+            'What did Ozma say at the Mangaboo Palace when he was found?',
+        )
+        for question in questions:
+            with self.subTest(question=question):
+                self.assertTrue(uses_book_history(question))
+
+    def test_scene_phrase_does_not_replace_the_previous_item(self):
+        self.assertEqual(
+            followup_question('What did Ozma say at the trial when it was found?',
+                              'Which piglet went missing?', 'Nick Chopper'),
+            'What did Ozma say at the trial when the piglet that went missing was found?',
+        )
+
+    def test_followup_rewrites_only_the_unresolved_pronoun(self):
+        self.assertEqual(
+            followup_question('What did Dorothy see coming after them when she looked back?',
+                              'Who chased the piglets?', 'Eureka'),
+            'What did Dorothy see coming after the piglets when she looked back?',
+        )
 
 
 if __name__ == '__main__':
