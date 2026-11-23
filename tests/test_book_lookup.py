@@ -783,10 +783,20 @@ Dana wanted to hear from the council.
             'What did Dorothy say about it?',
             'Where did the Prince and his people go to see them?',
             'How high could she go while the Mangaboos chased her?',
+            'What did Ozma say at the trial when it was found?',
+            'Where did the party go after the fire was lit to stop them?',
+            'What did Zeb shout at the hearings when they ended?',
         )
         for question in questions:
             with self.subTest(question=question):
                 self.assertTrue(uses_book_history(question))
+
+    def test_scene_phrase_does_not_replace_the_previous_item(self):
+        self.assertEqual(
+            followup_question('What did Ozma say at the trial when it was found?',
+                              'Which piglet went missing?', 'Nick Chopper'),
+            'What did Ozma say at the trial when the piglet that went missing was found?',
+        )
 
     def test_followup_rewrites_only_the_unresolved_pronoun(self):
         self.assertEqual(

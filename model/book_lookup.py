@@ -160,10 +160,19 @@ IMPERSONAL_IT = re.compile(
 )
 CAPITALIZED_WORD = re.compile(r"(?<=[\s(\"'])[A-Z][a-z]+(?:-[A-Z]?[a-z]+)*")
 PLACE_PREPOSITION = re.compile(r'\b(?:across|at|from|in|into|near|of|through|to|toward)\s+(?:the\s+)?$', re.IGNORECASE)
-PLURAL_GROUP = re.compile(
-    rf"\b(?i:the) (?:(?!(?:and|or|his|her|its|their)\b)[\w-]+ ){{0,3}}(?:[\w-]*[^\Ws]s|children|people|men|women)\b"
-    rf"|(?:{NAME}) (?i:and) (?:{NAME})",
+SCENE_PREPOSITION = re.compile(
+    r'\b(?:across|after|at|before|beside|by|during|from|in|inside|into|near|on|outside|over|since|through|'
+    r'throughout|to|toward|under|until)\s+$',
+    re.IGNORECASE,
 )
+NON_NOUN_WORD = r'am|and|are|did|does|had|has|her|his|is|its|or|the|their|was|were'
+PLURAL_PHRASE = (
+    rf"\b(?i:the) (?:(?!(?:{NON_NOUN_WORD})\b)[\w-]+ ){{0,3}}"
+    rf"(?:(?!(?:{NON_NOUN_WORD}|as|this|thus)\b)[\w-]*[^\Ws]s|children|people|men|women)\b"
+    rf"|(?:{NAME}) (?i:and) (?:{NAME})"
+)
+PLURAL_GROUP = re.compile(PLURAL_PHRASE)
+PLURAL_AT_END = re.compile(rf'(?:{PLURAL_PHRASE})$')
 DEFINITE_NOUN = re.compile(r'\b(?i:the) ([\w-]+)')
 STOP_WORDS = set(
     'a an and are as at be been but by can could did do does for from had has have he her him his '
@@ -204,13 +213,15 @@ def _possessive(question, match):
     return following is not None and following[1].lower() not in AFTER_OBJECT
 
 
-def _before_object_clause(before, pronoun):
+def _object_scope(before, pronoun):
+    """Return text that can hold an object's referent and whether it must directly precede "to"."""
     # An object pronoun normally cannot refer to the subject of its own clause.
-    breaks = [match.start() for match in SUBORDINATE_CLAUSE.finditer(before)]
-    for infinitive in INFINITIVE.finditer(before):
-        if pronoun in {'them', 'it'} or CAPITALIZED_WORD.search(before, infinitive.end()):
-            breaks.append(infinitive.start())
-    return before[:max(breaks)] if breaks else ''
+    clause = max((match.start() for match in SUBORDINATE_CLAUSE.finditer(before)), default=-1)
+    infinitive = max((match.start() for match in INFINITIVE.finditer(before)
+                      if pronoun in {'them', 'it'} or CAPITALIZED_WORD.search(before, match.end())), default=-1)
+    if infinitive > clause:
+        return before[:infinitive].rstrip(), pronoun in {'them', 'it'}
+    return (before[:clause] if clause >= 0 else ''), False
 
 
 def _can_name_person(text, pronoun):
@@ -225,8 +236,20 @@ def _can_name_person(text, pronoun):
     return False
 
 
-def _can_name_thing(text, pronoun):
-    for word in DEFINITE_NOUN.findall(text):
+def _can_name_group(text, at_end):
+    pattern = PLURAL_AT_END if at_end else PLURAL_GROUP
+    # A scene such as "at the hearings" sets the time or place. It is not the group being discussed.
+    return any(not SCENE_PREPOSITION.search(text[:match.start()]) for match in pattern.finditer(text))
+
+
+def _can_name_thing(text, pronoun, at_end):
+    matches = list(DEFINITE_NOUN.finditer(text))
+    if at_end:
+        matches = [match for match in matches[-1:] if len(text[match.end(1):].split()) <= 2]
+    for match in matches:
+        if SCENE_PREPOSITION.search(text[:match.start()]):
+            continue
+        word = match[1]
         if word == 'Sawhorse' or (word.islower() and word not in COMMON_PERSON_NOUNS):
             return True
         if pronoun == 'its' and word[0].isupper() and not BOOK_NAME.fullmatch(word):
@@ -240,12 +263,13 @@ def _has_antecedent(question, match):
     if pronoun == 'it' and IMPERSONAL_IT.match(question, match.start()):
         return True
     before = question[:match.start()]
+    at_end = False
     if pronoun in {'him', 'them', 'it'} or (pronoun == 'her' and not _possessive(question, match)):
-        before = _before_object_clause(before, pronoun)
+        before, at_end = _object_scope(before, pronoun)
     if pronoun in {'they', 'them', 'their'}:
-        return PLURAL_GROUP.search(before) is not None
+        return _can_name_group(before, at_end)
     if pronoun in {'it', 'its'}:
-        return _can_name_thing(before, pronoun)
+        return _can_name_thing(before, pronoun, at_end)
     return _can_name_person(before, pronoun)
 
 
