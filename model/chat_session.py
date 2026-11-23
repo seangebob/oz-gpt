@@ -31,7 +31,8 @@ PROPER_WORD = re.compile(r"\b[A-Z][a-z]+(?:-[A-Z][a-z]+)*\b")
 def _scene_terms(question):
     anchors = set()
     reporting = REPORTING_ACTOR.search(question)
-    if reporting:
+    # A common noun such as "the group" rarely appears under that wording in the book.
+    if reporting and any(character.isupper() for character in reporting[1]):
         anchors.update(search_terms(reporting[1]))
     time_clause = SCENE_CLAUSE.search(question.partition(' ')[2])
     if time_clause:
@@ -101,7 +102,9 @@ class ChatSession:
         anchors = set() if book_reply.history_used else _scene_terms(question)
 
         def accepts(passage, answer):
-            return anchors.issubset(search_terms(passage.text)) and _answer_type_matches(question, answer)
+            # A scene can name someone just outside the extract, so check its whole chapter.
+            in_scene = not anchors or anchors.issubset(self.book_session.chapter_terms(passage))
+            return in_scene and _answer_type_matches(question, answer)
 
         eligible = accepts(book_reply.source, book_reply.text)
         if eligible:
