@@ -1,3 +1,15 @@
 /model/model-chat.pth
 /model/model-chat-experiment.pth
 /model/model-base-experiment.pth
+
+# Python, notebook, and macOS artifacts
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
+
+# Generated files from the corpus extractor and legacy notebook
+/model/output.train.txt
+/model/output.val.txt
+/model/vocab.txt
+/model/model-01.pkl

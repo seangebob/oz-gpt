@@ -319,14 +319,14 @@ For each missed reply, open its `passage_trace`. Check each candidate's `reader_
 
 If you want to train on a **larger dataset** (e.g., OpenWebText `.xz` shards), use `data_extract.py`:
 
-1. Place `.xz`-compressed text files in the `model/` directory.
+1. Place at least two `.xz`-compressed text files in the `model/` directory.
 2. Run:
    ```bash
    python -m model.data_extract
    ```
-3. This produces `output.train.txt`, `output.val.txt`, and `vocab.txt` with a 90/10 train/val split.
+3. The extractor sorts shards by name and aims for a 90/10 split by file count. It writes `output.train.txt`, `output.val.txt`, and `vocab.txt` as local files.
 
-You would then update `DATA_PATH` in `model/model.py` to point at your new training file.
+The base trainer currently reads `DATA_PATH` in `model/model.py`, builds its vocabulary from that source, and creates its own validation split. Using the extractor’s separate validation and vocabulary files is still open.
 
 ---
 
@@ -389,8 +389,8 @@ Issue numbers refer to the project bug review. Complete each stage in this order
 
 ### Cleanup follow-ups
 
-- Add ignore rules for Python bytecode, `.DS_Store`, and notebook checkpoints. Remove the 14 tracked `.pyc` files, the tracked `.DS_Store`, and the tracked files under `extra/.ipynb_checkpoints/` from Git.
-- Fix `model/data_extract.py` so one `.xz` shard can produce usable training and validation splits. Connect the extracted text and vocabulary to the optional custom-corpus training workflow. Remove the committed empty outputs and retire the old Python source stored as `model/model-01.pkl`.
+- **Generated-file cleanup · complete.** Git ignores Python bytecode, macOS metadata, notebook checkpoints, and local corpus outputs. The empty extractor outputs and the legacy Python source named `model-01.pkl` were retired from Git. The source remains available in Git history.
+- Fix `model/data_extract.py` so one `.xz` shard can produce usable training and validation splits. Connect the extracted text and vocabulary to the optional custom-corpus training workflow.
 - Plan removal of the book’s byte-order mark together with vocabulary migration and checkpoint retraining. Keep the local `oz-*.json` reports for manual review. Apple MPS support for base training shipped with Step 2.
 
 ## Future Improvements
