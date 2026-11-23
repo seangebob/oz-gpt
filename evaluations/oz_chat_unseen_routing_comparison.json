@@ -1,0 +1,876 @@
+{
+  "baseline_code_commit": "597e6fcb226243dc5f37da40837e798d1f2d9e31",
+  "design": "Both runs use the same chat checkpoint, classifier, book and MiniLM reader. The changed policy lets a different cited extract replace a classifier reply when the citation covers at least 75% of the distinct question terms, with at least two terms in the question. Development checks used the existing memory and coverage development sets plus validation. The fresh 12-turn fixture was frozen before evaluation and its annotated source ranges do not overlap those in the prior fixtures.",
+  "scoring": "Review changed replies and citations against the question and the book. Reuse earlier reviewed scores when the baseline replies and citations match the earlier run. Review all replies for the additional benchmarks. Accept equivalent wording and exclude incomplete replies that omit a required fact.",
+  "settings": {
+    "block_size": 128,
+    "device": "cpu",
+    "decoding": "greedy",
+    "max_tokens": 150,
+    "reply_reserve": 32,
+    "torch_version": "2.13.0",
+    "history": "generated",
+    "checkpoint": "model/model-chat-coverage-experiment.pth",
+    "checkpoint_sha256": "7bf86a87e46073d61ba3d803af7bbc26bf295e22f0ab0ff7ddbdf9694caee17d",
+    "first_reply_classifier": "model/model-first-replies.pth",
+    "first_reply_classifier_sha256": "b8fcdab44f94b3458a08460f7a32d7af67fddccca5084395c8f7bceadbba9219",
+    "book_sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9",
+    "reader_model": "deepset/minilm-uncased-squad2",
+    "reader_revision": "934656cdda79824eabf503ed56e15c01ddbdbe3f"
+  },
+  "benchmarks": {
+    "generalization_test": {
+      "fixture": "data/oz_chat_generalization_test.jsonl",
+      "sha256": "754bd9df3bd40ff8c7dd8456bebb81a9e16410f35e10e860ba36a45ae8d5f706",
+      "turns": 16,
+      "first_replies": 16,
+      "followups": 0,
+      "changed_replies": [
+        {
+          "conversation": 11,
+          "turn": 1,
+          "prompt": "What size were the dragonettes' heads compared with barrels?",
+          "expected": "They were as big as barrels.",
+          "before": {
+            "reply": "Young dragons.",
+            "method": "classifier",
+            "correct": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "as big",
+            "method": "book",
+            "correct": true,
+            "citation": {
+              "section": "Chapter 13",
+              "start_line": 3574,
+              "end_line": 3591
+            }
+          },
+          "review": "The reply completes the comparison asked in the question. The cited sentence says the heads were as big as barrels."
+        }
+      ],
+      "correct": {
+        "before": 5,
+        "after": 6
+      },
+      "breakdown": {
+        "first_replies": {
+          "before": 5,
+          "after": 6
+        },
+        "followups": {
+          "before": 0,
+          "after": 0
+        },
+        "with_supporting_citations": {
+          "before": 5,
+          "after": 6
+        }
+      },
+      "methods": {
+        "before": {
+          "generator": 3,
+          "book": 8,
+          "classifier": 5
+        },
+        "after": {
+          "generator": 3,
+          "book": 9,
+          "classifier": 4
+        }
+      }
+    },
+    "book_assist_test": {
+      "fixture": "data/oz_chat_book_assist_test.jsonl",
+      "sha256": "f70ed25474943f335a8ebe4b6c2648a19a3650fc0842dd2c539593d264cc3e59",
+      "turns": 14,
+      "first_replies": 10,
+      "followups": 4,
+      "changed_replies": [
+        {
+          "conversation": 9,
+          "turn": 1,
+          "prompt": "What did the Woggle-Bug pull from his pocket before turning his back on the company?",
+          "expected": "A book.",
+          "before": {
+            "reply": "Trees.",
+            "method": "classifier",
+            "correct": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "a book",
+            "method": "book",
+            "correct": true,
+            "citation": {
+              "section": "Chapter 15",
+              "start_line": 4305,
+              "end_line": 4327
+            }
+          },
+          "review": "The citation says the Woggle-Bug drew a book from its pocket and then turned away."
+        }
+      ],
+      "correct": {
+        "before": 7,
+        "after": 8
+      },
+      "breakdown": {
+        "first_replies": {
+          "before": 5,
+          "after": 6
+        },
+        "followups": {
+          "before": 2,
+          "after": 2
+        },
+        "with_supporting_citations": {
+          "before": 7,
+          "after": 8
+        }
+      },
+      "methods": {
+        "before": {
+          "book": 8,
+          "classifier": 3,
+          "generator": 3
+        },
+        "after": {
+          "book": 9,
+          "classifier": 2,
+          "generator": 3
+        }
+      }
+    },
+    "coverage_unseen": {
+      "fixture": "data/oz_chat_coverage_unseen.jsonl",
+      "sha256": "6383d67937572fc8a5a209deb42f3298529aa08e641550c2fbc4981b69683625",
+      "turns": 14,
+      "first_replies": 14,
+      "followups": 0,
+      "changed_replies": [
+        {
+          "conversation": 5,
+          "turn": 1,
+          "prompt": "How often did the college boys yell as they marched?",
+          "expected": "Every other step.",
+          "before": {
+            "reply": "The Woggle-Bug.",
+            "method": "classifier",
+            "correct": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "every other step they took",
+            "method": "book",
+            "correct": true,
+            "citation": {
+              "section": "Chapter 17",
+              "start_line": 4668,
+              "end_line": 4686
+            }
+          },
+          "review": "The students yelled every other step."
+        },
+        {
+          "conversation": 13,
+          "turn": 1,
+          "prompt": "Why did Eureka think the fish had no bones?",
+          "expected": "Nothing scratched her throat.",
+          "before": {
+            "reply": "It was eaten.",
+            "method": "classifier",
+            "correct": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "I didn't feel them scratch my throat",
+            "method": "book",
+            "correct": true,
+            "citation": {
+              "section": "Chapter 5",
+              "start_line": 1530,
+              "end_line": 1556
+            }
+          },
+          "review": "The kitten says she felt no bones scratch her throat."
+        }
+      ],
+      "correct": {
+        "before": 9,
+        "after": 11
+      },
+      "breakdown": {
+        "first_replies": {
+          "before": 9,
+          "after": 11
+        },
+        "followups": {
+          "before": 0,
+          "after": 0
+        },
+        "with_supporting_citations": {
+          "before": 9,
+          "after": 11
+        }
+      },
+      "methods": {
+        "before": {
+          "generator": 2,
+          "book": 10,
+          "classifier": 2
+        },
+        "after": {
+          "generator": 2,
+          "book": 12
+        }
+      }
+    },
+    "unseen_facts_test": {
+      "fixture": "data/oz_chat_unseen_facts_test.jsonl",
+      "sha256": "1069e746940b2002670ed6cea67d4519ff36b70f1abe6a51691736f24068e896",
+      "turns": 14,
+      "first_replies": 13,
+      "followups": 1,
+      "changed_replies": [
+        {
+          "conversation": 4,
+          "turn": 1,
+          "prompt": "Did Jim mind the taste of the rainbow grass?",
+          "expected": "He liked it.",
+          "before": {
+            "reply": "Jim is the cab-horse.",
+            "method": "classifier",
+            "correct": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "If they give me plenty of it I'll not complain about its color",
+            "method": "book",
+            "correct": false,
+            "citation": {
+              "section": "Chapter 4",
+              "start_line": 1138,
+              "end_line": 1165
+            }
+          },
+          "review": "Jim comments on the color in the reply. The preceding sentence answers the taste question."
+        },
+        {
+          "conversation": 9,
+          "turn": 1,
+          "prompt": "What were the pebbles in the Gargoyle country?",
+          "expected": "Knots from trees.",
+          "before": {
+            "reply": "Sawdust.",
+            "method": "classifier",
+            "correct": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "hard knots from trees",
+            "method": "book",
+            "correct": true,
+            "citation": {
+              "section": "Chapter 11",
+              "start_line": 2873,
+              "end_line": 2891
+            }
+          },
+          "review": "The cited passage identifies the pebbles as hard knots from trees."
+        },
+        {
+          "conversation": 13,
+          "turn": 1,
+          "prompt": "What kept the Hungry Tiger from eating babies?",
+          "expected": "His conscience.",
+          "before": {
+            "reply": "Purple.",
+            "method": "classifier",
+            "correct": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "his conscience",
+            "method": "book",
+            "correct": true,
+            "citation": {
+              "section": "Chapter 16",
+              "start_line": 4520,
+              "end_line": 4537
+            }
+          },
+          "review": "The cited passage says his conscience stopped him from eating babies."
+        }
+      ],
+      "correct": {
+        "before": 7,
+        "after": 9
+      },
+      "breakdown": {
+        "first_replies": {
+          "before": 6,
+          "after": 8
+        },
+        "followups": {
+          "before": 1,
+          "after": 1
+        },
+        "with_supporting_citations": {
+          "before": 7,
+          "after": 9
+        }
+      },
+      "methods": {
+        "before": {
+          "book": 8,
+          "classifier": 6
+        },
+        "after": {
+          "book": 11,
+          "classifier": 3
+        }
+      }
+    },
+    "coverage_test": {
+      "fixture": "data/oz_chat_coverage_test.jsonl",
+      "sha256": "7a82ab6453a1154655931cd258a91af9710d402580bbe159359edb43f9eba838",
+      "turns": 50,
+      "first_replies": 30,
+      "followups": 20,
+      "changed_replies": [
+        {
+          "conversation": 19,
+          "turn": 1,
+          "prompt": "What startled the kitten as she tried to see the food on the table?",
+          "expected": "An unseen hand lifted her.",
+          "before": {
+            "reply": "An unseen hand lifted her.",
+            "method": "classifier",
+            "correct": true,
+            "citation": null
+          },
+          "after": {
+            "reply": "an unseen hand clutched her",
+            "method": "book",
+            "correct": true,
+            "citation": {
+              "section": "Chapter 9",
+              "start_line": 2306,
+              "end_line": 2324
+            }
+          },
+          "review": "Both answers identify the unseen hand. The cited sentence says it clutched Eureka and lifted her off the floor."
+        }
+      ],
+      "correct": {
+        "before": 31,
+        "after": 31
+      },
+      "breakdown": {
+        "first_replies": {
+          "before": 22,
+          "after": 22
+        },
+        "followups": {
+          "before": 9,
+          "after": 9
+        },
+        "with_supporting_citations": {
+          "before": 4,
+          "after": 5
+        }
+      },
+      "methods": {
+        "before": {
+          "classifier": 22,
+          "generator": 20,
+          "book": 8
+        },
+        "after": {
+          "classifier": 21,
+          "generator": 20,
+          "book": 9
+        }
+      }
+    },
+    "memory_test": {
+      "fixture": "data/oz_chat_memory_test.jsonl",
+      "sha256": "2624fe8edbf3ae5c728ec16277f5eae2ecd1691b21ca8668708db9d755aaa061",
+      "turns": 36,
+      "first_replies": 18,
+      "followups": 18,
+      "changed_replies": [
+        {
+          "conversation": 3,
+          "turn": 1,
+          "prompt": "In the hall of the Mangaboos, what clothing did Gwig wear?",
+          "expected": "His Mangaboo clothes.",
+          "before": {
+            "reply": "The Mangaboos are vegetable people.",
+            "method": "classifier",
+            "correct": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "hat",
+            "method": "book",
+            "correct": false,
+            "citation": {
+              "section": "Chapter 3",
+              "start_line": 960,
+              "end_line": 985
+            }
+          },
+          "review": "The citation mentions a hat in the Wizard’s performance. The answer should describe Gwig’s clothing."
+        }
+      ],
+      "correct": {
+        "before": 25,
+        "after": 25
+      },
+      "breakdown": {
+        "first_replies": {
+          "before": 13,
+          "after": 13
+        },
+        "followups": {
+          "before": 12,
+          "after": 12
+        },
+        "with_supporting_citations": {
+          "before": 3,
+          "after": 3
+        }
+      },
+      "methods": {
+        "before": {
+          "book": 8,
+          "classifier": 14,
+          "generator": 14
+        },
+        "after": {
+          "book": 9,
+          "classifier": 13,
+          "generator": 14
+        }
+      }
+    },
+    "test": {
+      "fixture": "data/oz_chat_test.jsonl",
+      "sha256": "1c29194de5fcf79db46c2097ba1fd8e150c205cddd22e33a9b1b0d96052755ea",
+      "turns": 32,
+      "first_replies": 24,
+      "followups": 8,
+      "changed_replies": [
+        {
+          "conversation": 1,
+          "turn": 1,
+          "prompt": "When did the train reach Hugson's Siding?",
+          "expected": "At five in the morning.",
+          "before": {
+            "reply": "A suit-case.",
+            "method": "classifier",
+            "correct": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "midnight",
+            "method": "book",
+            "correct": false,
+            "citation": {
+              "section": "Chapter 1",
+              "start_line": 154,
+              "end_line": 175
+            }
+          },
+          "review": "Midnight was the scheduled arrival. The cited text says the train actually arrived at five."
+        },
+        {
+          "conversation": 7,
+          "turn": 1,
+          "prompt": "Who started the race between Jim and the Sawhorse?",
+          "expected": "Zeb.",
+          "before": {
+            "reply": "The Sawhorse won.",
+            "method": "classifier",
+            "correct": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "Zeb",
+            "method": "book",
+            "correct": true,
+            "citation": {
+              "section": "Chapter 17",
+              "start_line": 4797,
+              "end_line": 4820
+            }
+          },
+          "review": "Zeb gives the starting command for the race."
+        },
+        {
+          "conversation": 24,
+          "turn": 1,
+          "prompt": "Where does Zeb return?",
+          "expected": "Hugson's Ranch.",
+          "before": {
+            "reply": "Zeb is short for Zebediah.",
+            "method": "classifier",
+            "correct": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "THE RANCH",
+            "method": "book",
+            "correct": false,
+            "citation": {
+              "section": "Chapter 20",
+              "start_line": 5326,
+              "end_line": 5346
+            }
+          },
+          "review": "The reply says only “the ranch” and leaves out the requested place name."
+        },
+        {
+          "conversation": 24,
+          "turn": 2,
+          "prompt": "Who went too?",
+          "expected": "Jim.",
+          "before": {
+            "reply": "Silver.",
+            "method": "generator",
+            "correct": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "Jim",
+            "method": "book",
+            "correct": true,
+            "citation": {
+              "section": "Chapter 20",
+              "start_line": 5384,
+              "end_line": 5407
+            }
+          },
+          "review": "The follow-up now uses the return trip and names Jim."
+        }
+      ],
+      "correct": {
+        "before": 13,
+        "after": 15
+      },
+      "breakdown": {
+        "first_replies": {
+          "before": 12,
+          "after": 13
+        },
+        "followups": {
+          "before": 1,
+          "after": 2
+        },
+        "with_supporting_citations": {
+          "before": 13,
+          "after": 15
+        }
+      },
+      "methods": {
+        "before": {
+          "classifier": 7,
+          "book": 16,
+          "generator": 9
+        },
+        "after": {
+          "book": 20,
+          "classifier": 4,
+          "generator": 8
+        }
+      }
+    },
+    "unseen_routing_check": {
+      "fixture": "data/oz_chat_unseen_routing_check.jsonl",
+      "sha256": "d4b6a70f79d73984cd28be186a30e0f1fea9e19d3a6ed30b69f4d329fefc6e99",
+      "turns": 12,
+      "first_replies": 10,
+      "followups": 2,
+      "changed_replies": [],
+      "reviewed_replies": [
+        {
+          "conversation": 1,
+          "turn": 1,
+          "prompt": "What position did the Mangaboo Prince offer if the Wizard beat the Sorcerer?",
+          "expected": "Chief Wizard of the domain.",
+          "both_runs": {
+            "reply": "Chief Wizard",
+            "method": "book",
+            "correct": true,
+            "citation": {
+              "section": "Chapter 3",
+              "start_line": 931,
+              "end_line": 955
+            }
+          }
+        },
+        {
+          "conversation": 2,
+          "turn": 1,
+          "prompt": "How big was the first piglet the Wizard produced beneath his hat?",
+          "expected": "No bigger than a mouse.",
+          "both_runs": {
+            "reply": "two",
+            "method": "book",
+            "correct": false,
+            "citation": {
+              "section": "Chapter 17",
+              "start_line": 4690,
+              "end_line": 4704
+            }
+          }
+        },
+        {
+          "conversation": 3,
+          "turn": 1,
+          "prompt": "Why did Zeb put out the lanterns when the tunnel grew lighter?",
+          "expected": "To save the oil.",
+          "both_runs": {
+            "reply": "to save the oil",
+            "method": "book",
+            "correct": true,
+            "citation": {
+              "section": "Chapter 7",
+              "start_line": 1964,
+              "end_line": 1982
+            }
+          }
+        },
+        {
+          "conversation": 3,
+          "turn": 2,
+          "prompt": "What color was the light they saw next?",
+          "expected": "White.",
+          "both_runs": {
+            "reply": "white",
+            "method": "book",
+            "correct": true,
+            "citation": {
+              "section": "Chapter 7",
+              "start_line": 1976,
+              "end_line": 1989
+            }
+          }
+        },
+        {
+          "conversation": 4,
+          "turn": 1,
+          "prompt": "What stone was the mountain on the Voe side compared to?",
+          "expected": "Granite.",
+          "both_runs": {
+            "reply": "granite",
+            "method": "book",
+            "correct": true,
+            "citation": {
+              "section": "Chapter 8",
+              "start_line": 2016,
+              "end_line": 2036
+            }
+          }
+        },
+        {
+          "conversation": 5,
+          "turn": 1,
+          "prompt": "What fruit did the Wizard compare the look of dama-fruit to?",
+          "expected": "A peach.",
+          "both_runs": {
+            "reply": "peach",
+            "method": "book",
+            "correct": true,
+            "citation": {
+              "section": "Chapter 8",
+              "start_line": 2213,
+              "end_line": 2234
+            }
+          }
+        },
+        {
+          "conversation": 6,
+          "turn": 1,
+          "prompt": "What hid the view from the third landing on the mountain?",
+          "expected": "Thick banks of clouds.",
+          "both_runs": {
+            "reply": "rolling banks of clouds",
+            "method": "book",
+            "correct": true,
+            "citation": {
+              "section": "Chapter 11",
+              "start_line": 2763,
+              "end_line": 2784
+            }
+          }
+        },
+        {
+          "conversation": 7,
+          "turn": 1,
+          "prompt": "What kind of opening did the Gargoyles push the prisoners through?",
+          "expected": "A broad opening high beneath the roof.",
+          "both_runs": {
+            "reply": "a platform",
+            "method": "book",
+            "correct": false,
+            "citation": {
+              "section": "Chapter 12",
+              "start_line": 3107,
+              "end_line": 3123
+            }
+          }
+        },
+        {
+          "conversation": 8,
+          "turn": 1,
+          "prompt": "How did they cross the deep cracks in the floor beyond the Gargoyles?",
+          "expected": "They jumped over them.",
+          "both_runs": {
+            "reply": "they were able to jump over them",
+            "method": "book",
+            "correct": true,
+            "citation": {
+              "section": "Chapter 13",
+              "start_line": 3438,
+              "end_line": 3453
+            }
+          }
+        },
+        {
+          "conversation": 9,
+          "turn": 1,
+          "prompt": "What did the Hungry Tiger strike when it knocked Jim over?",
+          "expected": "Jim's shoulder.",
+          "both_runs": {
+            "reply": "Purple.",
+            "method": "classifier",
+            "correct": false,
+            "citation": null
+          }
+        },
+        {
+          "conversation": 9,
+          "turn": 2,
+          "prompt": "Which animal was crouching on Jim's other side when he came to?",
+          "expected": "The Cowardly Lion.",
+          "both_runs": {
+            "reply": "The Sawhorse.",
+            "method": "generator",
+            "correct": false,
+            "citation": null
+          }
+        },
+        {
+          "conversation": 10,
+          "turn": 1,
+          "prompt": "Where did Ozma say she had left the piglet when she sent Jellia to get it?",
+          "expected": "On her dressing table.",
+          "both_runs": {
+            "reply": "In Ozma's private rooms.",
+            "method": "classifier",
+            "correct": false,
+            "citation": null
+          }
+        }
+      ],
+      "correct": {
+        "before": 7,
+        "after": 7
+      },
+      "breakdown": {
+        "first_replies": {
+          "before": 6,
+          "after": 6
+        },
+        "followups": {
+          "before": 1,
+          "after": 1
+        },
+        "with_supporting_citations": {
+          "before": 7,
+          "after": 7
+        }
+      },
+      "methods": {
+        "before": {
+          "book": 9,
+          "classifier": 2,
+          "generator": 1
+        },
+        "after": {
+          "book": 9,
+          "classifier": 2,
+          "generator": 1
+        }
+      }
+    }
+  },
+  "generator_trial": {
+    "design": "Resume the existing paraphrase generator on ordinary conversations mixed with short cited excerpts. Change some facts in the training excerpts to encourage the generator to follow the supplied text. The 12-example development check changes the answer in its excerpt. Held-out unseen-fact questions use their original prompts without snippets.",
+    "data": {
+      "ordinary_training_conversations": 699,
+      "added_excerpt_examples": 718,
+      "development_examples_with_changed_evidence": 12,
+      "sources": {
+        "data/oz_chat_train.jsonl": "ca4821a560569e0af1fbbf40602f0bd9e1360c309effcd159e5893ba7c4f518d",
+        "data/oz_chat_generator_train_extension.jsonl": "72dfc3b2fa129c67ac6cd66480c927830abae0cc007c2f9db904aab582df5bd6",
+        "data/oz_chat_val.jsonl": "a924141fbc366b0167493aea4f26b59b6cd0b7a6346cda0b916d0888d69b8499",
+        "data/oz_chat_memory_dev.jsonl": "8a824b3ea6c60f16b38b4491b2292c364b06c457f1992978113e3c02e3d2a2c1",
+        "data/oz_chat_coverage_dev.jsonl": "c1b52caac49bd15f59f05e0a806f933df9e42008a47d6c54f7d244eef481964c"
+      }
+    },
+    "settings": {
+      "steps": 1200,
+      "selected_step": 900,
+      "batch_size": 8,
+      "device": "mps",
+      "learning_rate": 0.00012,
+      "history_answer_dropout": 0.4,
+      "seed": 7,
+      "example_construction_seed": 31,
+      "validation_reply_loss": 3.0215
+    },
+    "results": {
+      "evidence-dev": {
+        "test_sha256": "f91e5e86b3d772fb2124c8054c31c7dee130704a9fd4f0ad6681b4057682675d",
+        "turns": 12,
+        "reference_matches": {
+          "before": 1,
+          "after": 2
+        },
+        "reviewed_correct": null
+      },
+      "generalization_test": {
+        "test_sha256": "754bd9df3bd40ff8c7dd8456bebb81a9e16410f35e10e860ba36a45ae8d5f706",
+        "turns": 16,
+        "reference_matches": {
+          "before": 0,
+          "after": 0
+        },
+        "reviewed_correct": {
+          "before": 0,
+          "after": 0
+        }
+      },
+      "book_assist_test": {
+        "test_sha256": "f70ed25474943f335a8ebe4b6c2648a19a3650fc0842dd2c539593d264cc3e59",
+        "turns": 14,
+        "reference_matches": {
+          "before": 0,
+          "after": 0
+        },
+        "reviewed_correct": {
+          "before": 0,
+          "after": 0
+        }
+      }
+    },
+    "disposition": "The trained trial improved exact reference matches on the altered-evidence development check from one to two. It still scored zero on both unseen-fact checks without supplied evidence. The trial checkpoint remains experimental.",
+    "starting_checkpoint_sha256": "93c84e538c97d65115b14ef02c0a18f290826b9576de8620f03697a36df9aa49",
+    "experimental_checkpoint_sha256": "e1d4bd12d756fddfd1c34ff215eb5298039a1d041c5dd0bcc901775146b611b4"
+  }
+}

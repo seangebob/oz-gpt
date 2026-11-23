@@ -794,8 +794,8 @@ class BookSession:
         self.previous_answer = ''
         self.previous_source = None
 
-    def remember(self, question, answer):
-        self._remember_resolved(self._followup(question) or question, answer)
+    def remember(self, question, answer, *, source=None):
+        self._remember_resolved(self._followup(question) or question, answer, source)
 
     def _followup(self, question):
         if self.previous_question and uses_book_history(question):

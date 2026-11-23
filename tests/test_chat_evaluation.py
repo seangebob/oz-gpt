@@ -68,6 +68,46 @@ class ChatEvaluationTests(unittest.TestCase):
         book.reply.assert_not_called()
         book.remember.assert_called_with('What happened next?', 'A cab-horse.')
 
+    def test_cited_first_reply_can_override_an_unrelated_classifier_answer(self):
+        tokenizer = ChatTokenizer(chars)
+        passage = Passage('Chapter 1', 10, 14, 'Dorothy will carry a basket to the garden. Her basket was red.')
+        book = BookSession(Mock(search=Mock(return_value=[(passage, 2.0)])),
+                           Mock(read=Mock(return_value=[AnswerSpan('a basket', 7)])), trace_passages=True)
+        classifier = Mock(predict=Mock(return_value='A lantern.'))
+        session = ChatSession(Mock(), tokenizer, first_reply_classifier=classifier, book_session=book)
+
+        reply = session.reply('What did Dorothy carry to the garden?', remember=False)
+        self.assertEqual((reply.text, reply.reply_method, reply.source), ('a basket', 'book', passage))
+        self.assertIsNone(book.previous_source)
+        self.assertFalse(session.history)
+
+        session.reset()
+        reply = session.reply('What did Dorothy carry to the garden?')
+        self.assertEqual(reply.passage_trace.query, 'What did Dorothy carry to the garden?')
+        self.assertEqual(book.previous_question, 'What did Dorothy carry to the garden?')
+        self.assertEqual(book.previous_source, passage)
+        self.assertEqual(list(session.history), [('What did Dorothy carry to the garden?', 'a basket')])
+
+    def test_weakly_related_or_equivalent_book_answers_keep_classifier_and_its_history(self):
+        tokenizer = ChatTokenizer(chars)
+        passages = [
+            (Passage('Chapter 2', 30, 34, 'Dorothy met Zeb.'), 'Zeb'),
+            (Passage('Chapter 1', 10, 14, 'Dorothy will carry a basket to the garden.'), 'basket'),
+        ]
+        classifier = Mock(predict=Mock(return_value='A basket.'))
+        for passage, text in passages:
+            with self.subTest(text=text):
+                book = BookSession(Mock(search=Mock(return_value=[(passage, 2.0)])),
+                                   Mock(read=Mock(return_value=[AnswerSpan(text, 7)])), trace_passages=True)
+                session = ChatSession(Mock(), tokenizer, first_reply_classifier=classifier, book_session=book)
+
+                reply = session.reply('What did Dorothy carry to the garden?')
+
+                self.assertEqual((reply.text, reply.reply_method, reply.source), ('A basket.', 'classifier', None))
+                self.assertIsNotNone(reply.passage_trace)
+                self.assertIsNone(book.previous_source)
+                self.assertEqual(book.previous_answer, 'A basket.')
+
     def test_book_assistance_uses_cited_history_and_keeps_generator_fallback(self):
         tokenizer = ChatTokenizer(chars)
         passage = Passage('Chapter 1', 1, 4, 'Jim pulled a buggy. The buggy was red.')

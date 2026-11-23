@@ -233,9 +233,9 @@ python -m model.chatbot --chat model/model-chat-coverage-experiment.pth \
   --first-reply-classifier --book-assist
 ```
 
-Book assistance keeps the trained classifier’s first-reply priority and can answer other factual questions from the bundled book. Cited answers can carry their context into follow-ups. The generator handles prompts such as `What happened next?` and takes over when lookup abstains. The terminal shows a source for each book reply and labels classifier and generator replies. Book assistance uses the same local reader as `--book` and the same prompt limits as `--chat`.
+On detailed factual questions, book assistance checks the passage before accepting a first-reply classifier answer. A different extract can take precedence when a citation covers at least 75% of the question’s distinct search terms. Equivalent extracts keep the classifier reply and its history. Cited replies can carry their source into a follow-up. The trained generator still handles conversational prompts such as `What happened next?` and takes over when both the classifier and lookup abstain. The terminal shows the source for each book reply and labels classifier and generator replies.
 
-With the same chat weights and classifier, assistance raised the earlier unseen-fact score from 0/16 to 5/16 and a separate check from 0/14 to 7/14. On the memory and coverage benchmarks it gained one correct first reply and one correct follow-up each. It also replaced two previously correct trained replies with an unrelated extract. [Reviewed scores and citations](evaluations/oz_chat_book_assist_comparison.json)
+With the same coverage checkpoint and classifier, this routing change raised the two existing unseen-fact checks from 5/16 to 6/16 and from 7/14 to 8/14. The coverage unseen-fact check rose from 9/14 to 11/14. A new 12-turn check scored 7/12 in both runs. A separate trial fine-tuned the generator on short book excerpts and scored zero on both existing unseen-fact checks when tested without the excerpts. [Reviewed results](evaluations/oz_chat_unseen_routing_comparison.json)
 
 Run both configurations with identical settings and review the resulting replies and citations.
 
@@ -386,7 +386,7 @@ Issue numbers refer to the project bug review. Complete each stage in this order
 
 ### Remaining repairs in order
 
-1. **#1 Improve factual accuracy in trained chat.** A generator-only training run learned to answer some fresh phrasings of 16 additional supervised facts. Accuracy on facts absent from chat training remains open. Book assistance scored 5/16 on the earlier unseen-fact test and 7/14 on a separate check. [Generator training comparison](evaluations/oz_chat_generator_training_comparison.json) · [Book assistance results](evaluations/oz_chat_book_assist_comparison.json)
+1. **#1 Improve factual accuracy in trained chat.** Cited answers can now take precedence over unrelated first-reply classifier answers. Book-assisted chat reached 6/16 and 8/14 on the two existing unseen-fact tests. The standalone generator still scores 0/16 and 0/14 after an excerpt-training trial. [Reviewed routing and training results](evaluations/oz_chat_unseen_routing_comparison.json) · [Earlier generator training](evaluations/oz_chat_generator_training_comparison.json)
 2. **Improve book lookup on the remaining misses.** Dialogue rereads and speaker tracking raised the reviewed score from 33/40 to 37/40 correct replies with supporting citations. First replies reached 20/20 and follow-ups reached 17/20. Jim’s reason for turning back is now supported but incomplete. The two remaining abstentions concern the second rain and how cracked roofs mend. A 12-turn dialogue check scored 6/12 before and after. [Dialogue review](evaluations/oz_book_dialogue_comparison.json) · [Earlier confidence and context review](evaluations/oz_book_confidence_context_comparison.json)
 
 ### Cleanup follow-ups

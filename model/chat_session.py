@@ -4,18 +4,29 @@ import re
 
 import torch
 
-from model.book_lookup import Passage, PassageTrace, uses_book_history
+from model.book_lookup import Passage, PassageTrace, search_terms, uses_book_history
 from model.chat_data import END_MARKER, END_OF_TURN, REPLY_RESERVE, format_compact_turn, format_prompt, format_turn, pack_history
 from model.model import block_size
 
 
 DEFAULT_MAX_TOKENS = 150
+MIN_BOOK_OVERRIDE_COVERAGE = 0.75
 QUESTION_START = re.compile(r'^(?:who|whom|whose|what|which|when|where|why|how|is|are|was|were|did|does|do|'
                             r'can|could|would|will|has|have|describe|tell me)\b', re.IGNORECASE)
 UNANCHORED_EVENT = re.compile(
     r'(?:what (?:happened|came) (?:next|afterwards?)|why did (?:that|this|it) (?:happen|occur))\W*',
     re.IGNORECASE,
 )
+
+
+def _prefer_book_answer(question_terms, classified, book_reply):
+    book_terms = set(search_terms(book_reply.text))
+    # Keep equivalent answers in the trained conversation path. Accept a different
+    # answer when the reader found a citation that covers most of the question.
+    if not book_terms.difference(search_terms(classified)):
+        return False
+    matched = len(question_terms.intersection(search_terms(book_reply.source.text)))
+    return matched >= MIN_BOOK_OVERRIDE_COVERAGE * len(question_terms)
 
 
 @dataclass(frozen=True)
@@ -77,23 +88,27 @@ class ChatSession:
         token_ids = self.tokenizer.encode(formatted)
         remaining = block_size + 1 - len(token_ids)
         limit = min(self.max_tokens, remaining)
+        classified = None
         if self.first_reply_classifier is not None and self._first_reply and not self.history:
             answer = self.first_reply_classifier.predict(user_text)
             if answer and len(answer) + len(self.stop_ids) <= limit and set(answer) <= self.tokenizer.ids.keys():
-                if remember:
-                    self.remember(user_text, answer)
-                self._first_reply = False
-                return ChatReply(answer, False, False, False, reply_method='classifier')
+                classified = answer
 
         book_reply = None
+        question_terms = set(search_terms(user_text)) if classified and self.book_session is not None else set()
         if (self.book_session is not None and (user_text.endswith('?') or QUESTION_START.match(user_text))
                 and not UNANCHORED_EVENT.fullmatch(user_text)
+                and (classified is None or len(question_terms) >= 2)
                 and (self._first_reply or self.book_session.previous_source is not None
                      or not uses_book_history(user_text))):
-            book_reply = self.book_session.reply(user_text, remember=remember, remember_abstentions=False)
-            if book_reply.source is not None:
+            book_reply = self.book_session.reply(user_text, remember=remember and classified is None,
+                                                 remember_abstentions=False)
+            if (book_reply.source is not None
+                    and (classified is None or _prefer_book_answer(question_terms, classified, book_reply))):
                 self._first_reply = False
                 if remember:
+                    if classified is not None:
+                        self.book_session.remember(user_text, book_reply.text, source=book_reply.source)
                     if set(book_reply.text) <= self.tokenizer.ids.keys():
                         self._remember_generation(user_text, book_reply.text)
                     else:
@@ -101,6 +116,13 @@ class ChatSession:
                         self.history.clear()
                 return ChatReply(book_reply.text, False, book_reply.history_used, False,
                                  reply_method='book', source=book_reply.source, passage_trace=book_reply.passage_trace)
+
+        if classified is not None:
+            if remember:
+                self.remember(user_text, classified)
+            self._first_reply = False
+            return ChatReply(classified, False, False, False, reply_method='classifier',
+                             passage_trace=book_reply.passage_trace if book_reply else None)
 
         context = torch.tensor([token_ids], dtype=torch.long, device=self.device)
         generated = self.model.generate(
