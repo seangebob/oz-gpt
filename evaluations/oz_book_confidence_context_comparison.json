@@ -1,0 +1,666 @@
+{
+  "baseline_code_commit": "228406cb76a100d1ddd82159551425f0936d53bf",
+  "history": "generated",
+  "book_sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9",
+  "reader_model": "deepset/minilm-uncased-squad2",
+  "reader_revision": "934656cdda79824eabf503ed56e15c01ddbdbe3f",
+  "review_method": "The reviewed 40-turn set supplied the misses for this repair. The 12-turn check was frozen before it was evaluated and uses new questions about the same book. Review answers against the original conversation and cited text. Preserve the prior correctness judgment if the answer and citation match.",
+  "reviewed_questions": {
+    "fixture": "data/oz_book_lookup_generalization_test.jsonl",
+    "test_sha256": "9fff016f4c4d293ca411ca9afeabb3f1613daf39f7efb46b24c7dc601a2f25c8",
+    "turns": 40,
+    "correct_first_replies_with_support": {
+      "before": 17,
+      "after": 18,
+      "total": 20
+    },
+    "correct_followups_with_support": {
+      "before": 12,
+      "after": 15,
+      "total": 20
+    },
+    "abstentions": {
+      "before": 9,
+      "after": 6
+    },
+    "changed_replies_or_citations": [
+      {
+        "conversation": 2,
+        "turn": 1,
+        "prompt": "What did Dorothy and Zeb do with their hands when the buggy passed the bright colored suns?",
+        "expected": "They covered their faces to protect their eyes.",
+        "before": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "What did Dorothy and Zeb do with their hands when the buggy passed the bright colored suns?",
+          "reread": null
+        },
+        "after": {
+          "reply": "covered their faces",
+          "citation": {
+            "section": "Chapter 2",
+            "start_line": 444,
+            "end_line": 465
+          },
+          "reader_query": "What did Dorothy and Zeb do with their hands when the buggy passed the bright colored suns?",
+          "reread": {
+            "query": "What did Dorothy and Zeb do with their hands when the buggy passed the bright colored suns?",
+            "span": "covered their faces",
+            "margin": 3.403976,
+            "excerpt": "Swiftly they drew near to the flaming colored suns, and passed close beside them. The light was then so bright that it dazzled their eyes, and they covered their faces with their hands to escape being blinded. There was no heat in the colored suns, however, and after they had passed below them the top of the buggy shut out many of the piercing rays so that the boy and girl could open their eyes again."
+          }
+        },
+        "changed_correctness": true,
+        "review_note": "Neighboring sentences provide enough context for the reader to confirm the original extract."
+      },
+      {
+        "conversation": 2,
+        "turn": 2,
+        "prompt": "What let them open their eyes again?",
+        "expected": "The top of the buggy blocked many of the bright rays.",
+        "before": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "What let the bright colored suns open the bright colored suns's eyes again?",
+          "reread": null
+        },
+        "after": {
+          "reply": "the top of the buggy shut out many of the piercing rays",
+          "citation": {
+            "section": "Chapter 2",
+            "start_line": 444,
+            "end_line": 465
+          },
+          "reader_query": "What let Dorothy and Zeb open their eyes again?",
+          "reread": null
+        },
+        "changed_correctness": true,
+        "review_note": "The rewrite keeps Dorothy and Zeb as the people opening their eyes."
+      },
+      {
+        "conversation": 5,
+        "turn": 3,
+        "prompt": "What caused that damage in the first place?",
+        "expected": "A Rain of Stones.",
+        "before": {
+          "reply": "earthquake",
+          "citation": {
+            "section": "Chapter 2",
+            "start_line": 684,
+            "end_line": 703
+          },
+          "reader_query": "What caused that damage in the first place?",
+          "reread": null
+        },
+        "after": {
+          "reply": "a Rain of Stones",
+          "citation": {
+            "section": "Chapter 4",
+            "start_line": 1113,
+            "end_line": 1135
+          },
+          "reader_query": "What caused the roofs to crack?",
+          "reread": null
+        },
+        "changed_correctness": true,
+        "review_note": "The third turn uses the preceding reference to cracked roofs."
+      },
+      {
+        "conversation": 13,
+        "turn": 2,
+        "prompt": "Where did he put it after tying it up?",
+        "expected": "In the buggy.",
+        "before": {
+          "reply": "buggy",
+          "citation": {
+            "section": "Chapter 11",
+            "start_line": 3018,
+            "end_line": 3027
+          },
+          "reader_query": "Where did Zeb put Zeb after tying Zeb up?",
+          "reread": null
+        },
+        "after": {
+          "reply": "buggy",
+          "citation": {
+            "section": "Chapter 11",
+            "start_line": 3009,
+            "end_line": 3025
+          },
+          "reader_query": "Where did Zeb put the Gargoyle after tying the Gargoyle up?",
+          "reread": null
+        },
+        "changed_correctness": false,
+        "review_note": "The answer was already correct. The query now distinguishes the captive from Zeb."
+      },
+      {
+        "conversation": 15,
+        "turn": 2,
+        "prompt": "How old did it say it and its siblings had just turned?",
+        "expected": "Sixty-six years old.",
+        "before": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "How old did it say it and its siblings had just turned (context: Which two animals did the dragonette say they usually ate because people were scarce)?",
+          "reread": null
+        },
+        "after": {
+          "reply": "sixty-six",
+          "citation": {
+            "section": "Chapter 13",
+            "start_line": 3510,
+            "end_line": 3536
+          },
+          "reader_query": "How old were the dragonette and its siblings?",
+          "reread": {
+            "query": "How old were the dragonette and its siblings?",
+            "span": "sixty-six",
+            "margin": 3.360857,
+            "excerpt": "If I remember rightly, we were sixty-six years old the day before yesterday.\""
+          }
+        },
+        "changed_correctness": true,
+        "review_note": "The rewrite names the reported speaker and the reread confirms the age in the dialogue."
+      }
+    ],
+    "remaining_misses": [
+      {
+        "conversation": 3,
+        "turn": 2,
+        "prompt": "What else did he say fell along with them?",
+        "expected": "Some stones.",
+        "result": "abstained",
+        "review_note": "The reader extracts “some stones” below its confidence requirements."
+      },
+      {
+        "conversation": 5,
+        "turn": 2,
+        "prompt": "How do they mend when the roofs crack?",
+        "expected": "They grow together again over time.",
+        "result": "abstained",
+        "review_note": "The reader still picks the original growth time from the passage that explains how houses mend."
+      },
+      {
+        "conversation": 7,
+        "turn": 2,
+        "prompt": "What did Dorothy promise them?",
+        "expected": "She would not let the kitten hurt them.",
+        "result": "abstained",
+        "review_note": "The reader extracts Dorothy’s promise below its confidence requirements."
+      },
+      {
+        "conversation": 12,
+        "turn": 1,
+        "prompt": "What did Jim ask the others to do when he first looked into the Country of the Gargoyles?",
+        "expected": "Go back down the stairs.",
+        "result": "abstained",
+        "review_note": "The relevant passage appears in expanded retrieval. The reader extracts a different action."
+      },
+      {
+        "conversation": 12,
+        "turn": 2,
+        "prompt": "Why did he want that?",
+        "expected": "He thought the place was dangerous and unfit for living creatures. Everything looked dead.",
+        "result": "incorrect",
+        "review_note": "The vague follow-up still chooses an earlier scene about finding something to eat."
+      },
+      {
+        "conversation": 19,
+        "turn": 1,
+        "prompt": "What did the Scarecrow say about the mind's eye during the Woggle-Bug's speech?",
+        "expected": "The mind had no eye and was blind.",
+        "result": "abstained",
+        "review_note": "The reader extracts only part of the Scarecrow’s statement, below the acceptance threshold."
+      },
+      {
+        "conversation": 19,
+        "turn": 2,
+        "prompt": "What did Ozma tell the Woggle-Bug about it?",
+        "expected": "If he had one, it was invisible.",
+        "result": "abstained",
+        "review_note": "The rewrite still points to an unspecified item. The right passage contains Ozma’s reply."
+      }
+    ]
+  },
+  "regressions": [
+    {
+      "fixture": "data/oz_book_lookup_test.jsonl",
+      "test_sha256": "fdb302e5e6c8fc12d6de0cde1f96d3489982657d0ddb97b23173a2b3d495b625",
+      "turns": 29,
+      "replies_or_citations_changed": 1,
+      "correct_with_support": {
+        "before": 19,
+        "after": 20
+      },
+      "changed_reply": {
+        "conversation": 16,
+        "turn": 1,
+        "prompt": "What color were the Hungry Tiger's stripes?",
+        "after": {
+          "reply": "purple",
+          "citation": {
+            "section": "Chapter 16",
+            "start_line": 4520,
+            "end_line": 4537
+          },
+          "reader_query": "What color were the Hungry Tiger's stripes?",
+          "reread": {
+            "query": "What was the color of the Hungry Tiger's stripes?",
+            "span": "purple",
+            "margin": 3.706848
+          }
+        }
+      }
+    },
+    {
+      "fixture": "data/oz_book_lookup_quality_test.jsonl",
+      "test_sha256": "2fdc91b949111fc3485cd984027240a4b56325f08f5282301f55ee7158166cca",
+      "turns": 26,
+      "replies_or_citations_changed": 0,
+      "correct_with_support": {
+        "before": 15,
+        "after": 15
+      }
+    },
+    {
+      "fixture": "data/oz_chat_test.jsonl",
+      "test_sha256": "1c29194de5fcf79db46c2097ba1fd8e150c205cddd22e33a9b1b0d96052755ea",
+      "turns": 32,
+      "replies_or_citations_changed": 0,
+      "correct_with_support": {
+        "before": 20,
+        "after": 20
+      }
+    },
+    {
+      "fixture": "data/oz_book_lookup_dev.jsonl",
+      "test_sha256": "dad905b394e32445e8a3c744be8e00d61ad95692d63f5aa53a29d6ed27883608",
+      "turns": 20,
+      "replies_or_citations_changed": 0
+    },
+    {
+      "fixture": "data/oz_book_lookup_completion_check.jsonl",
+      "test_sha256": "4f4a837be34798205d7300011e2f2b95c85f3920bc1bc3d19cd72b6db35675ca",
+      "turns": 11,
+      "replies_or_citations_changed": 0,
+      "correct_with_support": {
+        "before": 5,
+        "after": 5
+      }
+    }
+  ],
+  "fresh_check": {
+    "fixture": "data/oz_book_lookup_confidence_check.jsonl",
+    "test_sha256": "b259a317a0fc8afea9d16096c78e04e7e3e3db90da9b06dfb7687ab58dc30f62",
+    "turns": 12,
+    "rows": [
+      {
+        "conversation": 1,
+        "turn": 1,
+        "prompt": "What color was the sunlight on the Wizard’s face as he said “Nonsense” to Dorothy?",
+        "expected": "Violet.",
+        "before": {
+          "reply": "violet",
+          "citation": {
+            "section": "Chapter 3",
+            "start_line": 873,
+            "end_line": 897
+          },
+          "reader_query": "What color was the sunlight on the Wizard’s face as he said “Nonsense” to Dorothy?",
+          "reread": null,
+          "result": "correct_with_support"
+        },
+        "after": {
+          "reply": "violet",
+          "citation": {
+            "section": "Chapter 3",
+            "start_line": 873,
+            "end_line": 897
+          },
+          "reader_query": "What color was the sunlight on the Wizard’s face as he said “Nonsense” to Dorothy?",
+          "reread": null,
+          "result": "correct_with_support"
+        },
+        "review_note": "The passage specifies violet sunlight."
+      },
+      {
+        "conversation": 2,
+        "turn": 1,
+        "prompt": "What did Zeb and the Wizard take off the hinges when the Gargoyles drew back?",
+        "expected": "The wooden doors.",
+        "before": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "What did Zeb and the Wizard take off the hinges when the Gargoyles drew back?",
+          "reread": null,
+          "result": "abstained"
+        },
+        "after": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "What did Zeb and the Wizard take off the hinges when the Gargoyles drew back?",
+          "reread": null,
+          "result": "abstained"
+        },
+        "review_note": ""
+      },
+      {
+        "conversation": 2,
+        "turn": 2,
+        "prompt": "What did they do with the doors?",
+        "expected": "They tossed them onto the flames.",
+        "before": {
+          "reply": "tossed them all on the flames",
+          "citation": {
+            "section": "Chapter 13",
+            "start_line": 3389,
+            "end_line": 3406
+          },
+          "reader_query": "What did they do with the doors (context: did Zeb and the Wizard take off the hinges when the Gargoyles drew back)?",
+          "reread": null,
+          "result": "correct_with_support"
+        },
+        "after": {
+          "reply": "lifted these wooden doors from their hinges and tossed them all on the flames",
+          "citation": {
+            "section": "Chapter 13",
+            "start_line": 3389,
+            "end_line": 3406
+          },
+          "reader_query": "What did Zeb and the Wizard do with the doors?",
+          "reread": null,
+          "result": "correct_with_support"
+        },
+        "review_note": "Both replies say the doors were tossed onto the flames."
+      },
+      {
+        "conversation": 3,
+        "turn": 1,
+        "prompt": "How old was the dragonettes’ mother according to the young dragonette?",
+        "expected": "About two thousand years old.",
+        "before": {
+          "reply": "two thousand years old",
+          "citation": {
+            "section": "Chapter 13",
+            "start_line": 3527,
+            "end_line": 3546
+          },
+          "reader_query": "How old was the dragonettes’ mother according to the young dragonette?",
+          "reread": null,
+          "result": "correct_with_support"
+        },
+        "after": {
+          "reply": "two thousand years old",
+          "citation": {
+            "section": "Chapter 13",
+            "start_line": 3527,
+            "end_line": 3546
+          },
+          "reader_query": "How old was the dragonettes’ mother according to the young dragonette?",
+          "reread": null,
+          "result": "correct_with_support"
+        },
+        "review_note": "The cited age is about two thousand years."
+      },
+      {
+        "conversation": 3,
+        "turn": 2,
+        "prompt": "Why was her age only an estimate?",
+        "expected": "She lost track of her age and skipped several hundred years.",
+        "before": {
+          "reply": "she carelessly lost track of her age a few centuries ago and skipped several hundreds",
+          "citation": {
+            "section": "Chapter 13",
+            "start_line": 3510,
+            "end_line": 3536
+          },
+          "reader_query": "Why was her age only an estimate (context: old was the dragonettes' mother according to the young dragonette)?",
+          "reread": null,
+          "result": "correct_with_support"
+        },
+        "after": {
+          "reply": "she carelessly lost track of her age a few centuries ago and skipped several hundreds",
+          "citation": {
+            "section": "Chapter 13",
+            "start_line": 3510,
+            "end_line": 3536
+          },
+          "reader_query": "Why was her age only an estimate (context: old was the dragonettes' mother according to the young dragonette)?",
+          "reread": null,
+          "result": "correct_with_support"
+        },
+        "review_note": "The dragonette explains that its mother lost track and skipped several hundreds."
+      },
+      {
+        "conversation": 4,
+        "turn": 1,
+        "prompt": "What color was the Cowardly Lion’s mane when Jim saw him beside the Tiger?",
+        "expected": "Tawny.",
+        "before": {
+          "reply": "tawney",
+          "citation": {
+            "section": "Chapter 16",
+            "start_line": 4511,
+            "end_line": 4528
+          },
+          "reader_query": "What color was the Cowardly Lion’s mane when Jim saw him beside the Tiger?",
+          "reread": null,
+          "result": "correct_with_support"
+        },
+        "after": {
+          "reply": "tawney",
+          "citation": {
+            "section": "Chapter 16",
+            "start_line": 4511,
+            "end_line": 4528
+          },
+          "reader_query": "What color was the Cowardly Lion’s mane when Jim saw him beside the Tiger?",
+          "reread": null,
+          "result": "correct_with_support"
+        },
+        "review_note": "The word “tawney” in the book describes the mane."
+      },
+      {
+        "conversation": 5,
+        "turn": 1,
+        "prompt": "What blocked the passage above the dragonettes’ cavern?",
+        "expected": "A huge rock.",
+        "before": {
+          "reply": "a huge rock",
+          "citation": {
+            "section": "Chapter 14",
+            "start_line": 3622,
+            "end_line": 3640
+          },
+          "reader_query": "What blocked the passage above the dragonettes’ cavern?",
+          "reread": null,
+          "result": "correct_with_support"
+        },
+        "after": {
+          "reply": "a huge rock",
+          "citation": {
+            "section": "Chapter 14",
+            "start_line": 3622,
+            "end_line": 3640
+          },
+          "reader_query": "What blocked the passage above the dragonettes’ cavern?",
+          "reread": null,
+          "result": "correct_with_support"
+        },
+        "review_note": "The passage describes the rock blocking the passage."
+      },
+      {
+        "conversation": 5,
+        "turn": 2,
+        "prompt": "How was it moving?",
+        "expected": "It was turning around as if on a pivot.",
+        "before": {
+          "reply": "in motion, turning slowly around and around as if upon a pivot",
+          "citation": {
+            "section": "Chapter 14",
+            "start_line": 3622,
+            "end_line": 3640
+          },
+          "reader_query": "How was the thing that blocked the passage above the dragonettes' cavern moving?",
+          "reread": null,
+          "result": "correct_with_support"
+        },
+        "after": {
+          "reply": "in motion, turning slowly around and around as if upon a pivot",
+          "citation": {
+            "section": "Chapter 14",
+            "start_line": 3622,
+            "end_line": 3640
+          },
+          "reader_query": "How was the thing that blocked the passage above the dragonettes' cavern moving?",
+          "reread": null,
+          "result": "correct_with_support"
+        },
+        "review_note": "The passage says the rock turned as if on a pivot."
+      },
+      {
+        "conversation": 5,
+        "turn": 3,
+        "prompt": "Who was the last one to cross when the path appeared again?",
+        "expected": "Jim the cab-horse.",
+        "before": {
+          "reply": "Jim the cab-horse",
+          "citation": {
+            "section": "Chapter 14",
+            "start_line": 3634,
+            "end_line": 3651
+          },
+          "reader_query": "Who was the last one to cross when the path appeared again?",
+          "reread": null,
+          "result": "correct_with_support"
+        },
+        "after": {
+          "reply": "Jim the cab-horse",
+          "citation": {
+            "section": "Chapter 14",
+            "start_line": 3634,
+            "end_line": 3651
+          },
+          "reader_query": "Who was the last one to cross when the path appeared again?",
+          "reread": null,
+          "result": "correct_with_support"
+        },
+        "review_note": "Jim came last."
+      },
+      {
+        "conversation": 6,
+        "turn": 1,
+        "prompt": "How many times did the Woggle-Bug demand that the death penalty be inflicted on Eureka?",
+        "expected": "Nine times.",
+        "before": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "How many times did the Woggle-Bug demand that the death penalty be inflicted on Eureka?",
+          "reread": null,
+          "result": "abstained"
+        },
+        "after": {
+          "reply": "nine",
+          "citation": {
+            "section": "Chapter 19",
+            "start_line": 5157,
+            "end_line": 5181
+          },
+          "reader_query": "How many times did the Woggle-Bug demand that the death penalty be inflicted on Eureka?",
+          "reread": {
+            "query": "How many times did the Woggle-Bug demand that the death penalty be inflicted on Eureka?",
+            "span": "nine",
+            "margin": 9.239563,
+            "excerpt": "\"Very likely,\" acknowledged the Woggle-Bug. \"And now, Fellow Citizens and Creatures of the Jury, I assert that so awful a crime deserves death, and in the case of the ferocious criminal before you--who is now washing her face--the death penalty should be inflicted nine times.\" There was great applause when the speaker sat down."
+          },
+          "result": "correct_with_support"
+        },
+        "review_note": "The recropped dialogue retains the demand for the death penalty nine times."
+      },
+      {
+        "conversation": 7,
+        "turn": 1,
+        "prompt": "What color were the velvet uniforms of the band leading the Oz parade?",
+        "expected": "Emerald green.",
+        "before": {
+          "reply": "emerald",
+          "citation": {
+            "section": "Chapter 17",
+            "start_line": 4640,
+            "end_line": 4655
+          },
+          "reader_query": "What color were the velvet uniforms of the band leading the Oz parade?",
+          "reread": null,
+          "result": "correct_with_support"
+        },
+        "after": {
+          "reply": "emerald",
+          "citation": {
+            "section": "Chapter 17",
+            "start_line": 4640,
+            "end_line": 4655
+          },
+          "reader_query": "What color were the velvet uniforms of the band leading the Oz parade?",
+          "reread": null,
+          "result": "correct_with_support"
+        },
+        "review_note": "The first band wore emerald velvet."
+      },
+      {
+        "conversation": 7,
+        "turn": 2,
+        "prompt": "What was that band called?",
+        "expected": "The Imperial Cornet Band of Oz.",
+        "before": {
+          "reply": "Royal Court Band",
+          "citation": {
+            "section": "Chapter 17",
+            "start_line": 4660,
+            "end_line": 4676
+          },
+          "reader_query": "What was that band called?",
+          "reread": null,
+          "result": "incorrect"
+        },
+        "after": {
+          "reply": "Royal Court Band",
+          "citation": {
+            "section": "Chapter 17",
+            "start_line": 4660,
+            "end_line": 4676
+          },
+          "reader_query": "What was that band called?",
+          "reread": null,
+          "result": "incorrect"
+        },
+        "review_note": "The reply names the later Royal Court Band. The first was the Imperial Cornet Band."
+      }
+    ],
+    "first_replies": {
+      "turns": 7,
+      "before": {
+        "correct_with_support": 5,
+        "abstained": 2,
+        "incorrect": 0
+      },
+      "after": {
+        "correct_with_support": 6,
+        "abstained": 1,
+        "incorrect": 0
+      }
+    },
+    "followups": {
+      "turns": 5,
+      "before": {
+        "correct_with_support": 4,
+        "abstained": 0,
+        "incorrect": 1
+      },
+      "after": {
+        "correct_with_support": 4,
+        "abstained": 0,
+        "incorrect": 1
+      }
+    }
+  }
+}

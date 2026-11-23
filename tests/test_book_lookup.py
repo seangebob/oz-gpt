@@ -138,6 +138,43 @@ The Wizard was born in Omaha.
         reader.read.side_effect = [[AnswerSpan('spring-clock', 0.1, len(sentence) - 1, weak.start)]]
         self.assertIsNone(session.reply(question).source)
 
+    def test_weak_extract_can_be_confirmed_with_a_neighboring_sentence(self):
+        sentences = ('Dark clouds had cleared earlier.', 'Clara and Danny sat in the buggy in the sunshine.',
+                     'The bright light made them cover their faces with their hands.', 'Later the pair went home.')
+        text = ' '.join(sentences)
+        passage = Passage('Chapter 1', 1, 4, text, sentence_starts=tuple(
+            sum(len(sentence.split()) for sentence in sentences[:i]) for i in range(len(sentences))))
+        index = Mock(search=Mock(return_value=[(passage, 2.0)]))
+        reader = Mock()
+        excerpt = ' '.join(sentences[1:])
+        reader.read.side_effect = [
+            [AnswerSpan('cover their faces', 2.1, start=text.index('cover'))],
+            [AnswerSpan('cover their faces', 5.0, start=excerpt.index('cover'))],
+        ]
+        session = BookSession(index, reader, trace_passages=True)
+
+        reply = session.reply('What did Clara and Danny do with their hands in the bright sunshine in the buggy?')
+
+        self.assertEqual((reply.text, reply.source), ('cover their faces', passage))
+        self.assertEqual(reply.passage_trace.reread.excerpt, excerpt)
+
+    def test_weak_age_can_be_verified_when_the_evidence_uses_a_pronoun(self):
+        setup = 'The dragonette looked at its siblings.'
+        evidence = 'All of us were sixteen years old.'
+        text = f'{setup} {evidence}'
+        passage = Passage('Chapter 1', 1, 2, text, sentence_starts=(0, len(setup.split())))
+        index = Mock(search=Mock(return_value=[(passage, 2.0)]))
+        reader = Mock()
+        reader.read.side_effect = [
+            [AnswerSpan('sixteen years old', 2.6, start=text.index('sixteen'))],
+            [AnswerSpan('sixteen', 4.0, start=evidence.index('sixteen'))],
+        ]
+        session = BookSession(index, reader)
+
+        reply = session.reply('How old were the dragonette and its siblings?')
+
+        self.assertEqual((reply.text, reply.source), ('sixteen', passage))
+
     def test_reaction_reread_quotes_the_previous_reply_and_stays_in_the_scene(self):
         speech = 'The canal will flood the lower fields'
         reaction = 'They were scared and ran to the hill.'
@@ -458,6 +495,14 @@ The Wizard was born in Omaha.
             ('Why that name?', 'Who is in the stable?', 'Comet', 'Why was Comet given that name?'),
             ('Where did she lose them?', 'Which witch owned the silver shoes?', 'the Wicked Witch',
              'Where did she lose the silver shoes?'),
+            ('What let them open their eyes again?', 'What did Dorothy and Zeb do when the suns grew bright?', '',
+             'What let Dorothy and Zeb open their eyes again?'),
+            ('How old did it say it and its siblings had just turned?', 'What did the dragonette say it ate?', 'fish',
+             'How old were the dragonette and its siblings?'),
+            ('What caused that damage in the first place?', 'How do they mend when the roofs crack?', '',
+             'What caused the roofs to crack?'),
+            ('Where did he put it?', 'Who picked up the Gargoyle by the gate?', 'Zeb',
+             'Where did Zeb put the Gargoyle?'),
         ]
         for question, previous, answer, expected in cases:
             with self.subTest(question=question, previous=previous):

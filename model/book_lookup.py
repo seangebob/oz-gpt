@@ -54,6 +54,24 @@ QUESTION_ACTOR = re.compile(
     rf"(?i:who|what|where|when|why|how(?: long| much| high| far| often)?) "
     rf"(?i:did|does|was|were|is|has|had|could|would) ({NAME})(?= |'s\b|$)",
 )
+COORDINATED_ACTOR = re.compile(rf'(?i: and) ({NAME})(?= |$)')
+PLURAL_PERSON = re.compile(r'\b(?:they|them|their)\b', re.IGNORECASE)
+TIME_CLAUSE = re.compile(r'\b(?:when|while|after|before)\b', re.IGNORECASE)
+REPORTING_ACTOR = re.compile(
+    rf'(?i:\b(?:did|does)) ({NAME}|(?i:the [a-z-]+(?: [a-z-]+){{0,3}})) (?i:say|claim|report)\b',
+)
+REPORTED_AGE = re.compile(
+    r'how old did (he|she|it|they) (?:say|claim|report) \1( and (?:his|her|its|their) [a-z]+)? '
+    r'(?:was|were|(?:had )?(?:just )?turned)\W*', re.IGNORECASE,
+)
+AGE_ANSWER = re.compile(r'(?:[a-z0-9]+(?:[- ][a-z0-9]+){0,4}) years? old', re.IGNORECASE)
+COLOR_QUESTION = re.compile(r'what color (is|are|was|were) (.+?)\W*', re.IGNORECASE)
+DAMAGE_REFERENCE = re.compile(r'what caused that damage(?: in the first place)?\W*', re.IGNORECASE)
+DAMAGE_VERBS = {'cracked': 'crack', 'broke': 'break', 'shattered': 'shatter', 'collapsed': 'collapse'}
+DAMAGE_CLAUSE = re.compile(
+    r"\bwhen ((?:the|a|an) [\w'-]+(?: [\w'-]+){0,3}) "
+    r'(crack|cracked|break|broke|shatter|shattered|collapse|collapsed|split)$', re.IGNORECASE,
+)
 ABOUT_SUBJECT = re.compile(rf'(?i:what about) ({NAME})\W*')
 RECIPIENT = re.compile(rf'\b(?i:give|gave|offer|offered|lend|lent|send|sent|show|showed|bring|brought) ({NAME})(?= )')
 NAME_ANSWER = re.compile(r"(?:(?i:the) )?[A-Z][a-z][\w'-]*(?: [A-Z][a-z][\w'-]*){0,3}")
@@ -149,7 +167,7 @@ def _possessive(question, match):
 
 
 def _uses_history(question):
-    if SHORT_FOLLOW_UP.search(question) or ABOUT_SUBJECT.fullmatch(question):
+    if SHORT_FOLLOW_UP.search(question) or ABOUT_SUBJECT.fullmatch(question) or DAMAGE_REFERENCE.fullmatch(question):
         return True
     pronouns = list(PRONOUN.finditer(question))
     if not pronouns:
@@ -179,6 +197,9 @@ def _person_referent(pronoun, actor, direct_object, people):
 
 def followup_question(question, previous_question, previous_answer):
     previous_question = previous_question.replace('’', "'").rstrip('?.!')
+    if DAMAGE_REFERENCE.fullmatch(question) and (damage := DAMAGE_CLAUSE.search(previous_question)):
+        target, action = damage[1], damage[2].lower()
+        return f'What caused {target} to {DAMAGE_VERBS.get(action, action)}?'
     named = NAMED_SUBJECT.fullmatch(previous_question)
     prior_action = ACTION_ACTOR.fullmatch(previous_question)
     actor = named[1] if named else ''
@@ -264,16 +285,36 @@ def followup_question(question, previous_question, previous_answer):
     if plural_item and re.fullmatch(r'how many\W*', question, re.IGNORECASE):
         return f'How many {plural_item}?'
 
+    reported_age = REPORTED_AGE.fullmatch(question)
+    if reported_age and (speaker := REPORTING_ACTOR.search(previous_question)):
+        group = reported_age[2] or ''
+        verb = 'were' if group or reported_age[1].lower() == 'they' else 'was'
+        return f'How old {verb} {speaker[1]}{group}?'
+
+    pair = COORDINATED_ACTOR.match(previous_question, subject.end()) if subject else None
+    plural_person = PLURAL_PERSON.search(question)
+    if pair and plural_person:
+        time_clause = TIME_CLAUSE.search(previous_question)
+        # An object in a time clause is a weaker antecedent than the named pair who acted.
+        if not plural or (time_clause and time_clause.start() < plural.start()) or plural_person[0].lower() == 'they':
+            people_who_acted = f'{subject[1]} and {pair[1]}'
+            if _possessive(question, plural_person):
+                people_who_acted += "'s"
+            start, end = plural_person.span()
+            return question[:start] + people_who_acted + question[end:]
+
     people = {_person_key(match[0]): match[0] for match in BOOK_NAME.finditer(previous_question)}
     direct_object = ''
     if subject:
         verb = re.match(r' [a-z]+', previous_question[subject.end():], re.IGNORECASE)
         if verb and (match := NAMED_OBJECT.match(previous_question, subject.end() + verb.end())):
             direct_object = match[1]
-    elif prior_action and (match := NAMED_OBJECT.match(prior_action[2] or '')):
-        direct_object = match[1]
-        if not named and _person_key(actor) == _person_key(direct_object):
-            actor = ''
+    elif prior_action and prior_action[2]:
+        remainder = prior_action[2].removeprefix(' up') if prior_action[2].startswith(' up ') else prior_action[2]
+        if match := NAMED_OBJECT.match(remainder):
+            direct_object = match[1]
+            if not named and _person_key(actor) == _person_key(direct_object):
+                actor = ''
 
     repeated = REPEATED_ACTION_REASON.fullmatch(question)
     if repeated and prior_action and prior_action[2]:
@@ -301,7 +342,7 @@ def followup_question(question, previous_question, previous_answer):
         if pronoun in {'they', 'them', 'their'}:
             referent = f'the {plural_item}' if plural_item else ''
         elif pronoun in {'it', 'its'}:
-            referent = item or actor
+            referent = item or direct_object or actor
         else:
             referent = _person_referent(pronoun, actor, direct_object, people)
         if not referent:
@@ -641,7 +682,7 @@ def _select_expanded_answer(question, candidates, spans, initial_count):
     return _select_answer(eligible, eligible_spans, question)
 
 
-def _answer_sentence(passage, span):
+def _answer_sentence(passage, span, *, neighbors=0):
     if span.start is None or not passage.sentence_starts:
         return '', 0
     words = list(re.finditer(r'\S+', passage.text))
@@ -656,6 +697,14 @@ def _answer_sentence(passage, span):
     visible_end = len(passage.text) if span.context_end is None else span.context_end
     if not SENTENCE_END.search(excerpt) or not span.start + len(span.text) <= begin + len(excerpt) <= visible_end:
         return '', 0
+    if neighbors:
+        begin = starts[max(0, sentence - 1 - neighbors)]
+        neighbor_end = sentence + neighbors
+        wider_end = starts[neighbor_end] if neighbor_end < len(starts) else len(passage.text)
+        wider = passage.text[begin:wider_end].rstrip()
+        if begin + len(wider) <= visible_end and SENTENCE_END.search(wider):
+            return wider, begin
+        return passage.text[begin:end].rstrip(), begin
     return excerpt, begin
 
 
@@ -796,9 +845,31 @@ class BookSession:
     def _reread_sentence(self, question, passage, span):
         excerpt, offset = _answer_sentence(passage, span)
         terms = set(search_terms(question))
-        if len(terms.intersection(search_terms(excerpt))) < max(2, len(terms) / 2):
-            return None
+        overlap = len(terms.intersection(search_terms(excerpt)))
+        minimum = max(2, len(terms) / 2)
+        age = (question.casefold().startswith('how old ') and span.margin >= MIN_ANSWER_MARGIN
+               and AGE_ANSWER.fullmatch(span.text))
+        # An explicit age can be verified in a sentence that refers to the speaker by pronoun.
+        visible = passage.text[:span.context_end]
+        if overlap >= minimum or (age and excerpt and len(terms.intersection(search_terms(visible))) >= 2):
+            confirmed = self._confirm_span(question, passage, span, excerpt, offset)
+            if confirmed is not None:
+                return confirmed
+        if overlap >= 2 and span.margin >= MIN_ANSWER_MARGIN:
+            wider, begin = _answer_sentence(passage, span, neighbors=1)
+            if wider != excerpt and len(terms.intersection(search_terms(wider))) >= minimum:
+                confirmed = self._confirm_span(question, passage, span, wider, begin)
+                if confirmed is not None:
+                    return confirmed
 
+        color = COLOR_QUESTION.fullmatch(question)
+        if color and span.start is not None and span.margin >= 0:
+            verb = 'is' if color[1].lower() in {'is', 'are'} else 'was'
+            query = f'What {verb} the color of {color[2]}?'
+            return self._confirm_span(query, passage, span, visible, 0)
+        return None
+
+    def _confirm_span(self, question, passage, span, excerpt, offset):
         # Confirm a weak extract in its complete sentence without trusting a new, unrelated answer.
         checked, = self.reader.read(question, [replace(passage, text=excerpt)])
         if (checked.margin < MIN_SINGLE_PASSAGE_MARGIN or checked.start is None
