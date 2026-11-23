@@ -152,6 +152,19 @@ PAST_TENSE = {
 BASE_VERB = {past: verb for verb, past in PAST_TENSE.items()}
 AFTER_OBJECT = set('about after again along and around as at back before behind by down for from go in into leave '
                    'near off on or out over through to under up with'.split())
+COMMON_PERSON_NOUNS = set('boy child father girl king man mother prince princess queen sorcerer wizard woman'.split())
+SUBORDINATE_CLAUSE = re.compile(r'\b(?i:when|while|after|before|as|if|because|since|until|once)\b')
+INFINITIVE = re.compile(r'\bto (?!(?:a|an|the|his|her|their|its)\b)[a-z]+\b')
+IMPERSONAL_IT = re.compile(
+    r'it (?:take|cost|(?:is|was) (?:so |very |too )?(?:easy|hard|difficult|possible|impossible))\b', re.IGNORECASE,
+)
+CAPITALIZED_WORD = re.compile(r"(?<=[\s(\"'])[A-Z][a-z]+(?:-[A-Z]?[a-z]+)*")
+PLACE_PREPOSITION = re.compile(r'\b(?:across|at|from|in|into|near|of|through|to|toward)\s+(?:the\s+)?$', re.IGNORECASE)
+PLURAL_GROUP = re.compile(
+    rf"\b(?i:the) (?:(?!(?:and|or|his|her|its|their)\b)[\w-]+ ){{0,3}}(?:[\w-]*[^\Ws]s|children|people|men|women)\b"
+    rf"|(?:{NAME}) (?i:and) (?:{NAME})",
+)
+DEFINITE_NOUN = re.compile(r'\b(?i:the) ([\w-]+)')
 STOP_WORDS = set(
     'a an and are as at be been but by can could did do does for from had has have he her him his '
     'how i in is it its me of on or she should that the their them then there these they this those '
@@ -191,6 +204,51 @@ def _possessive(question, match):
     return following is not None and following[1].lower() not in AFTER_OBJECT
 
 
+def _before_object_clause(before, pronoun):
+    # An object pronoun normally cannot refer to the subject of its own clause.
+    breaks = [match.start() for match in SUBORDINATE_CLAUSE.finditer(before)]
+    for infinitive in INFINITIVE.finditer(before):
+        if pronoun in {'them', 'it'} or CAPITALIZED_WORD.search(before, infinitive.end()):
+            breaks.append(infinitive.start())
+    return before[:max(breaks)] if breaks else ''
+
+
+def _can_name_person(text, pronoun):
+    pattern = FEMALE_NAME if pronoun in {'she', 'her', 'hers'} else MALE_NAME
+    if any(pattern.fullmatch(match[0]) for match in BOOK_NAME.finditer(text)):
+        return True
+    unlisted = BOOK_NAME.sub(' ', text)
+    for match in CAPITALIZED_WORD.finditer(unlisted):
+        plural = match[0].endswith('s') and not match[0].endswith('ss')
+        if not plural and not PLACE_PREPOSITION.search(unlisted[:match.start()]):
+            return True
+    return False
+
+
+def _can_name_thing(text, pronoun):
+    for word in DEFINITE_NOUN.findall(text):
+        if word == 'Sawhorse' or (word.islower() and word not in COMMON_PERSON_NOUNS):
+            return True
+        if pronoun == 'its' and word[0].isupper() and not BOOK_NAME.fullmatch(word):
+            return True
+    return False
+
+
+def _has_antecedent(question, match):
+    """Return whether an earlier word in the same question can be this pronoun's referent."""
+    pronoun = match[0].lower()
+    if pronoun == 'it' and IMPERSONAL_IT.match(question, match.start()):
+        return True
+    before = question[:match.start()]
+    if pronoun in {'him', 'them', 'it'} or (pronoun == 'her' and not _possessive(question, match)):
+        before = _before_object_clause(before, pronoun)
+    if pronoun in {'they', 'them', 'their'}:
+        return PLURAL_GROUP.search(before) is not None
+    if pronoun in {'it', 'its'}:
+        return _can_name_thing(before, pronoun)
+    return _can_name_person(before, pronoun)
+
+
 def uses_book_history(question):
     if SHORT_FOLLOW_UP.search(question) or ABOUT_SUBJECT.fullmatch(question) or DAMAGE_REFERENCE.fullmatch(question):
         return True
@@ -198,9 +256,10 @@ def uses_book_history(question):
     if not pronouns:
         return False
     main_question = question.rsplit(', ', 1)[-1].rstrip('?.!')
-    if all(_possessive(question, match) for match in pronouns):
-        return not (QUESTION_ACTOR.match(main_question) or BOOK_NAME.search(question[:pronouns[0].start()]))
-    return True
+    if (all(_possessive(question, match) for match in pronouns)
+            and (QUESTION_ACTOR.match(main_question) or BOOK_NAME.search(question[:pronouns[0].start()]))):
+        return False
+    return not all(_has_antecedent(question, match) for match in pronouns)
 
 
 def _person_key(name):
@@ -367,6 +426,8 @@ def followup_question(question, previous_question, previous_answer):
 
     def replace_pronoun(match):
         nonlocal last_object
+        if _has_antecedent(question, match):
+            return match[0]
         pronoun = match[0].lower()
         possessive = _possessive(question, match)
         if pronoun in {'they', 'them', 'their'}:
