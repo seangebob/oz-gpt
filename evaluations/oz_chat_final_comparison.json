@@ -1,0 +1,1455 @@
+{
+  "evaluated_code_commit": "8ab556477c08ceb949eda4d3714e2cbc1214d0e0",
+  "paired_fixture_commit": "b5d19635c801e137d01b124154e9e2cea3c43771",
+  "design": {
+    "paired": "Run the same 16 factual questions with plain generation, generation given a short source excerpt, and live book assistance. Disambiguating question wording was fixed before scoring. The fact families come from the existing held-out excerpt benchmark and are not an independent second sample.",
+    "ordinary": "Repeat four frozen unseen-fact checks, a separate scene check, and three known-fact regressions with generated conversation history.",
+    "evidence": "Repeat the held-out excerpt triplets separately because the bare question can have different answers depending on the supplied excerpt.",
+    "review": "Judge paired and unseen answers by factual correctness, including whether the citation answers the question in the requested scene. Known-fact generator regressions track normalized reference matches. Known-fact live and standalone scores reuse manual judgments after verifying identical outputs."
+  },
+  "settings": {
+    "device": "cpu",
+    "torch_version": "2.13.0",
+    "cpu_threads": 2,
+    "decoding": "greedy",
+    "block_size": 128,
+    "max_tokens": 150,
+    "reply_reserve": 32,
+    "history": "generated",
+    "history_packing": "compact_question_and_reply"
+  },
+  "inputs": {
+    "published_checkpoint": {
+      "path": "model/model-chat-coverage-experiment.pth",
+      "sha256": "7bf86a87e46073d61ba3d803af7bbc26bf295e22f0ab0ff7ddbdf9694caee17d"
+    },
+    "experimental_checkpoints": {
+      "evidence-7": {
+        "seed": 7,
+        "selected_step": 300,
+        "checkpoint_sha256": "7f8f353bb0fe8976ad6d7176f890200d555cbdf3c53649a088c4cbe713382619"
+      },
+      "evidence-19": {
+        "seed": 19,
+        "selected_step": 900,
+        "checkpoint_sha256": "525525724090a1ec4d253d9d3e9fb8e9c940f3ded5fdad6f1a18eb50ba8640f7"
+      }
+    },
+    "experiment_recipe": "evaluations/oz_chat_evidence_comparison.json",
+    "live_book": {
+      "book": "wizard_of_oz.txt",
+      "book_sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9",
+      "reader_model": "deepset/minilm-uncased-squad2",
+      "reader_revision": "934656cdda79824eabf503ed56e15c01ddbdbe3f",
+      "first_reply_classifier": "model/model-first-replies.pth",
+      "first_reply_classifier_sha256": "b8fcdab44f94b3458a08460f7a32d7af67fddccca5084395c8f7bceadbba9219"
+    }
+  },
+  "reproduction": {
+    "generator": "OMP_NUM_THREADS=2 python -m model.chat_evaluation run --checkpoint model/model-chat-coverage-experiment.pth --checkpoint <evidence-7.pth> --checkpoint <evidence-19.pth> --history generated --max-tokens 150 --test-data <fixture> --output <new-report>",
+    "assisted": "OMP_NUM_THREADS=2 python -m model.chat_evaluation run --checkpoint model/model-chat-coverage-experiment.pth --first-reply-classifier --book-assist --trace-passages --history generated --max-tokens 150 --test-data <fixture> --output <new-report>",
+    "standalone_lookup": "OMP_NUM_THREADS=2 python -m model.chat_evaluation run --book --trace-passages --history generated --test-data <fixture> --output <new-report>"
+  },
+  "paired_factual_questions": {
+    "questions": {
+      "fixture": "data/oz_chat_final_questions_test.jsonl",
+      "sha256": "496b631e4653262ddaf599c01568bc8d6bcbe6768ca1c9b86dcca58cef12e757",
+      "turns": 16,
+      "first_replies": 16,
+      "followups": 0
+    },
+    "supplied_excerpts": {
+      "fixture": "data/oz_chat_final_excerpts_test.jsonl",
+      "sha256": "88a8301dd80aedb2ae9487829748f0dbd85a408b97d536e8ca1b88afb5be5ac4",
+      "turns": 16,
+      "first_replies": 16,
+      "followups": 0
+    },
+    "scores": {
+      "generator_alone": {
+        "frozen": {
+          "correct": 0,
+          "clean_stops": 16
+        },
+        "evidence-7": {
+          "correct": 0,
+          "clean_stops": 16
+        },
+        "evidence-19": {
+          "correct": 0,
+          "clean_stops": 16
+        }
+      },
+      "generator_with_excerpt": {
+        "frozen": {
+          "correct": 0,
+          "clean_stops": 14,
+          "false_abstentions": 0
+        },
+        "evidence-7": {
+          "correct": 0,
+          "clean_stops": 15,
+          "false_abstentions": 3
+        },
+        "evidence-19": {
+          "correct": 0,
+          "clean_stops": 16,
+          "false_abstentions": 2
+        }
+      },
+      "live_book_assist": {
+        "correct": 7,
+        "supporting_citations": 7,
+        "unsupported_or_incomplete_citations": 4,
+        "abstentions": 0,
+        "misses_with_reference_in_retrieved_passages": 7
+      }
+    },
+    "reviewed_replies": [
+      {
+        "conversation": 1,
+        "question": "Where did the Tin Woodman hide the pig?",
+        "expected": "In his funnel-shaped hat.",
+        "evidence_test_conversation": 1,
+        "source_lines": [
+          5081,
+          5082
+        ],
+        "generator_alone": {
+          "frozen": {
+            "reply": "Crackers.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "The Sorcerer's house.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "An ornamental the giver.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "generator_with_excerpt": {
+          "frozen": {
+            "reply": "Revolvers.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "An archway.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "live_book_assist": {
+          "reply": "in some safe place",
+          "correct": false,
+          "method": "book",
+          "citation": {
+            "section": "Chapter 18",
+            "start_line": 5065,
+            "end_line": 5083
+          },
+          "reference_passage_ranks": [
+            1,
+            2
+          ],
+          "review": "The right passage was retrieved. The answer repeats the instruction to choose a safe place. The passage later specifies the hat."
+        }
+      },
+      {
+        "conversation": 2,
+        "question": "Where did the Wizard put his nine piglets?",
+        "expected": "In his inside pocket.",
+        "evidence_test_conversation": 2,
+        "source_lines": [
+          1933,
+          1934
+        ],
+        "generator_alone": {
+          "frozen": {
+            "reply": "Revolvers.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "The Royal promoted on archway.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "The Royal Court Band.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "generator_with_excerpt": {
+          "frozen": {
+            "reply": "Revolvers.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "He gathered the piglets.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "He bowed.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "live_book_assist": {
+          "reply": "underneath his hat",
+          "correct": false,
+          "method": "book",
+          "citation": {
+            "section": "Chapter 3",
+            "start_line": 1014,
+            "end_line": 1034
+          },
+          "reference_passage_ranks": [],
+          "review": "The cited scene is the Wizard's first performance. The pocket scene was absent from the retrieved passages."
+        }
+      },
+      {
+        "conversation": 3,
+        "question": "Which way did Eureka climb off the roof?",
+        "expected": "Down.",
+        "evidence_test_conversation": 4,
+        "source_lines": [
+          3181,
+          3182
+        ],
+        "generator_alone": {
+          "frozen": {
+            "reply": "Six dollars a month.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Shorse.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "She was picked from the abonfined lit.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "generator_with_excerpt": {
+          "frozen": {
+            "reply": "Red lifted her.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Show a cone.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Whited lifte.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "live_book_assist": {
+          "reply": "Six dollars a month.",
+          "correct": false,
+          "clean_stop": true,
+          "reference_passage_ranks": [
+            1,
+            3
+          ],
+          "review": "The correct roof passage was retrieved and the answer fell through to the generator."
+        }
+      },
+      {
+        "conversation": 4,
+        "question": "Which way did they go after passing the dragonettes?",
+        "expected": "Up.",
+        "evidence_test_conversation": 5,
+        "source_lines": [
+          3681,
+          3681
+        ],
+        "generator_alone": {
+          "frozen": {
+            "reply": "It landed on a roof.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "It lanted on a roof.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "It lanted upward.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "generator_with_excerpt": {
+          "frozen": {
+            "reply": "He wangets.",
+            "correct": false,
+            "clean_stop": false
+          },
+          "evidence-7": {
+            "reply": "Wood.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Wood.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "live_book_assist": {
+          "reply": "All the way to the great rock",
+          "correct": false,
+          "method": "book",
+          "citation": {
+            "section": "Chapter 13",
+            "start_line": 3373,
+            "end_line": 3395
+          },
+          "reference_passage_ranks": [],
+          "review": "The cited passage occurs on the approach to the cave. The later climb was absent from the retrieved passages."
+        }
+      },
+      {
+        "conversation": 5,
+        "question": "When was the trial room crowded?",
+        "expected": "At three o'clock.",
+        "evidence_test_conversation": 7,
+        "source_lines": [
+          5093,
+          5093
+        ],
+        "generator_alone": {
+          "frozen": {
+            "reply": "White.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "It was three dozen.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "White.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "generator_with_excerpt": {
+          "frozen": {
+            "reply": "log.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "live_book_assist": {
+          "reply": "White.",
+          "correct": false,
+          "clean_stop": true,
+          "reference_passage_ranks": [
+            1
+          ],
+          "review": "The correct passage was ranked first and the routed answer came from the generator."
+        }
+      },
+      {
+        "conversation": 6,
+        "question": "When did Jim take his palace walk?",
+        "expected": "At daybreak.",
+        "evidence_test_conversation": 8,
+        "source_lines": [
+          4395,
+          4396
+        ],
+        "generator_alone": {
+          "frozen": {
+            "reply": "No, he wanted pattern.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Oatmeal.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "A pile of rugs.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "generator_with_excerpt": {
+          "frozen": {
+            "reply": "A striped pattern.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "live_book_assist": {
+          "reply": "morning",
+          "correct": true,
+          "method": "book",
+          "citation": {
+            "section": "Chapter 16",
+            "start_line": 4389,
+            "end_line": 4406
+          },
+          "reference_passage_ranks": [
+            1,
+            7
+          ],
+          "review": "The passage says Jim went out in the morning as soon as it was daylight. Morning is a supported answer at a coarser precision."
+        }
+      },
+      {
+        "conversation": 7,
+        "question": "Why was Dorothy's fall safe?",
+        "expected": "They fell slowly.",
+        "evidence_test_conversation": 10,
+        "source_lines": [
+          477,
+          479
+        ],
+        "generator_alone": {
+          "frozen": {
+            "reply": "Eureka is Dorothy's kitten.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Eureka is Dorothy's kitten.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Eureka is Dorothy's kitten.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "generator_with_excerpt": {
+          "frozen": {
+            "reply": "recomerald to a room.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Eureka.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Eureka.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "live_book_assist": {
+          "reply": "An earthquake opens a crack in the ground.",
+          "correct": false,
+          "method": "classifier",
+          "reference_passage_ranks": [
+            7
+          ],
+          "review": "The classifier answered with the cause of the fall. A retrieved passage supports the different question about the slow descent."
+        }
+      },
+      {
+        "conversation": 8,
+        "question": "Why were Gargoyles no threat in rocks?",
+        "expected": "Hard to fly.",
+        "evidence_test_conversation": 11,
+        "source_lines": [
+          3438,
+          3440
+        ],
+        "generator_alone": {
+          "frozen": {
+            "reply": "He wanted to stop the was tied to privates.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "He was tied to sto stop the buried up.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Whited through evidence.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "generator_with_excerpt": {
+          "frozen": {
+            "reply": "archway.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "In the was the was s",
+            "correct": false,
+            "clean_stop": false
+          },
+          "evidence-19": {
+            "reply": "They used saw.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "live_book_assist": {
+          "reply": "He wanted to stop the was tied to privates.",
+          "correct": false,
+          "clean_stop": true,
+          "reference_passage_ranks": [
+            5,
+            15
+          ],
+          "review": "The search retrieved the explanation about difficulty flying among rocks. The generator did not answer it."
+        }
+      },
+      {
+        "conversation": 9,
+        "question": "How fast did Jim trot into the palace courtyard?",
+        "expected": "Slowly.",
+        "evidence_test_conversation": 13,
+        "source_lines": [
+          3979,
+          3980
+        ],
+        "generator_alone": {
+          "frozen": {
+            "reply": "Trees.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "The Sow a taken to prison.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Trees.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "generator_with_excerpt": {
+          "frozen": {
+            "reply": "He wanted.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Blow.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Blow stairs.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "live_book_assist": {
+          "reply": "slowly",
+          "correct": true,
+          "method": "book",
+          "citation": {
+            "section": "Chapter 14",
+            "start_line": 3970,
+            "end_line": 3983
+          },
+          "reference_passage_ranks": [
+            1
+          ],
+          "review": "Jim slowly trotted into the courtyard."
+        }
+      },
+      {
+        "conversation": 10,
+        "question": "How fast did Eureka run from the Gargoyles?",
+        "expected": "Very fast.",
+        "evidence_test_conversation": 14,
+        "source_lines": [
+          3096,
+          3097
+        ],
+        "generator_alone": {
+          "frozen": {
+            "reply": "At three were was taken to prison.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Around rocation.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Ared up.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "generator_with_excerpt": {
+          "frozen": {
+            "reply": "aroom.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Dorothy.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Zeb.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "live_book_assist": {
+          "reply": "At three were was taken to prison.",
+          "correct": false,
+          "clean_stop": true,
+          "reference_passage_ranks": [
+            1
+          ],
+          "review": "The streak comparison was in the first passage. The generator reply does not describe Eureka's speed."
+        }
+      },
+      {
+        "conversation": 11,
+        "question": "What was the floor of Jim's palace room made of?",
+        "expected": "Green marble.",
+        "evidence_test_conversation": 16,
+        "source_lines": [
+          4340,
+          4342
+        ],
+        "generator_alone": {
+          "frozen": {
+            "reply": "White.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Jim stood still.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "A pile.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "generator_with_excerpt": {
+          "frozen": {
+            "reply": "the Sawhorse.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Silver.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Bllow.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "live_book_assist": {
+          "reply": "green marble",
+          "correct": true,
+          "method": "book",
+          "citation": {
+            "section": "Chapter 16",
+            "start_line": 4335,
+            "end_line": 4358
+          },
+          "reference_passage_ranks": [
+            6
+          ],
+          "review": "The floor of the room was green marble."
+        }
+      },
+      {
+        "conversation": 12,
+        "question": "What was Tik-tok made of?",
+        "expected": "Burnished copper.",
+        "evidence_test_conversation": 17,
+        "source_lines": [
+          4664,
+          4664
+        ],
+        "generator_alone": {
+          "frozen": {
+            "reply": "A kitten.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "A kitten.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Ask me about Dorothy and the Wizard in Oz.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "generator_with_excerpt": {
+          "frozen": {
+            "reply": "A striped pattern.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "A striped pattern.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "A cork-screw.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "live_book_assist": {
+          "reply": "burnished copper",
+          "correct": true,
+          "method": "book",
+          "citation": {
+            "section": "Chapter 17",
+            "start_line": 4648,
+            "end_line": 4665
+          },
+          "reference_passage_ranks": [
+            1,
+            2
+          ],
+          "review": "The book describes Tik-tok as made of burnished copper."
+        }
+      },
+      {
+        "conversation": 13,
+        "question": "Which of Jim's body parts stood erect after the quake?",
+        "expected": "His ears.",
+        "evidence_test_conversation": 19,
+        "source_lines": [
+          319,
+          320
+        ],
+        "generator_alone": {
+          "frozen": {
+            "reply": "A striped pattern.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "A striped pattern.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "A striped pattern.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "generator_with_excerpt": {
+          "frozen": {
+            "reply": "He wanted to a keer.",
+            "correct": false,
+            "clean_stop": false
+          },
+          "evidence-7": {
+            "reply": "Seven.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "A crach.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "live_book_assist": {
+          "reply": "ears",
+          "correct": true,
+          "method": "book",
+          "citation": {
+            "section": "Chapter 1",
+            "start_line": 304,
+            "end_line": 322
+          },
+          "reference_passage_ranks": [
+            1,
+            3
+          ],
+          "review": "Jim's ears stood erect."
+        }
+      },
+      {
+        "conversation": 14,
+        "question": "Which Gargoyle limbs were long and stout?",
+        "expected": "Arms.",
+        "evidence_test_conversation": 20,
+        "source_lines": [
+          2901,
+          2902
+        ],
+        "generator_alone": {
+          "frozen": {
+            "reply": "They walked through the Wizard.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "They walked to stop.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "She was picked from the bush.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "generator_with_excerpt": {
+          "frozen": {
+            "reply": "lit.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Wicker.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "White.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "live_book_assist": {
+          "reply": "arms",
+          "correct": true,
+          "method": "book",
+          "citation": {
+            "section": "Chapter 11",
+            "start_line": 2891,
+            "end_line": 2911
+          },
+          "reference_passage_ranks": [
+            1,
+            7
+          ],
+          "review": "The Gargoyles had extraordinarily long and stout arms."
+        }
+      },
+      {
+        "conversation": 15,
+        "question": "What did the Wizard urge in the dragon cave?",
+        "expected": "Leave the cave.",
+        "evidence_test_conversation": 22,
+        "source_lines": [
+          3593,
+          3594
+        ],
+        "generator_alone": {
+          "frozen": {
+            "reply": "A velvet costume.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "A bout th pin.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "A velvet costume.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "generator_with_excerpt": {
+          "frozen": {
+            "reply": "He gathered the piglets.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "He bowed.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "He bowed.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "live_book_assist": {
+          "reply": "save Eureka's life",
+          "correct": false,
+          "method": "book",
+          "citation": {
+            "section": "Chapter 18",
+            "start_line": 5077,
+            "end_line": 5083
+          },
+          "reference_passage_ranks": [
+            8
+          ],
+          "review": "The cited passage is about the trial. The dragon cave passage appeared further down the ranked list."
+        }
+      },
+      {
+        "conversation": 16,
+        "question": "What did the Scarecrow propose for both horses?",
+        "expected": "Race the two horses.",
+        "evidence_test_conversation": 23,
+        "source_lines": [
+          4757,
+          4758
+        ],
+        "generator_alone": {
+          "frozen": {
+            "reply": "The Sawhorse won.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "The Sawhorse won.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "They unhooked the walked sto privates.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "generator_with_excerpt": {
+          "frozen": {
+            "reply": "Zeb.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Jim stood still.",
+            "correct": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "on  ornoce.",
+            "correct": false,
+            "clean_stop": true
+          }
+        },
+        "live_book_assist": {
+          "reply": "a race",
+          "correct": true,
+          "method": "book",
+          "citation": {
+            "section": "Chapter 17",
+            "start_line": 4753,
+            "end_line": 4777
+          },
+          "reference_passage_ranks": [
+            3
+          ],
+          "review": "The full question names both horses, so a race answers the proposal."
+        }
+      }
+    ]
+  },
+  "unseen_facts": {
+    "total_turns": 67,
+    "first_replies": 58,
+    "followups": 9,
+    "generator_alone_correct": {
+      "frozen": 0,
+      "evidence-7": 0,
+      "evidence-19": 0
+    },
+    "live_book_assist": {
+      "correct": 45,
+      "correct_first_replies": 40,
+      "incorrect_answers": 19,
+      "supporting_citations": 45,
+      "unsupported_or_incomplete_citations": 5,
+      "abstentions": 3,
+      "correct_followups": 5
+    },
+    "benchmarks": {
+      "generalization_test": {
+        "fixture": "data/oz_chat_generalization_test.jsonl",
+        "sha256": "754bd9df3bd40ff8c7dd8456bebb81a9e16410f35e10e860ba36a45ae8d5f706",
+        "turns": 16,
+        "first_replies": 16,
+        "followups": 0,
+        "generator_alone": {
+          "frozen": {
+            "correct": 0,
+            "reference_matches": 0,
+            "first_reply_reference_matches": 0,
+            "followup_reference_matches": 0,
+            "clean_stops": 16,
+            "reference_reply_loss": 3.451118
+          },
+          "evidence-7": {
+            "correct": 0,
+            "reference_matches": 0,
+            "first_reply_reference_matches": 0,
+            "followup_reference_matches": 0,
+            "clean_stops": 16,
+            "reference_reply_loss": 3.39484
+          },
+          "evidence-19": {
+            "correct": 0,
+            "reference_matches": 0,
+            "first_reply_reference_matches": 0,
+            "followup_reference_matches": 0,
+            "clean_stops": 16,
+            "reference_reply_loss": 3.600658
+          }
+        },
+        "live_book_assist": {
+          "correct": 10,
+          "correct_first_replies": 10,
+          "correct_followups": 0,
+          "incorrect_answers": 5,
+          "supporting_citations": 10,
+          "unsupported_or_incomplete_citations": 1,
+          "abstentions": 1
+        },
+        "previously_reviewed_live_outputs_reproduced": true
+      },
+      "book_assist_test": {
+        "fixture": "data/oz_chat_book_assist_test.jsonl",
+        "sha256": "f70ed25474943f335a8ebe4b6c2648a19a3650fc0842dd2c539593d264cc3e59",
+        "turns": 14,
+        "first_replies": 10,
+        "followups": 4,
+        "generator_alone": {
+          "frozen": {
+            "correct": 0,
+            "reference_matches": 0,
+            "first_reply_reference_matches": 0,
+            "followup_reference_matches": 0,
+            "clean_stops": 14,
+            "reference_reply_loss": 2.977537
+          },
+          "evidence-7": {
+            "correct": 0,
+            "reference_matches": 0,
+            "first_reply_reference_matches": 0,
+            "followup_reference_matches": 0,
+            "clean_stops": 14,
+            "reference_reply_loss": 2.908529
+          },
+          "evidence-19": {
+            "correct": 0,
+            "reference_matches": 0,
+            "first_reply_reference_matches": 0,
+            "followup_reference_matches": 0,
+            "clean_stops": 14,
+            "reference_reply_loss": 3.146093
+          }
+        },
+        "live_book_assist": {
+          "correct": 9,
+          "correct_first_replies": 7,
+          "correct_followups": 2,
+          "incorrect_answers": 5,
+          "supporting_citations": 9,
+          "unsupported_or_incomplete_citations": 0,
+          "abstentions": 0
+        },
+        "previously_reviewed_live_outputs_reproduced": true
+      },
+      "coverage_unseen": {
+        "fixture": "data/oz_chat_coverage_unseen.jsonl",
+        "sha256": "6383d67937572fc8a5a209deb42f3298529aa08e641550c2fbc4981b69683625",
+        "turns": 14,
+        "first_replies": 14,
+        "followups": 0,
+        "generator_alone": {
+          "frozen": {
+            "correct": 0,
+            "reference_matches": 0,
+            "first_reply_reference_matches": 0,
+            "followup_reference_matches": 0,
+            "clean_stops": 14,
+            "reference_reply_loss": 3.202854
+          },
+          "evidence-7": {
+            "correct": 0,
+            "reference_matches": 0,
+            "first_reply_reference_matches": 0,
+            "followup_reference_matches": 0,
+            "clean_stops": 14,
+            "reference_reply_loss": 3.225975
+          },
+          "evidence-19": {
+            "correct": 0,
+            "reference_matches": 0,
+            "first_reply_reference_matches": 0,
+            "followup_reference_matches": 0,
+            "clean_stops": 14,
+            "reference_reply_loss": 3.389571
+          }
+        },
+        "live_book_assist": {
+          "correct": 11,
+          "correct_first_replies": 11,
+          "correct_followups": 0,
+          "incorrect_answers": 2,
+          "supporting_citations": 11,
+          "unsupported_or_incomplete_citations": 0,
+          "abstentions": 1
+        },
+        "previously_reviewed_live_outputs_reproduced": true
+      },
+      "unseen_routing_check": {
+        "fixture": "data/oz_chat_unseen_routing_check.jsonl",
+        "sha256": "d4b6a70f79d73984cd28be186a30e0f1fea9e19d3a6ed30b69f4d329fefc6e99",
+        "turns": 12,
+        "first_replies": 10,
+        "followups": 2,
+        "generator_alone": {
+          "frozen": {
+            "correct": 0,
+            "reference_matches": 0,
+            "first_reply_reference_matches": 0,
+            "followup_reference_matches": 0,
+            "clean_stops": 12,
+            "reference_reply_loss": 3.265854
+          },
+          "evidence-7": {
+            "correct": 0,
+            "reference_matches": 0,
+            "first_reply_reference_matches": 0,
+            "followup_reference_matches": 0,
+            "clean_stops": 12,
+            "reference_reply_loss": 3.090552
+          },
+          "evidence-19": {
+            "correct": 0,
+            "reference_matches": 0,
+            "first_reply_reference_matches": 0,
+            "followup_reference_matches": 0,
+            "clean_stops": 12,
+            "reference_reply_loss": 3.360248
+          }
+        },
+        "live_book_assist": {
+          "correct": 8,
+          "correct_first_replies": 7,
+          "correct_followups": 1,
+          "incorrect_answers": 3,
+          "supporting_citations": 8,
+          "unsupported_or_incomplete_citations": 1,
+          "abstentions": 1
+        },
+        "previously_reviewed_live_outputs_reproduced": true
+      },
+      "scene_routing_test": {
+        "fixture": "data/oz_chat_scene_routing_test.jsonl",
+        "sha256": "732bbd8cb46fd8c633f0eaff160f28002bf1086f99d745060adcf53c179ee861",
+        "turns": 11,
+        "first_replies": 8,
+        "followups": 3,
+        "generator_alone": {
+          "frozen": {
+            "correct": 0,
+            "reference_matches": 0,
+            "first_reply_reference_matches": 0,
+            "followup_reference_matches": 0,
+            "clean_stops": 11,
+            "reference_reply_loss": 3.313943
+          },
+          "evidence-7": {
+            "correct": 0,
+            "reference_matches": 0,
+            "first_reply_reference_matches": 0,
+            "followup_reference_matches": 0,
+            "clean_stops": 11,
+            "reference_reply_loss": 3.138923
+          },
+          "evidence-19": {
+            "correct": 0,
+            "reference_matches": 0,
+            "first_reply_reference_matches": 0,
+            "followup_reference_matches": 0,
+            "clean_stops": 11,
+            "reference_reply_loss": 3.376484
+          }
+        },
+        "live_book_assist": {
+          "correct": 7,
+          "correct_first_replies": 5,
+          "correct_followups": 2,
+          "incorrect_answers": 4,
+          "supporting_citations": 7,
+          "unsupported_or_incomplete_citations": 3,
+          "abstentions": 0
+        },
+        "previously_reviewed_live_outputs_reproduced": true
+      }
+    }
+  },
+  "known_fact_regressions": {
+    "total_turns": 118,
+    "followups": 46,
+    "generator_alone": {
+      "frozen": {
+        "reference_matches": 25,
+        "first_reply_reference_matches": 10,
+        "followup_reference_matches": 15,
+        "clean_stops": 118
+      },
+      "evidence-7": {
+        "reference_matches": 20,
+        "first_reply_reference_matches": 5,
+        "followup_reference_matches": 15,
+        "clean_stops": 117
+      },
+      "evidence-19": {
+        "reference_matches": 15,
+        "first_reply_reference_matches": 1,
+        "followup_reference_matches": 14,
+        "clean_stops": 117
+      }
+    },
+    "live_book_assist": {
+      "correct": 71,
+      "correct_first_replies": 48,
+      "correct_followups": 23,
+      "supporting_citations": 23
+    },
+    "benchmarks": {
+      "coverage_test": {
+        "fixture": "data/oz_chat_coverage_test.jsonl",
+        "sha256": "7a82ab6453a1154655931cd258a91af9710d402580bbe159359edb43f9eba838",
+        "turns": 50,
+        "first_replies": 30,
+        "followups": 20,
+        "generator_alone": {
+          "frozen": {
+            "reference_matches": 12,
+            "first_reply_reference_matches": 7,
+            "followup_reference_matches": 5,
+            "clean_stops": 50,
+            "reference_reply_loss": 0.157392
+          },
+          "evidence-7": {
+            "reference_matches": 9,
+            "first_reply_reference_matches": 2,
+            "followup_reference_matches": 7,
+            "clean_stops": 49,
+            "reference_reply_loss": 0.215436
+          },
+          "evidence-19": {
+            "reference_matches": 7,
+            "first_reply_reference_matches": 1,
+            "followup_reference_matches": 6,
+            "clean_stops": 50,
+            "reference_reply_loss": 0.208238
+          }
+        },
+        "live_book_assist": {
+          "correct": 31,
+          "correct_first_replies": 22,
+          "correct_followups": 9,
+          "supporting_citations": 5
+        },
+        "previously_reviewed_live_outputs_reproduced": true
+      },
+      "memory_test": {
+        "fixture": "data/oz_chat_memory_test.jsonl",
+        "sha256": "2624fe8edbf3ae5c728ec16277f5eae2ecd1691b21ca8668708db9d755aaa061",
+        "turns": 36,
+        "first_replies": 18,
+        "followups": 18,
+        "generator_alone": {
+          "frozen": {
+            "reference_matches": 13,
+            "first_reply_reference_matches": 3,
+            "followup_reference_matches": 10,
+            "clean_stops": 36,
+            "reference_reply_loss": 0.129439
+          },
+          "evidence-7": {
+            "reference_matches": 11,
+            "first_reply_reference_matches": 3,
+            "followup_reference_matches": 8,
+            "clean_stops": 36,
+            "reference_reply_loss": 0.147962
+          },
+          "evidence-19": {
+            "reference_matches": 8,
+            "first_reply_reference_matches": 0,
+            "followup_reference_matches": 8,
+            "clean_stops": 36,
+            "reference_reply_loss": 0.148788
+          }
+        },
+        "live_book_assist": {
+          "correct": 25,
+          "correct_first_replies": 13,
+          "correct_followups": 12,
+          "supporting_citations": 3
+        },
+        "previously_reviewed_live_outputs_reproduced": true
+      },
+      "test": {
+        "fixture": "data/oz_chat_test.jsonl",
+        "sha256": "1c29194de5fcf79db46c2097ba1fd8e150c205cddd22e33a9b1b0d96052755ea",
+        "turns": 32,
+        "first_replies": 24,
+        "followups": 8,
+        "generator_alone": {
+          "frozen": {
+            "reference_matches": 0,
+            "first_reply_reference_matches": 0,
+            "followup_reference_matches": 0,
+            "clean_stops": 32,
+            "reference_reply_loss": 2.979727
+          },
+          "evidence-7": {
+            "reference_matches": 0,
+            "first_reply_reference_matches": 0,
+            "followup_reference_matches": 0,
+            "clean_stops": 32,
+            "reference_reply_loss": 2.950551
+          },
+          "evidence-19": {
+            "reference_matches": 0,
+            "first_reply_reference_matches": 0,
+            "followup_reference_matches": 0,
+            "clean_stops": 31,
+            "reference_reply_loss": 3.074346
+          }
+        },
+        "live_book_assist": {
+          "correct": 15,
+          "correct_first_replies": 13,
+          "correct_followups": 2,
+          "supporting_citations": 15
+        },
+        "previously_reviewed_live_outputs_reproduced": true
+      }
+    }
+  },
+  "held_out_evidence_triplets": {
+    "fixture": "data/oz_chat_evidence_test.jsonl",
+    "sha256": "cde89b210234f0379a171f8be5493f79cbe3bbd9ca5126eca2e9ee3385683765",
+    "turns": 24,
+    "first_replies": 24,
+    "followups": 0,
+    "supported_turns": 16,
+    "insufficient_turns": 8,
+    "scores": {
+      "frozen": {
+        "supported_answers_correct": 0,
+        "supported_answers_abstained": 0,
+        "insufficient_answers_abstained": 0,
+        "both_supported_answers_correct": 0,
+        "complete_triplets": 0,
+        "clean_stops": 24
+      },
+      "evidence-7": {
+        "supported_answers_correct": 0,
+        "supported_answers_abstained": 9,
+        "insufficient_answers_abstained": 4,
+        "both_supported_answers_correct": 0,
+        "complete_triplets": 0,
+        "clean_stops": 23
+      },
+      "evidence-19": {
+        "supported_answers_correct": 0,
+        "supported_answers_abstained": 7,
+        "insufficient_answers_abstained": 4,
+        "both_supported_answers_correct": 0,
+        "complete_triplets": 0,
+        "clean_stops": 24
+      }
+    },
+    "previous_review_reproduced": "evaluations/oz_chat_evidence_comparison.json"
+  },
+  "standalone_lookup_regressions": {
+    "generalization_test": {
+      "fixture": "data/oz_book_lookup_generalization_test.jsonl",
+      "sha256": "9fff016f4c4d293ca411ca9afeabb3f1613daf39f7efb46b24c7dc601a2f25c8",
+      "turns": 40,
+      "first_replies": 20,
+      "followups": 20,
+      "correct_first_replies_with_support": 20,
+      "correct_followups_with_support": 20,
+      "previously_reviewed_outputs_reproduced": true
+    },
+    "followup_check": {
+      "fixture": "data/oz_book_lookup_followup_check.jsonl",
+      "sha256": "8a38106e57a6830b5e0aa0817e4e13485383f0c40785da18650c4396057d4dde",
+      "turns": 12,
+      "first_replies": 6,
+      "followups": 6,
+      "correct_first_replies_with_support": 6,
+      "correct_followups_with_support": 1,
+      "previously_reviewed_outputs_reproduced": true
+    }
+  },
+  "checkpoint_decision": "Keep the published checkpoint in service. Neither evidence-trained candidate answered a supported excerpt correctly. Both candidates also lost normalized matches on the known-fact regressions. Live assistance answered some unseen facts correctly and still missed questions when it retrieved the reference passage or lost the scene."
+}
