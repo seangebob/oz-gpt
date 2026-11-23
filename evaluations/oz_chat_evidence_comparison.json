@@ -1,0 +1,1815 @@
+{
+  "baseline_code_commit": "b0eec6b5641654578ddba7e2f1a240b9c17aeea9",
+  "held_out_fixture_commit": "de3e6c37e22fda95a7d783027ca8b021e64fe39b",
+  "method": "Each held-out family uses the same question with two book excerpts that support different answers and a third excerpt that is insufficient. These scenes were selected from source ranges absent from all earlier annotated fixtures. The final fixture was committed before training and kept out of checkpoint selection. The Oz book was available during base pretraining.",
+  "training": {
+    "starting_checkpoint": "model/model-chat-coverage-experiment.pth",
+    "starting_checkpoint_sha256": "7bf86a87e46073d61ba3d803af7bbc26bf295e22f0ab0ff7ddbdf9694caee17d",
+    "ordinary_training_data": "data/oz_chat_train.jsonl",
+    "ordinary_conversations": 619,
+    "evidence_training_data": "data/oz_chat_evidence_train.jsonl",
+    "unique_evidence_examples": 72,
+    "evidence_repetitions": 8,
+    "control_trainable_replies": 913,
+    "mixed_trainable_replies": 1489,
+    "mixed_recipe": "Concatenate the bytes of the ordinary training file and eight successive copies of the evidence training file.",
+    "mixed_sha256": "18e8a1f275f5656f74624794b35d1867f8fd1574b232c14e794530be6413e21c",
+    "training_seed_pairs": [
+      7,
+      19
+    ],
+    "steps": 900,
+    "eval_every": 300,
+    "batch_size": 8,
+    "learning_rate": 0.00012,
+    "sampling": "uniform",
+    "history_answer_dropout": 0.4,
+    "checkpoint_selection": "balanced-first across the evidence and coverage development files, followed by total development matches and ordinary validation loss",
+    "device": "mps",
+    "python": "3.14.6",
+    "platform": "Darwin arm64",
+    "torch_version": "2.13.0",
+    "source_file_hashes": {
+      "data/oz_chat_train.jsonl": "ca4821a560569e0af1fbbf40602f0bd9e1360c309effcd159e5893ba7c4f518d",
+      "data/oz_chat_evidence_train.jsonl": "bb03c3ea8935a272d16e69f2525e68c731f29d5949f183fdfd9cdded57f91174",
+      "data/oz_chat_val.jsonl": "a924141fbc366b0167493aea4f26b59b6cd0b7a6346cda0b916d0888d69b8499",
+      "data/oz_chat_evidence_dev.jsonl": "5e9920eb83dd0d4a8c659e7b6c37c11faf80281b4b7064dfbfa7b2b2da77a861",
+      "data/oz_chat_coverage_dev.jsonl": "c1b52caac49bd15f59f05e0a806f933df9e42008a47d6c54f7d244eef481964c"
+    },
+    "command": [
+      "python",
+      "-m",
+      "model.chat_training",
+      "--init-chat-checkpoint",
+      "model/model-chat-coverage-experiment.pth",
+      "--train-data",
+      "TRAIN_FILE",
+      "--val-data",
+      "data/oz_chat_val.jsonl",
+      "--dev-data",
+      "data/oz_chat_evidence_dev.jsonl",
+      "--dev-data",
+      "data/oz_chat_coverage_dev.jsonl",
+      "--select-by",
+      "balanced-first",
+      "--sampling",
+      "uniform",
+      "--steps",
+      "900",
+      "--eval-every",
+      "300",
+      "--batch-size",
+      "8",
+      "--lr",
+      "0.00012",
+      "--history-answer-dropout",
+      "0.4",
+      "--seed",
+      "SEED",
+      "--device",
+      "mps",
+      "--output",
+      "OUTPUT_FILE"
+    ]
+  },
+  "evaluation": {
+    "device": "cpu",
+    "cpu_threads": 2,
+    "torch_version": "2.13.0",
+    "decoding": "greedy",
+    "block_size": 128,
+    "max_tokens": 150,
+    "reply_reserve": 32,
+    "history": "generated",
+    "history_packing": "compact_question_and_reply",
+    "classifier": false,
+    "book_lookup": false,
+    "review_method": "Manually check held-out replies against the excerpt and question, accepting equivalent wording. Score abstention only when the reply clearly states that the excerpt lacks sufficient evidence. Regressions and development diagnostics use exact reference matches.",
+    "command": [
+      "python",
+      "-m",
+      "model.chat_evaluation",
+      "run",
+      "--checkpoint",
+      "CHECKPOINT",
+      "--test-data",
+      "TEST_FILE",
+      "--history",
+      "generated",
+      "--max-tokens",
+      "150",
+      "--output",
+      "OUTPUT_FILE"
+    ]
+  },
+  "checkpoints": {
+    "frozen": {
+      "checkpoint_sha256": "7bf86a87e46073d61ba3d803af7bbc26bf295e22f0ab0ff7ddbdf9694caee17d"
+    },
+    "control-7": {
+      "checkpoint_sha256": "15d45eaba28aa5dd1a80aef3aa336df1b36e7c2e0768810d8f1186e43b45a25d",
+      "seed": 7,
+      "selected_step": 300,
+      "validation_reply_loss": 3.6684,
+      "development_log": [
+        "Step  300 | train reply loss 0.0522 | validation reply loss 3.6684 | development reference matches 15/68 | first replies oz_chat_evidence_dev.jsonl 0/18, oz_chat_coverage_dev.jsonl 8/30",
+        "Step  600 | train reply loss 0.0630 | validation reply loss 3.8178 | development reference matches 10/68 | first replies oz_chat_evidence_dev.jsonl 0/18, oz_chat_coverage_dev.jsonl 4/30",
+        "Step  900 | train reply loss 0.0763 | validation reply loss 3.9154 | development reference matches 14/68 | first replies oz_chat_evidence_dev.jsonl 0/18, oz_chat_coverage_dev.jsonl 7/30"
+      ]
+    },
+    "evidence-7": {
+      "checkpoint_sha256": "7f8f353bb0fe8976ad6d7176f890200d555cbdf3c53649a088c4cbe713382619",
+      "seed": 7,
+      "selected_step": 300,
+      "validation_reply_loss": 3.4951,
+      "development_log": [
+        "Step  300 | train reply loss 0.1647 | validation reply loss 3.4951 | development reference matches 15/68 | first replies oz_chat_evidence_dev.jsonl 4/18, oz_chat_coverage_dev.jsonl 6/30",
+        "Step  600 | train reply loss 0.0509 | validation reply loss 3.5964 | development reference matches 11/68 | first replies oz_chat_evidence_dev.jsonl 5/18, oz_chat_coverage_dev.jsonl 4/30",
+        "Step  900 | train reply loss 0.0728 | validation reply loss 3.6825 | development reference matches 13/68 | first replies oz_chat_evidence_dev.jsonl 6/18, oz_chat_coverage_dev.jsonl 4/30"
+      ]
+    },
+    "control-19": {
+      "checkpoint_sha256": "0790f3e25949a5f8291f191d548460667c37bf0106a224b59a531578dbb774f0",
+      "seed": 19,
+      "selected_step": 600,
+      "validation_reply_loss": 3.7136,
+      "development_log": [
+        "Step  300 | train reply loss 0.1185 | validation reply loss 3.6843 | development reference matches 8/68 | first replies oz_chat_evidence_dev.jsonl 0/18, oz_chat_coverage_dev.jsonl 2/30",
+        "Step  600 | train reply loss 0.0515 | validation reply loss 3.7136 | development reference matches 13/68 | first replies oz_chat_evidence_dev.jsonl 0/18, oz_chat_coverage_dev.jsonl 6/30",
+        "Step  900 | train reply loss 0.0183 | validation reply loss 3.8771 | development reference matches 14/68 | first replies oz_chat_evidence_dev.jsonl 0/18, oz_chat_coverage_dev.jsonl 5/30"
+      ]
+    },
+    "evidence-19": {
+      "checkpoint_sha256": "525525724090a1ec4d253d9d3e9fb8e9c940f3ded5fdad6f1a18eb50ba8640f7",
+      "seed": 19,
+      "selected_step": 900,
+      "validation_reply_loss": 3.7933,
+      "development_log": [
+        "Step  300 | train reply loss 0.0919 | validation reply loss 3.5655 | development reference matches 11/68 | first replies oz_chat_evidence_dev.jsonl 2/18, oz_chat_coverage_dev.jsonl 3/30",
+        "Step  600 | train reply loss 0.1100 | validation reply loss 3.5807 | development reference matches 14/68 | first replies oz_chat_evidence_dev.jsonl 6/18, oz_chat_coverage_dev.jsonl 3/30",
+        "Step  900 | train reply loss 0.0838 | validation reply loss 3.7933 | development reference matches 20/68 | first replies oz_chat_evidence_dev.jsonl 5/18, oz_chat_coverage_dev.jsonl 6/30"
+      ]
+    }
+  },
+  "held_out_evidence": {
+    "fixture": "data/oz_chat_evidence_test.jsonl",
+    "test_sha256": "cde89b210234f0379a171f8be5493f79cbe3bbd9ca5126eca2e9ee3385683765",
+    "turns": 24,
+    "supported_turns": 16,
+    "insufficient_turns": 8,
+    "fact_families": 8,
+    "scores": {
+      "frozen": {
+        "turns": 24,
+        "reference_matches": 0,
+        "first_replies": 24,
+        "first_reference_matches": 0,
+        "followups": 0,
+        "followup_reference_matches": 0,
+        "clean_stops": 24,
+        "reference_reply_loss": 3.603015,
+        "supported_answers_correct": 0,
+        "supported_answers_abstained": 0,
+        "insufficient_answers_abstained": 0,
+        "both_supported_answers_correct": 0,
+        "complete_triplets": 0,
+        "reviewed_correct": 0
+      },
+      "control-7": {
+        "turns": 24,
+        "reference_matches": 0,
+        "first_replies": 24,
+        "first_reference_matches": 0,
+        "followups": 0,
+        "followup_reference_matches": 0,
+        "clean_stops": 23,
+        "reference_reply_loss": 3.675846,
+        "supported_answers_correct": 0,
+        "supported_answers_abstained": 0,
+        "insufficient_answers_abstained": 0,
+        "both_supported_answers_correct": 0,
+        "complete_triplets": 0,
+        "reviewed_correct": 0
+      },
+      "evidence-7": {
+        "turns": 24,
+        "reference_matches": 4,
+        "first_replies": 24,
+        "first_reference_matches": 4,
+        "followups": 0,
+        "followup_reference_matches": 0,
+        "clean_stops": 23,
+        "reference_reply_loss": 1.889362,
+        "supported_answers_correct": 0,
+        "supported_answers_abstained": 9,
+        "insufficient_answers_abstained": 4,
+        "both_supported_answers_correct": 0,
+        "complete_triplets": 0,
+        "reviewed_correct": 4
+      },
+      "control-19": {
+        "turns": 24,
+        "reference_matches": 0,
+        "first_replies": 24,
+        "first_reference_matches": 0,
+        "followups": 0,
+        "followup_reference_matches": 0,
+        "clean_stops": 23,
+        "reference_reply_loss": 3.784116,
+        "supported_answers_correct": 0,
+        "supported_answers_abstained": 0,
+        "insufficient_answers_abstained": 0,
+        "both_supported_answers_correct": 0,
+        "complete_triplets": 0,
+        "reviewed_correct": 0
+      },
+      "evidence-19": {
+        "turns": 24,
+        "reference_matches": 4,
+        "first_replies": 24,
+        "first_reference_matches": 4,
+        "followups": 0,
+        "followup_reference_matches": 0,
+        "clean_stops": 24,
+        "reference_reply_loss": 1.986553,
+        "supported_answers_correct": 0,
+        "supported_answers_abstained": 7,
+        "insufficient_answers_abstained": 4,
+        "both_supported_answers_correct": 0,
+        "complete_triplets": 0,
+        "reviewed_correct": 4
+      }
+    },
+    "reviewed_replies": [
+      {
+        "conversation": 1,
+        "family": "evidence-final-pig-storage",
+        "evidence_status": "supported",
+        "source_lines": [
+          5081,
+          5082
+        ],
+        "excerpt": "he placed the little pig inside his funnel-shaped hat",
+        "question": "Where was it put?",
+        "expected": "In his funnel-shaped hat.",
+        "replies": {
+          "frozen": {
+            "reply": "Revolvers.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "The Wizard.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "The Wizard.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "Well, that's better!",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "The Wizard.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 2,
+        "family": "evidence-final-pig-storage",
+        "evidence_status": "supported",
+        "source_lines": [
+          1933,
+          1934
+        ],
+        "excerpt": "placed them carefully in his inside pocket",
+        "question": "Where was it put?",
+        "expected": "In his inside pocket.",
+        "replies": {
+          "frozen": {
+            "reply": "Piglets.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "He was tied up.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "abstained": true,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "He was tied up.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "abstained": true,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 3,
+        "family": "evidence-final-pig-storage",
+        "evidence_status": "insufficient",
+        "source_lines": [
+          5068,
+          5069
+        ],
+        "excerpt": "He drew from his inside pocket one of the eight tiny piglets",
+        "question": "Where was it put?",
+        "expected": "Not enough evidence.",
+        "replies": {
+          "frozen": {
+            "reply": "Red leather.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "Red lifted him.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "He was tied to a to a treat",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": false
+          },
+          "control-19": {
+            "reply": "Red leather.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Whited the aves.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 4,
+        "family": "evidence-final-vertical-motion",
+        "evidence_status": "supported",
+        "source_lines": [
+          3181,
+          3182
+        ],
+        "excerpt": "climbed down the sides of this house to the ground",
+        "question": "Which direction did they go?",
+        "expected": "Down.",
+        "replies": {
+          "frozen": {
+            "reply": "Revolvers.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "A stair.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "A sund.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "A strip of hars.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "The buggy seat.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 5,
+        "family": "evidence-final-vertical-motion",
+        "evidence_status": "supported",
+        "source_lines": [
+          3681,
+          3681
+        ],
+        "excerpt": "creeping slowly up another steep incline",
+        "question": "Which direction did they go?",
+        "expected": "Up.",
+        "replies": {
+          "frozen": {
+            "reply": "The Woggle-Bug.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "The Woggle-Bug.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "abstained": true,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "They walked in the air.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "abstained": true,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 6,
+        "family": "evidence-final-vertical-motion",
+        "evidence_status": "insufficient",
+        "source_lines": [
+          3158,
+          3158
+        ],
+        "excerpt": "they did not like the darkness or the damp smell",
+        "question": "Which direction did they go?",
+        "expected": "Not enough evidence.",
+        "replies": {
+          "frozen": {
+            "reply": "Revolvers.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "A wooden him.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Not enough evidence.",
+            "correct": true,
+            "abstained": true,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "He was tied the .",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Not enough evidence.",
+            "correct": true,
+            "abstained": true,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 7,
+        "family": "evidence-final-event-time",
+        "evidence_status": "supported",
+        "source_lines": [
+          5093,
+          5093
+        ],
+        "excerpt": "At three o'clock the Throne Room was crowded with citizens",
+        "question": "When did this happen?",
+        "expected": "At three o'clock.",
+        "replies": {
+          "frozen": {
+            "reply": "lity.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "He was tied to a tree.\n[E",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": false
+          },
+          "evidence-7": {
+            "reply": "He was tree.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "He wanted to a treep rule",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": false
+          },
+          "evidence-19": {
+            "reply": "The use.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 8,
+        "family": "evidence-final-event-time",
+        "evidence_status": "supported",
+        "source_lines": [
+          4395,
+          4396
+        ],
+        "excerpt": "as soon as it was daylight, he resolved to take a walk",
+        "question": "When did this happen?",
+        "expected": "At daybreak.",
+        "replies": {
+          "frozen": {
+            "reply": "He was tied to a tree.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "He was tied to a tree.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "abstained": true,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "He was tied to a tree.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "The Wizard.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 9,
+        "family": "evidence-final-event-time",
+        "evidence_status": "insufficient",
+        "source_lines": [
+          4691,
+          4692
+        ],
+        "excerpt": "the citizens crowded into the great Throne Room",
+        "question": "When did this happen?",
+        "expected": "Not enough evidence.",
+        "replies": {
+          "frozen": {
+            "reply": "lit.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "The Woggle-Bug.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Not enough evidence.",
+            "correct": true,
+            "abstained": true,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "He wanted to a tree.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Not enough evidence.",
+            "correct": true,
+            "abstained": true,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 10,
+        "family": "evidence-final-reason-for-safety",
+        "evidence_status": "supported",
+        "source_lines": [
+          477,
+          479
+        ],
+        "excerpt": "falling so slowly that we can't be dashed to pieces",
+        "question": "Why did they feel safe?",
+        "expected": "They fell slowly.",
+        "replies": {
+          "frozen": {
+            "reply": "Red leather.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "Wicker.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "In the soft grass.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "Wicker.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "In the soft grass.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 11,
+        "family": "evidence-final-reason-for-safety",
+        "evidence_status": "supported",
+        "source_lines": [
+          3438,
+          3440
+        ],
+        "excerpt": "difficult for them to fly amongst these rocks",
+        "question": "Why did they feel safe?",
+        "expected": "The rocks made flying hard.",
+        "replies": {
+          "frozen": {
+            "reply": "Wicker.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "The Wizard.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "The Wizard.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "Wicker.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Woggle-Bug.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 12,
+        "family": "evidence-final-reason-for-safety",
+        "evidence_status": "insufficient",
+        "source_lines": [
+          487,
+          487
+        ],
+        "excerpt": "The boy became silent, having no reply",
+        "question": "Why did they feel safe?",
+        "expected": "Not enough evidence.",
+        "replies": {
+          "frozen": {
+            "reply": "The Sawhorse.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "The Wizard.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "The buggy top.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "The Wizard.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "The were no stair.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 13,
+        "family": "evidence-final-animal-pace",
+        "evidence_status": "supported",
+        "source_lines": [
+          3979,
+          3980
+        ],
+        "excerpt": "Jim slowly trotted into the courtyard",
+        "question": "How fast did the animal move?",
+        "expected": "Slowly.",
+        "replies": {
+          "frozen": {
+            "reply": "Silver.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "She saddle.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "abstained": true,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "She saw the ench.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "abstained": true,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 14,
+        "family": "evidence-final-animal-pace",
+        "evidence_status": "supported",
+        "source_lines": [
+          3096,
+          3097
+        ],
+        "excerpt": "scampered along the ground like a streak",
+        "question": "How fast did the animal move?",
+        "expected": "Very fast.",
+        "replies": {
+          "frozen": {
+            "reply": "He bowed.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "He bowed.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "abstained": true,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "He bowed.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "abstained": true,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 15,
+        "family": "evidence-final-animal-pace",
+        "evidence_status": "insufficient",
+        "source_lines": [
+          3175,
+          3175
+        ],
+        "excerpt": "the kitten was no place to be seen",
+        "question": "How fast did the animal move?",
+        "expected": "Not enough evidence.",
+        "replies": {
+          "frozen": {
+            "reply": "costume.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "He bowed.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Silver.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "He bowed.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Silver.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 16,
+        "family": "evidence-final-surface-and-machine-materials",
+        "evidence_status": "supported",
+        "source_lines": [
+          4340,
+          4342
+        ],
+        "excerpt": "with a green marble floor and carved marble wainscoting",
+        "question": "What material is described?",
+        "expected": "Green marble.",
+        "replies": {
+          "frozen": {
+            "reply": "city.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "city.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "clatter.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "He wa tied them.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "clatter.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 17,
+        "family": "evidence-final-surface-and-machine-materials",
+        "evidence_status": "supported",
+        "source_lines": [
+          4664,
+          4664
+        ],
+        "excerpt": "made all of burnished copper",
+        "question": "What material is described?",
+        "expected": "Burnished copper.",
+        "replies": {
+          "frozen": {
+            "reply": "Piglets.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "The Royal Court Band.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "abstained": true,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "Emerald green.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "abstained": true,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 18,
+        "family": "evidence-final-surface-and-machine-materials",
+        "evidence_status": "insufficient",
+        "source_lines": [
+          4342,
+          4343
+        ],
+        "excerpt": "Jim accepted it as a mere detail",
+        "question": "What material is described?",
+        "expected": "Not enough evidence.",
+        "replies": {
+          "frozen": {
+            "reply": "Piglets.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "A horse.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Not enough evidence.",
+            "correct": true,
+            "abstained": true,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "Eureka.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Not enough evidence.",
+            "correct": true,
+            "abstained": true,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 19,
+        "family": "evidence-final-described-body-part",
+        "evidence_status": "supported",
+        "source_lines": [
+          319,
+          320
+        ],
+        "excerpt": "Jim's ears were standing erect",
+        "question": "What body part is described?",
+        "expected": "His ears.",
+        "replies": {
+          "frozen": {
+            "reply": "He bowed.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "A striped pattern.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "abstained": true,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "He bowed.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "A bridge.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 20,
+        "family": "evidence-final-described-body-part",
+        "evidence_status": "supported",
+        "source_lines": [
+          2901,
+          2902
+        ],
+        "excerpt": "arms extraordinarily long and stout",
+        "question": "What body part is described?",
+        "expected": "Arms.",
+        "replies": {
+          "frozen": {
+            "reply": "He was tied to a roof.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "He was tied to a tree.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "abstained": true,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "He bowed.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "abstained": true,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 21,
+        "family": "evidence-final-described-body-part",
+        "evidence_status": "insufficient",
+        "source_lines": [
+          2655,
+          2655
+        ],
+        "excerpt": "a man standing on the floor in the center",
+        "question": "What body part is described?",
+        "expected": "Not enough evidence.",
+        "replies": {
+          "frozen": {
+            "reply": "citund.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "An ornamental bridge.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Not enough evidence.",
+            "correct": true,
+            "abstained": true,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "He was tied to a roof.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Not enough evidence.",
+            "correct": true,
+            "abstained": true,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 22,
+        "family": "evidence-final-proposed-next-action",
+        "evidence_status": "supported",
+        "source_lines": [
+          3593,
+          3594
+        ],
+        "excerpt": "out of this place before the mother dragon comes back",
+        "question": "What was proposed?",
+        "expected": "Leave before she returns.",
+        "replies": {
+          "frozen": {
+            "reply": "He was tied to a tree.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "The Wizard.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "abstained": true,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "He was tied to a bree.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "Not enough evidence.",
+            "correct": false,
+            "abstained": true,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 23,
+        "family": "evidence-final-proposed-next-action",
+        "evidence_status": "supported",
+        "source_lines": [
+          4757,
+          4758
+        ],
+        "excerpt": "proposed a race between the Sawhorse and the Cab-horse",
+        "question": "What was proposed?",
+        "expected": "Race the two horses.",
+        "replies": {
+          "frozen": {
+            "reply": "Dorothy and the Wizard.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "Dorothy and the Wizard.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "Dorothy and the Wizard.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "Dorothy and the Wizard.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "They used special leaves.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          }
+        }
+      },
+      {
+        "conversation": 24,
+        "family": "evidence-final-proposed-next-action",
+        "evidence_status": "insufficient",
+        "source_lines": [
+          4758,
+          4759
+        ],
+        "excerpt": "the others were delighted at the suggestion",
+        "question": "What was proposed?",
+        "expected": "Not enough evidence.",
+        "replies": {
+          "frozen": {
+            "reply": "He bowed.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-7": {
+            "reply": "He bowed.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-7": {
+            "reply": "He bowed.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "control-19": {
+            "reply": "He bowed.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          },
+          "evidence-19": {
+            "reply": "He bowed.",
+            "correct": false,
+            "abstained": false,
+            "clean_stop": true
+          }
+        }
+      }
+    ]
+  },
+  "other_evaluations": {
+    "evidence_train": {
+      "fixture": "data/oz_chat_evidence_train.jsonl",
+      "test_sha256": "bb03c3ea8935a272d16e69f2525e68c731f29d5949f183fdfd9cdded57f91174",
+      "scores": {
+        "frozen": {
+          "turns": 72,
+          "reference_matches": 0,
+          "first_replies": 72,
+          "first_reference_matches": 0,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 71,
+          "reference_reply_loss": 3.503892,
+          "insufficient_turns": 24,
+          "insufficient_reference_matches": 0,
+          "supported_turns": 48,
+          "supported_reference_matches": 0
+        },
+        "control-7": {
+          "turns": 72,
+          "reference_matches": 0,
+          "first_replies": 72,
+          "first_reference_matches": 0,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 70,
+          "reference_reply_loss": 3.489021,
+          "insufficient_turns": 24,
+          "insufficient_reference_matches": 0,
+          "supported_turns": 48,
+          "supported_reference_matches": 0
+        },
+        "evidence-7": {
+          "turns": 72,
+          "reference_matches": 68,
+          "first_replies": 72,
+          "first_reference_matches": 68,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 72,
+          "reference_reply_loss": 0.021627,
+          "insufficient_turns": 24,
+          "insufficient_reference_matches": 24,
+          "supported_turns": 48,
+          "supported_reference_matches": 44
+        },
+        "control-19": {
+          "turns": 72,
+          "reference_matches": 0,
+          "first_replies": 72,
+          "first_reference_matches": 0,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 69,
+          "reference_reply_loss": 3.56235,
+          "insufficient_turns": 24,
+          "insufficient_reference_matches": 0,
+          "supported_turns": 48,
+          "supported_reference_matches": 0
+        },
+        "evidence-19": {
+          "turns": 72,
+          "reference_matches": 72,
+          "first_replies": 72,
+          "first_reference_matches": 72,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 72,
+          "reference_reply_loss": 0.001684,
+          "insufficient_turns": 24,
+          "insufficient_reference_matches": 24,
+          "supported_turns": 48,
+          "supported_reference_matches": 48
+        }
+      }
+    },
+    "evidence_dev": {
+      "fixture": "data/oz_chat_evidence_dev.jsonl",
+      "test_sha256": "5e9920eb83dd0d4a8c659e7b6c37c11faf80281b4b7064dfbfa7b2b2da77a861",
+      "scores": {
+        "frozen": {
+          "turns": 18,
+          "reference_matches": 0,
+          "first_replies": 18,
+          "first_reference_matches": 0,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 3.531568,
+          "insufficient_turns": 6,
+          "insufficient_reference_matches": 0,
+          "supported_turns": 12,
+          "supported_reference_matches": 0
+        },
+        "control-7": {
+          "turns": 18,
+          "reference_matches": 0,
+          "first_replies": 18,
+          "first_reference_matches": 0,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 17,
+          "reference_reply_loss": 3.643858,
+          "insufficient_turns": 6,
+          "insufficient_reference_matches": 0,
+          "supported_turns": 12,
+          "supported_reference_matches": 0
+        },
+        "evidence-7": {
+          "turns": 18,
+          "reference_matches": 4,
+          "first_replies": 18,
+          "first_reference_matches": 4,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 17,
+          "reference_reply_loss": 1.646461,
+          "insufficient_turns": 6,
+          "insufficient_reference_matches": 4,
+          "supported_turns": 12,
+          "supported_reference_matches": 0
+        },
+        "control-19": {
+          "turns": 18,
+          "reference_matches": 0,
+          "first_replies": 18,
+          "first_reference_matches": 0,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 18,
+          "reference_reply_loss": 3.645805,
+          "insufficient_turns": 6,
+          "insufficient_reference_matches": 0,
+          "supported_turns": 12,
+          "supported_reference_matches": 0
+        },
+        "evidence-19": {
+          "turns": 18,
+          "reference_matches": 5,
+          "first_replies": 18,
+          "first_reference_matches": 5,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 17,
+          "reference_reply_loss": 1.862758,
+          "insufficient_turns": 6,
+          "insufficient_reference_matches": 5,
+          "supported_turns": 12,
+          "supported_reference_matches": 0
+        }
+      }
+    },
+    "generalization_test": {
+      "fixture": "data/oz_chat_generalization_test.jsonl",
+      "test_sha256": "754bd9df3bd40ff8c7dd8456bebb81a9e16410f35e10e860ba36a45ae8d5f706",
+      "scores": {
+        "frozen": {
+          "turns": 16,
+          "reference_matches": 0,
+          "first_replies": 16,
+          "first_reference_matches": 0,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 3.451118
+        },
+        "control-7": {
+          "turns": 16,
+          "reference_matches": 0,
+          "first_replies": 16,
+          "first_reference_matches": 0,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 3.53163
+        },
+        "evidence-7": {
+          "turns": 16,
+          "reference_matches": 0,
+          "first_replies": 16,
+          "first_reference_matches": 0,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 3.39484
+        },
+        "control-19": {
+          "turns": 16,
+          "reference_matches": 0,
+          "first_replies": 16,
+          "first_reference_matches": 0,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 3.589797
+        },
+        "evidence-19": {
+          "turns": 16,
+          "reference_matches": 0,
+          "first_replies": 16,
+          "first_reference_matches": 0,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 3.600658
+        }
+      }
+    },
+    "book_assist_test": {
+      "fixture": "data/oz_chat_book_assist_test.jsonl",
+      "test_sha256": "f70ed25474943f335a8ebe4b6c2648a19a3650fc0842dd2c539593d264cc3e59",
+      "scores": {
+        "frozen": {
+          "turns": 14,
+          "reference_matches": 0,
+          "first_replies": 10,
+          "first_reference_matches": 0,
+          "followups": 4,
+          "followup_reference_matches": 0,
+          "clean_stops": 14,
+          "reference_reply_loss": 2.977537
+        },
+        "control-7": {
+          "turns": 14,
+          "reference_matches": 0,
+          "first_replies": 10,
+          "first_reference_matches": 0,
+          "followups": 4,
+          "followup_reference_matches": 0,
+          "clean_stops": 14,
+          "reference_reply_loss": 3.070488
+        },
+        "evidence-7": {
+          "turns": 14,
+          "reference_matches": 0,
+          "first_replies": 10,
+          "first_reference_matches": 0,
+          "followups": 4,
+          "followup_reference_matches": 0,
+          "clean_stops": 14,
+          "reference_reply_loss": 2.908529
+        },
+        "control-19": {
+          "turns": 14,
+          "reference_matches": 0,
+          "first_replies": 10,
+          "first_reference_matches": 0,
+          "followups": 4,
+          "followup_reference_matches": 0,
+          "clean_stops": 14,
+          "reference_reply_loss": 3.071378
+        },
+        "evidence-19": {
+          "turns": 14,
+          "reference_matches": 0,
+          "first_replies": 10,
+          "first_reference_matches": 0,
+          "followups": 4,
+          "followup_reference_matches": 0,
+          "clean_stops": 14,
+          "reference_reply_loss": 3.146093
+        }
+      }
+    },
+    "coverage_unseen": {
+      "fixture": "data/oz_chat_coverage_unseen.jsonl",
+      "test_sha256": "6383d67937572fc8a5a209deb42f3298529aa08e641550c2fbc4981b69683625",
+      "scores": {
+        "frozen": {
+          "turns": 14,
+          "reference_matches": 0,
+          "first_replies": 14,
+          "first_reference_matches": 0,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 14,
+          "reference_reply_loss": 3.202854
+        },
+        "control-7": {
+          "turns": 14,
+          "reference_matches": 0,
+          "first_replies": 14,
+          "first_reference_matches": 0,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 14,
+          "reference_reply_loss": 3.318162
+        },
+        "evidence-7": {
+          "turns": 14,
+          "reference_matches": 0,
+          "first_replies": 14,
+          "first_reference_matches": 0,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 14,
+          "reference_reply_loss": 3.225975
+        },
+        "control-19": {
+          "turns": 14,
+          "reference_matches": 0,
+          "first_replies": 14,
+          "first_reference_matches": 0,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 14,
+          "reference_reply_loss": 3.454493
+        },
+        "evidence-19": {
+          "turns": 14,
+          "reference_matches": 0,
+          "first_replies": 14,
+          "first_reference_matches": 0,
+          "followups": 0,
+          "followup_reference_matches": 0,
+          "clean_stops": 14,
+          "reference_reply_loss": 3.389571
+        }
+      }
+    },
+    "unseen_routing_check": {
+      "fixture": "data/oz_chat_unseen_routing_check.jsonl",
+      "test_sha256": "d4b6a70f79d73984cd28be186a30e0f1fea9e19d3a6ed30b69f4d329fefc6e99",
+      "scores": {
+        "frozen": {
+          "turns": 12,
+          "reference_matches": 0,
+          "first_replies": 10,
+          "first_reference_matches": 0,
+          "followups": 2,
+          "followup_reference_matches": 0,
+          "clean_stops": 12,
+          "reference_reply_loss": 3.265854
+        },
+        "control-7": {
+          "turns": 12,
+          "reference_matches": 0,
+          "first_replies": 10,
+          "first_reference_matches": 0,
+          "followups": 2,
+          "followup_reference_matches": 0,
+          "clean_stops": 12,
+          "reference_reply_loss": 3.497479
+        },
+        "evidence-7": {
+          "turns": 12,
+          "reference_matches": 0,
+          "first_replies": 10,
+          "first_reference_matches": 0,
+          "followups": 2,
+          "followup_reference_matches": 0,
+          "clean_stops": 12,
+          "reference_reply_loss": 3.090552
+        },
+        "control-19": {
+          "turns": 12,
+          "reference_matches": 0,
+          "first_replies": 10,
+          "first_reference_matches": 0,
+          "followups": 2,
+          "followup_reference_matches": 0,
+          "clean_stops": 12,
+          "reference_reply_loss": 3.526861
+        },
+        "evidence-19": {
+          "turns": 12,
+          "reference_matches": 0,
+          "first_replies": 10,
+          "first_reference_matches": 0,
+          "followups": 2,
+          "followup_reference_matches": 0,
+          "clean_stops": 12,
+          "reference_reply_loss": 3.360248
+        }
+      }
+    },
+    "coverage_test": {
+      "fixture": "data/oz_chat_coverage_test.jsonl",
+      "test_sha256": "7a82ab6453a1154655931cd258a91af9710d402580bbe159359edb43f9eba838",
+      "scores": {
+        "frozen": {
+          "turns": 50,
+          "reference_matches": 12,
+          "first_replies": 30,
+          "first_reference_matches": 7,
+          "followups": 20,
+          "followup_reference_matches": 5,
+          "clean_stops": 50,
+          "reference_reply_loss": 0.157392
+        },
+        "control-7": {
+          "turns": 50,
+          "reference_matches": 9,
+          "first_replies": 30,
+          "first_reference_matches": 5,
+          "followups": 20,
+          "followup_reference_matches": 4,
+          "clean_stops": 50,
+          "reference_reply_loss": 0.187254
+        },
+        "evidence-7": {
+          "turns": 50,
+          "reference_matches": 9,
+          "first_replies": 30,
+          "first_reference_matches": 2,
+          "followups": 20,
+          "followup_reference_matches": 7,
+          "clean_stops": 49,
+          "reference_reply_loss": 0.215436
+        },
+        "control-19": {
+          "turns": 50,
+          "reference_matches": 9,
+          "first_replies": 30,
+          "first_reference_matches": 4,
+          "followups": 20,
+          "followup_reference_matches": 5,
+          "clean_stops": 49,
+          "reference_reply_loss": 0.180234
+        },
+        "evidence-19": {
+          "turns": 50,
+          "reference_matches": 7,
+          "first_replies": 30,
+          "first_reference_matches": 1,
+          "followups": 20,
+          "followup_reference_matches": 6,
+          "clean_stops": 50,
+          "reference_reply_loss": 0.208238
+        }
+      }
+    },
+    "memory_test": {
+      "fixture": "data/oz_chat_memory_test.jsonl",
+      "test_sha256": "2624fe8edbf3ae5c728ec16277f5eae2ecd1691b21ca8668708db9d755aaa061",
+      "scores": {
+        "frozen": {
+          "turns": 36,
+          "reference_matches": 13,
+          "first_replies": 18,
+          "first_reference_matches": 3,
+          "followups": 18,
+          "followup_reference_matches": 10,
+          "clean_stops": 36,
+          "reference_reply_loss": 0.129439
+        },
+        "control-7": {
+          "turns": 36,
+          "reference_matches": 12,
+          "first_replies": 18,
+          "first_reference_matches": 2,
+          "followups": 18,
+          "followup_reference_matches": 10,
+          "clean_stops": 36,
+          "reference_reply_loss": 0.123338
+        },
+        "evidence-7": {
+          "turns": 36,
+          "reference_matches": 11,
+          "first_replies": 18,
+          "first_reference_matches": 3,
+          "followups": 18,
+          "followup_reference_matches": 8,
+          "clean_stops": 36,
+          "reference_reply_loss": 0.147962
+        },
+        "control-19": {
+          "turns": 36,
+          "reference_matches": 11,
+          "first_replies": 18,
+          "first_reference_matches": 2,
+          "followups": 18,
+          "followup_reference_matches": 9,
+          "clean_stops": 36,
+          "reference_reply_loss": 0.108533
+        },
+        "evidence-19": {
+          "turns": 36,
+          "reference_matches": 8,
+          "first_replies": 18,
+          "first_reference_matches": 0,
+          "followups": 18,
+          "followup_reference_matches": 8,
+          "clean_stops": 36,
+          "reference_reply_loss": 0.148788
+        }
+      }
+    }
+  },
+  "conclusion": "Both evidence-trained runs learned to abstain on four of eight insufficient excerpts. Neither answered a supported held-out question correctly, although they matched 68/72 and 72/72 training references. Known-fact reference matches also fell from the frozen checkpoint. The experimental checkpoints are for this comparison.",
+  "aggregate_frozen_unseen_checks": {
+    "frozen": {
+      "turns": 56,
+      "reference_matches": 0
+    },
+    "control-7": {
+      "turns": 56,
+      "reference_matches": 0
+    },
+    "evidence-7": {
+      "turns": 56,
+      "reference_matches": 0
+    },
+    "control-19": {
+      "turns": 56,
+      "reference_matches": 0
+    },
+    "evidence-19": {
+      "turns": 56,
+      "reference_matches": 0
+    }
+  }
+}
