@@ -386,14 +386,40 @@ Issue numbers refer to the project bug review. Complete each stage in this order
 
 ### Remaining repairs in order
 
-1. **#1 Improve factual accuracy in trained chat.** Cited answers can now take precedence over unrelated first-reply classifier answers. Book-assisted chat reached 6/16 and 8/14 on the two existing unseen-fact tests. The standalone generator still scores 0/16 and 0/14 after an excerpt-training trial. [Reviewed routing and training results](evaluations/oz_chat_unseen_routing_comparison.json) · [Earlier generator training](evaluations/oz_chat_generator_training_comparison.json)
-2. **Validate book lookup on new conversations.** All three previously reviewed misses now have supporting answers. The 40-turn benchmark rose from 37/40 to 40/40, with 20/20 first replies and 20/20 follow-ups. The separate follow-up check scored 7/12 in both runs, with 6/6 first replies and 1/6 follow-ups supported. [Remaining follow-up review](evaluations/oz_book_remaining_followups_comparison.json) · [Earlier dialogue review](evaluations/oz_book_dialogue_comparison.json)
+#### 1. Improve trained chat on unseen facts
+
+Cited answers can now take precedence over unrelated first-reply classifier answers. Book-assisted chat reached 6/16 and 8/14 on the two existing unseen-fact tests. The standalone generator still scores 0/16 and 0/14 after an excerpt-training trial. [Reviewed routing and training results](evaluations/oz_chat_unseen_routing_comparison.json) · [Earlier generator training](evaluations/oz_chat_generator_training_comparison.json)
+
+1. **Freeze the baselines.** Record generator-only and book-assisted scores using the same questions, checkpoints, and settings.
+2. **Build evidence-grounded training examples.** Pair each question with a short supporting passage and answer. Include similar questions where different evidence leads to different answers and passages that give too little information to answer.
+3. **Test whether the generator follows the evidence.** Give it the correct passage, a passage with a different answer, and an irrelevant passage. Keep entire fact families out of training and checkpoint selection.
+4. **Improve answer routing.** Check that a passage supports the requested fact and scene before its extract overrides the classifier. Measure correct answers, unsupported answers, and abstentions separately.
+5. **Run a final comparison.** Score the generator alone, with supplied evidence, and with live book lookup. Recheck known facts and follow-ups before promoting a checkpoint.
+
+#### 2. Improve `--book` follow-ups on new conversations
+
+All three previously reviewed misses now have supporting answers. The 40-turn benchmark rose from 37/40 to 40/40, with 20/20 first replies and 20/20 follow-ups. The separate follow-up check scored 7/12 in both runs, with 6/6 first replies and 1/6 follow-ups supported. [Remaining follow-up review](evaluations/oz_book_remaining_followups_comparison.json) · [Earlier dialogue review](evaluations/oz_book_dialogue_comparison.json)
+
+1. **Keep the scene when the question says “below.”** Resolve it to the platform in the Gargoyles’ prison and retrieve the empty rooms underneath.
+2. **Keep the scene when the question says “right afterward.”** Find Zeb yawning immediately after the Wizard discusses the Gargoyles’ rest. The current answer names Zeb correctly and cites a different chapter.
+3. **Recover the Sawhorse’s answer about splinters.** Retrieve and verify its statement that it never feels a break or splinter.
+4. **Resolve “she” to Dorothy in the Wizard’s tricks exchange.** Carry both Dorothy and the Wizard into the search so the reply identifies his tools and machinery.
+5. **Select the Scarecrow’s complete statement.** Return his point that good thoughts would stay clear. The current extract starts his next thought.
+6. **Verify the fixes on two sets.** Keep these five misses as regression cases and score a separate set of new conversations for answer accuracy and citation support.
+
+#### 3. Plan and verify the vocabulary migration
+
+1. **Inventory the checkpoints.** Identify which checkpoints store their character order and which rely on the vocabulary derived from the bundled book.
+2. **Define compatibility for existing checkpoints.** Keep the legacy character order available for old weights. Define how new runs record the vocabulary after removing the book’s byte-order mark.
+3. **Test a migration on a copy.** If remapping a checkpoint, map its character embedding and output rows by character. Check that shared characters produce equivalent scores on fixed prompts.
+4. **Verify the normal commands.** Test text completion, trained chat, and `--book`. Compare legacy checkpoint behavior and verify that citations still point to the correct lines.
+5. **Decide what needs retraining.** Use the compatibility and benchmark results to decide which checkpoints can be reused, remapped, or retrained.
 
 ### Cleanup follow-ups
 
 - **Generated-file cleanup · complete.** Git ignores Python bytecode, macOS metadata, notebook checkpoints, and local corpus outputs. The empty extractor outputs and the legacy Python source named `model-01.pkl` were retired from Git. The source remains available in Git history.
 - **Custom-corpus training · complete.** The extractor handles single-shard and multi-shard corpora, and the base trainer reads the separate splits and vocabulary. Its checkpoints work with the text completion CLI. [Run the workflow](#training-your-own-corpus)
-- Plan removal of the book’s byte-order mark together with vocabulary migration and checkpoint retraining. Keep the local `oz-*.json` reports for manual review. Apple MPS support for base training shipped with Step 2.
+- Keep the local `oz-*.json` reports for manual review. Apple MPS support for base training shipped with Step 2.
 
 ## Future Improvements
 
