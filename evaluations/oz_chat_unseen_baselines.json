@@ -1,0 +1,2506 @@
+{
+  "baseline_code_commit": "b070249a9110b8312d45f9dfb0934bf1a213d542",
+  "purpose": "Freeze the reference runs for Task 1 before further training or routing changes.",
+  "benchmark_use": "These four existing fixtures are regression checks. Use separate development fact families for selection and independent questions for a new final test of generalization.",
+  "review_method": "Review whether each reply answers the requested fact. Credit equivalent wording and contextually complete short answers. Require each cited answer to be supported in the requested scene for the grounded score.",
+  "modes": {
+    "generator_only": "Only the shared trained chat checkpoint.",
+    "classifier_and_generator": "The same checkpoint with the trained first-reply classifier enabled.",
+    "book_assist": "The same checkpoint and classifier with citation lookup enabled."
+  },
+  "settings": {
+    "device": "cpu",
+    "cpu_threads": 2,
+    "torch_version": "2.13.0",
+    "decoding": "greedy",
+    "block_size": 128,
+    "max_tokens": 150,
+    "reply_reserve": 32,
+    "history": "generated",
+    "history_packing": "compact_question_and_reply",
+    "python": "3.14.6",
+    "platform": "Darwin arm64",
+    "transformers": "5.14.1",
+    "reader_model": "deepset/minilm-uncased-squad2",
+    "reader_revision": "934656cdda79824eabf503ed56e15c01ddbdbe3f"
+  },
+  "inputs": {
+    "chat_checkpoint": {
+      "path": "model/model-chat-coverage-experiment.pth",
+      "sha256": "7bf86a87e46073d61ba3d803af7bbc26bf295e22f0ab0ff7ddbdf9694caee17d"
+    },
+    "first_reply_classifier": {
+      "path": "model/model-first-replies.pth",
+      "sha256": "b8fcdab44f94b3458a08460f7a32d7af67fddccca5084395c8f7bceadbba9219"
+    },
+    "book": {
+      "path": "model/wizard_of_oz.txt",
+      "sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9"
+    }
+  },
+  "reproduction": {
+    "environment": {
+      "OMP_NUM_THREADS": "2",
+      "HF_HUB_OFFLINE": "1"
+    },
+    "instructions": "Run from the repository root at the baseline code commit. Cache the pinned reader revision before the offline run. For each fixture, replace TEST_FILE with its path and OUTPUT_FILE with a new path. The second command produces both the classifier and book-assisted runs.",
+    "generator_command": [
+      "python",
+      "-m",
+      "model.chat_evaluation",
+      "run",
+      "--checkpoint",
+      "model/model-chat-coverage-experiment.pth",
+      "--history",
+      "generated",
+      "--max-tokens",
+      "150",
+      "--test-data",
+      "TEST_FILE",
+      "--output",
+      "OUTPUT_FILE"
+    ],
+    "classifier_and_book_command": [
+      "python",
+      "-m",
+      "model.chat_evaluation",
+      "run",
+      "--checkpoint",
+      "model/model-chat-coverage-experiment.pth",
+      "--history",
+      "generated",
+      "--max-tokens",
+      "150",
+      "--first-reply-classifier",
+      "model/model-first-replies.pth",
+      "--book-assist",
+      "--trace-passages",
+      "--test-data",
+      "TEST_FILE",
+      "--output",
+      "OUTPUT_FILE"
+    ]
+  },
+  "benchmarks": {
+    "generalization_test": {
+      "fixture": "data/oz_chat_generalization_test.jsonl",
+      "test_sha256": "754bd9df3bd40ff8c7dd8456bebb81a9e16410f35e10e860ba36a45ae8d5f706",
+      "conversations": 16,
+      "turns": 16,
+      "first_replies": 16,
+      "followups": 0,
+      "reference_reply_loss": 3.451118,
+      "scores": {
+        "generator_only": {
+          "correct": 0,
+          "correct_first_replies": 0,
+          "correct_followups": 0,
+          "correct_with_supporting_citation": 0,
+          "reference_matches": 0,
+          "generator_clean_stops": 16,
+          "generator_replies": 16,
+          "reply_methods": {
+            "generator": 16
+          }
+        },
+        "classifier_and_generator": {
+          "correct": 0,
+          "correct_first_replies": 0,
+          "correct_followups": 0,
+          "correct_with_supporting_citation": 0,
+          "reference_matches": 0,
+          "generator_clean_stops": 11,
+          "generator_replies": 11,
+          "reply_methods": {
+            "generator": 11,
+            "classifier": 5
+          }
+        },
+        "book_assist": {
+          "correct": 6,
+          "correct_first_replies": 6,
+          "correct_followups": 0,
+          "correct_with_supporting_citation": 6,
+          "reference_matches": 2,
+          "generator_clean_stops": 3,
+          "generator_replies": 3,
+          "reply_methods": {
+            "generator": 3,
+            "book": 9,
+            "classifier": 4
+          }
+        }
+      },
+      "reviewed_replies": [
+        {
+          "conversation": 1,
+          "turn": 1,
+          "prompt": "Why did Jim reach the glass street before Dorothy and Zeb?",
+          "expected": "His weight made him descend faster.",
+          "responses": {
+            "generator_only": {
+              "reply": "A strip of harness.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "A strip of harness.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "A strip of harness.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            }
+          }
+        },
+        {
+          "conversation": 2,
+          "turn": 1,
+          "prompt": "Where did the Mangaboo Prince wear the star when he first questioned Zeb?",
+          "expected": "In his hair, above his forehead.",
+          "responses": {
+            "generator_only": {
+              "reply": "A button.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "A button.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "brow",
+              "reply_method": "book",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": false,
+              "citation": {
+                "section": "Chapter 5",
+                "start_line": 1381,
+                "end_line": 1402
+              },
+              "review": "The later transfer of the star does not answer where the Prince wore it during his first exchange with Zeb."
+            }
+          }
+        },
+        {
+          "conversation": 3,
+          "turn": 1,
+          "prompt": "What sound did Gwig produce when he first waved his hand at the contest?",
+          "expected": "Tinkling bells.",
+          "responses": {
+            "generator_only": {
+              "reply": "Revolvers.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "Revolvers.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "tinkling of bells",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 3",
+                "start_line": 944,
+                "end_line": 972
+              }
+            }
+          }
+        },
+        {
+          "conversation": 4,
+          "turn": 1,
+          "prompt": "Why couldn't a Mangaboo lend the Wizard a hat for his trick?",
+          "expected": "The Mangaboos did not wear hats.",
+          "responses": {
+            "generator_only": {
+              "reply": "A balloon carried him down.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "A balloon carried him down.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "the Mangaboos did not wear hats",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": true,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 3",
+                "start_line": 960,
+                "end_line": 985
+              }
+            }
+          }
+        },
+        {
+          "conversation": 5,
+          "turn": 1,
+          "prompt": "Which two fruits did the visitors find to eat in the Mangaboo gardens?",
+          "expected": "Strawberries and melons.",
+          "responses": {
+            "generator_only": {
+              "reply": "He gathered the piglets.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "He gathered the piglets.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "strawberries",
+              "reply_method": "book",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": false,
+              "citation": {
+                "section": "Chapter 4",
+                "start_line": 1309,
+                "end_line": 1330
+              },
+              "review": "The answer gives one fruit. The question asks for strawberries and melons."
+            }
+          }
+        },
+        {
+          "conversation": 6,
+          "turn": 1,
+          "prompt": "What did the piglets nibble when the Wizard set them on the grass?",
+          "expected": "Tender blades of grass.",
+          "responses": {
+            "generator_only": {
+              "reply": "Revolvers.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "He gathered the piglets.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "He gathered the piglets.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            }
+          }
+        },
+        {
+          "conversation": 7,
+          "turn": 1,
+          "prompt": "Who held up the two lanterns in the glass tunnel while Zeb drove?",
+          "expected": "Dorothy and the Wizard each held one.",
+          "responses": {
+            "generator_only": {
+              "reply": "Jim stood still.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "Jim stood still.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "Jim stood still.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            }
+          }
+        },
+        {
+          "conversation": 8,
+          "turn": 1,
+          "prompt": "What sound did Zeb imitate to make Jim gallop faster on the way to the mountain?",
+          "expected": "A bear's growl.",
+          "responses": {
+            "generator_only": {
+              "reply": "Leather.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "Leather.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "growl",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 9",
+                "start_line": 2526,
+                "end_line": 2545
+              },
+              "review": "The question asks for the sound. The citation explicitly describes the growl as sounding like a bear."
+            }
+          }
+        },
+        {
+          "conversation": 9,
+          "turn": 1,
+          "prompt": "How did Gargoyles communicate without making sounds?",
+          "expected": "Signals with their fingers or lips.",
+          "responses": {
+            "generator_only": {
+              "reply": "White.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "White.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "quick signals made with their wooden fingers or lips",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 11",
+                "start_line": 2913,
+                "end_line": 2930
+              }
+            }
+          }
+        },
+        {
+          "conversation": 10,
+          "turn": 1,
+          "prompt": "What did the Wizard take out of his satchel to attach the wings to Jim?",
+          "expected": "A spool of strong wire.",
+          "responses": {
+            "generator_only": {
+              "reply": "still.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "Revolvers.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "Revolvers.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            }
+          }
+        },
+        {
+          "conversation": 11,
+          "turn": 1,
+          "prompt": "What size were the dragonettes' heads compared with barrels?",
+          "expected": "They were as big as barrels.",
+          "responses": {
+            "generator_only": {
+              "reply": "He bowed.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "Young dragons.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "as big",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 13",
+                "start_line": 3574,
+                "end_line": 3591
+              },
+              "review": "The question names barrels as the comparison. The extract answers that they were as big, and the cited sentence supplies the complete comparison."
+            }
+          }
+        },
+        {
+          "conversation": 12,
+          "turn": 1,
+          "prompt": "What did Ozma say the word Oz means in her language?",
+          "expected": "Great and Good.",
+          "responses": {
+            "generator_only": {
+              "reply": "Revolvers.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "Revolvers.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "the Great and Terrible",
+              "reply_method": "book",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": false,
+              "citation": {
+                "section": "Chapter 3",
+                "start_line": 849,
+                "end_line": 871
+              },
+              "review": "The extract gives part of the Wizard’s title. It does not state Ozma’s meaning of Oz."
+            }
+          }
+        },
+        {
+          "conversation": 13,
+          "turn": 1,
+          "prompt": "What kept the Tin Woodman's heart from getting moldy?",
+          "expected": "His airtight chest.",
+          "responses": {
+            "generator_only": {
+              "reply": "She saw the enchanted picture.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "Officers of Oz.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "Officers of Oz.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            }
+          }
+        },
+        {
+          "conversation": 14,
+          "turn": 1,
+          "prompt": "What did the Woggle-Bug say H. M. stands for in his title?",
+          "expected": "Highly Magnified.",
+          "responses": {
+            "generator_only": {
+              "reply": "A striped the gred the picked.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "A striped the gred the picked.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "Highly Magnified",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": true,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 15",
+                "start_line": 4293,
+                "end_line": 4315
+              }
+            }
+          }
+        },
+        {
+          "conversation": 15,
+          "turn": 1,
+          "prompt": "Where was the Gump's talking head hung in the palace?",
+          "expected": "Above the fireplace.",
+          "responses": {
+            "generator_only": {
+              "reply": "A bonfire was lit.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "A bonfire was lit.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "A bonfire was lit.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            }
+          }
+        },
+        {
+          "conversation": 16,
+          "turn": 1,
+          "prompt": "What was attached around the brim of the Munchkin wrestler's hat?",
+          "expected": "Little bells.",
+          "responses": {
+            "generator_only": {
+              "reply": "A butter.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "Ozma's saddle.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "Ozma's saddle.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            }
+          }
+        }
+      ]
+    },
+    "book_assist_test": {
+      "fixture": "data/oz_chat_book_assist_test.jsonl",
+      "test_sha256": "f70ed25474943f335a8ebe4b6c2648a19a3650fc0842dd2c539593d264cc3e59",
+      "conversations": 10,
+      "turns": 14,
+      "first_replies": 10,
+      "followups": 4,
+      "reference_reply_loss": 2.977537,
+      "scores": {
+        "generator_only": {
+          "correct": 0,
+          "correct_first_replies": 0,
+          "correct_followups": 0,
+          "correct_with_supporting_citation": 0,
+          "reference_matches": 0,
+          "generator_clean_stops": 14,
+          "generator_replies": 14,
+          "reply_methods": {
+            "generator": 14
+          }
+        },
+        "classifier_and_generator": {
+          "correct": 0,
+          "correct_first_replies": 0,
+          "correct_followups": 0,
+          "correct_with_supporting_citation": 0,
+          "reference_matches": 0,
+          "generator_clean_stops": 11,
+          "generator_replies": 11,
+          "reply_methods": {
+            "generator": 11,
+            "classifier": 3
+          }
+        },
+        "book_assist": {
+          "correct": 8,
+          "correct_first_replies": 6,
+          "correct_followups": 2,
+          "correct_with_supporting_citation": 8,
+          "reference_matches": 3,
+          "generator_clean_stops": 3,
+          "generator_replies": 3,
+          "reply_methods": {
+            "book": 9,
+            "classifier": 2,
+            "generator": 3
+          }
+        }
+      },
+      "reviewed_replies": [
+        {
+          "conversation": 1,
+          "turn": 1,
+          "prompt": "How long had Zeb waited at the station before Dorothy arrived?",
+          "expected": "Five hours.",
+          "responses": {
+            "generator_only": {
+              "reply": "A suit-case.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "A suit-case.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "five hours",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": true,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 1",
+                "start_line": 247,
+                "end_line": 274
+              }
+            }
+          }
+        },
+        {
+          "conversation": 1,
+          "turn": 2,
+          "prompt": "How did he say Californians felt about earthquakes?",
+          "expected": "They were used to them and were not very scared.",
+          "responses": {
+            "generator_only": {
+              "reply": "He wanted to a room.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": true,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "He wanted to a room.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": true,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "They don't scare us much",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": true,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 1",
+                "start_line": 247,
+                "end_line": 274
+              },
+              "review": "“They don’t scare us much” answers how Zeb says Californians felt about earthquakes."
+            }
+          }
+        },
+        {
+          "conversation": 2,
+          "turn": 1,
+          "prompt": "What did Eureka first ask Dorothy for after the buggy landed on a roof?",
+          "expected": "Her milk.",
+          "responses": {
+            "generator_only": {
+              "reply": "Wicker.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "Eureka is Dorothy's kitten.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "Eureka is Dorothy's kitten.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            }
+          }
+        },
+        {
+          "conversation": 2,
+          "turn": 2,
+          "prompt": "Why did she ask for it?",
+          "expected": "She was very hungry.",
+          "responses": {
+            "generator_only": {
+              "reply": "A kitten.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": true,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "A kitten.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": true,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "A kitten.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": true,
+              "clean_stop": true,
+              "source_supports_reply": null
+            }
+          }
+        },
+        {
+          "conversation": 3,
+          "turn": 1,
+          "prompt": "What did the messenger announce after the Sorcerer predicted no more rains?",
+          "expected": "More wonders in the air.",
+          "responses": {
+            "generator_only": {
+              "reply": "Jim stood still.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "Jim stood still.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "Jim stood still.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            }
+          }
+        },
+        {
+          "conversation": 3,
+          "turn": 2,
+          "prompt": "Where did the Prince and his people go to see them?",
+          "expected": "Into the street.",
+          "responses": {
+            "generator_only": {
+              "reply": "He was tied to a tree.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": true,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "He was tied to a tree.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": true,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "He was tied to a tree.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": true,
+              "clean_stop": true,
+              "source_supports_reply": null
+            }
+          }
+        },
+        {
+          "conversation": 4,
+          "turn": 1,
+          "prompt": "Who inspected the Wizard's hat before he did his trick for the Mangaboos?",
+          "expected": "The Sorcerer.",
+          "responses": {
+            "generator_only": {
+              "reply": "Revolvers.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "Revolvers.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "citizens",
+              "reply_method": "book",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": false,
+              "citation": {
+                "section": "Chapter 17",
+                "start_line": 4681,
+                "end_line": 4698
+              },
+              "review": "This later performance describes a different audience. The Sorcerer inspected the hat in the Mangaboo scene."
+            }
+          }
+        },
+        {
+          "conversation": 5,
+          "turn": 1,
+          "prompt": "Why did the Prince plan to keep the Wizard after Gwig was cut in two?",
+          "expected": "He was skillful and useful.",
+          "responses": {
+            "generator_only": {
+              "reply": "Revolvers.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "They buried Gwig.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "They buried Gwig.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            }
+          }
+        },
+        {
+          "conversation": 6,
+          "turn": 1,
+          "prompt": "What did the Wizard plan to nap on in the House of the Sorcerer?",
+          "expected": "A hard glass bench.",
+          "responses": {
+            "generator_only": {
+              "reply": "A bonfire was lit.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "A bonfire was lit.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "glass benches",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 5",
+                "start_line": 1609,
+                "end_line": 1624
+              },
+              "review": "The passage identifies the glass benches as the place the Wizard intended to nap."
+            }
+          }
+        },
+        {
+          "conversation": 6,
+          "turn": 2,
+          "prompt": "Where did Dorothy choose to sleep?",
+          "expected": "In a little room at the end of the hall.",
+          "responses": {
+            "generator_only": {
+              "reply": "He wanted to a room.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": true,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "He wanted to a room.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": true,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "a little room at the end of the hall",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 5",
+                "start_line": 1598,
+                "end_line": 1616
+              }
+            }
+          }
+        },
+        {
+          "conversation": 7,
+          "turn": 1,
+          "prompt": "What were the Mangaboos stacking in front of the Black Pit when the Wizard arrived?",
+          "expected": "Glass rocks.",
+          "responses": {
+            "generator_only": {
+              "reply": "He bowed.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "He bowed.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "glass rocks",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": true,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 7",
+                "start_line": 1893,
+                "end_line": 1911
+              }
+            }
+          }
+        },
+        {
+          "conversation": 8,
+          "turn": 1,
+          "prompt": "How did Dorothy say Jim could defend himself when the man in Voe asked?",
+          "expected": "He could kick and bite.",
+          "responses": {
+            "generator_only": {
+              "reply": "In Ozma's private rooms.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "In Ozma's private rooms.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "he can kick pretty hard with his heels, and bite a little",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 8",
+                "start_line": 2194,
+                "end_line": 2220
+              }
+            }
+          }
+        },
+        {
+          "conversation": 9,
+          "turn": 1,
+          "prompt": "What did the Woggle-Bug pull from his pocket before turning his back on the company?",
+          "expected": "A book.",
+          "responses": {
+            "generator_only": {
+              "reply": "He bowed.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "Trees.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "a book",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": true,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 15",
+                "start_line": 4305,
+                "end_line": 4327
+              }
+            }
+          }
+        },
+        {
+          "conversation": 10,
+          "turn": 1,
+          "prompt": "Why did Dorothy say she could not stay away from Kansas for long?",
+          "expected": "Uncle Henry and Aunt Em needed her.",
+          "responses": {
+            "generator_only": {
+              "reply": "She saw the enchanted picture.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "She saw the enchanted picture.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "Uncle Henry and Aunt Em need me to help them",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 20",
+                "start_line": 5384,
+                "end_line": 5407
+              }
+            }
+          }
+        }
+      ]
+    },
+    "coverage_unseen": {
+      "fixture": "data/oz_chat_coverage_unseen.jsonl",
+      "test_sha256": "6383d67937572fc8a5a209deb42f3298529aa08e641550c2fbc4981b69683625",
+      "conversations": 14,
+      "turns": 14,
+      "first_replies": 14,
+      "followups": 0,
+      "reference_reply_loss": 3.202854,
+      "scores": {
+        "generator_only": {
+          "correct": 0,
+          "correct_first_replies": 0,
+          "correct_followups": 0,
+          "correct_with_supporting_citation": 0,
+          "reference_matches": 0,
+          "generator_clean_stops": 14,
+          "generator_replies": 14,
+          "reply_methods": {
+            "generator": 14
+          }
+        },
+        "classifier_and_generator": {
+          "correct": 0,
+          "correct_first_replies": 0,
+          "correct_followups": 0,
+          "correct_with_supporting_citation": 0,
+          "reference_matches": 0,
+          "generator_clean_stops": 12,
+          "generator_replies": 12,
+          "reply_methods": {
+            "generator": 12,
+            "classifier": 2
+          }
+        },
+        "book_assist": {
+          "correct": 11,
+          "correct_first_replies": 11,
+          "correct_followups": 0,
+          "correct_with_supporting_citation": 11,
+          "reference_matches": 4,
+          "generator_clean_stops": 2,
+          "generator_replies": 2,
+          "reply_methods": {
+            "generator": 2,
+            "book": 12
+          }
+        }
+      },
+      "reviewed_replies": [
+        {
+          "conversation": 1,
+          "turn": 1,
+          "prompt": "Who did the Scarecrow say conquered him after the Wizard left?",
+          "expected": "General Jinjur.",
+          "responses": {
+            "generator_only": {
+              "reply": "Revolvers.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "Revolvers.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "Revolvers.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            }
+          }
+        },
+        {
+          "conversation": 2,
+          "turn": 1,
+          "prompt": "Where did the Wizard keep his big silver watch?",
+          "expected": "In his vest pocket.",
+          "responses": {
+            "generator_only": {
+              "reply": "He gathered the piglets.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "He gathered the piglets.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "vest pocket",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 14",
+                "start_line": 3894,
+                "end_line": 3924
+              }
+            }
+          }
+        },
+        {
+          "conversation": 3,
+          "turn": 1,
+          "prompt": "What time did the Wizard read on his watch in the cave?",
+          "expected": "Half-past three.",
+          "responses": {
+            "generator_only": {
+              "reply": "The Sorcerer's pocker.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "The Sorcerer's pocker.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "The Sorcerer's pocker.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            }
+          }
+        },
+        {
+          "conversation": 4,
+          "turn": 1,
+          "prompt": "What was the floor like in the cave with the pairs of yellow lights?",
+          "expected": "Smooth and level.",
+          "responses": {
+            "generator_only": {
+              "reply": "The Sawhorse.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "The Sawhorse.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "smooth, level",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 13",
+                "start_line": 3446,
+                "end_line": 3464
+              }
+            }
+          }
+        },
+        {
+          "conversation": 5,
+          "turn": 1,
+          "prompt": "How often did the college boys yell as they marched?",
+          "expected": "Every other step.",
+          "responses": {
+            "generator_only": {
+              "reply": "The Sawhorse.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "The Woggle-Bug.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "every other step they took",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 17",
+                "start_line": 4668,
+                "end_line": 4686
+              }
+            }
+          }
+        },
+        {
+          "conversation": 6,
+          "turn": 1,
+          "prompt": "What did the Wizard promise to cancel so he could stay in Oz?",
+          "expected": "His engagements abroad.",
+          "responses": {
+            "generator_only": {
+              "reply": "A velvet costume.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "A velvet costume.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "engagements",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 17",
+                "start_line": 4725,
+                "end_line": 4742
+              },
+              "review": "The requested engagements are identified by the cited sentence, which specifies Europe and America."
+            }
+          }
+        },
+        {
+          "conversation": 7,
+          "turn": 1,
+          "prompt": "Where did Billina's tale of her adventures with the Nome King take place?",
+          "expected": "The Land of Ev.",
+          "responses": {
+            "generator_only": {
+              "reply": "He bowed.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "He bowed.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "the Land of Ev",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": true,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 20",
+                "start_line": 5372,
+                "end_line": 5393
+              }
+            }
+          }
+        },
+        {
+          "conversation": 8,
+          "turn": 1,
+          "prompt": "Where did Dorothy threaten to send Eureka if she would not come out?",
+          "expected": "The Country of the Gurgles.",
+          "responses": {
+            "generator_only": {
+              "reply": "Damas.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "Damas.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "Princess Ozma",
+              "reply_method": "book",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": false,
+              "citation": {
+                "section": "Chapter 18",
+                "start_line": 4941,
+                "end_line": 4977
+              },
+              "review": "The question asks where Dorothy threatened to send Eureka. The reply names a person."
+            }
+          }
+        },
+        {
+          "conversation": 9,
+          "turn": 1,
+          "prompt": "Where did Eureka hide while Ozma was dressing?",
+          "expected": "Under a chair.",
+          "responses": {
+            "generator_only": {
+              "reply": ".",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": ".",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "under a chair",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": true,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 19",
+                "start_line": 5280,
+                "end_line": 5296
+              }
+            }
+          }
+        },
+        {
+          "conversation": 10,
+          "turn": 1,
+          "prompt": "Who told stories to the guests on the last evening in Oz?",
+          "expected": "The Scarecrow.",
+          "responses": {
+            "generator_only": {
+              "reply": "They walked on water.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "They walked on water.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "Scarecrow",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 20",
+                "start_line": 5372,
+                "end_line": 5393
+              }
+            }
+          }
+        },
+        {
+          "conversation": 11,
+          "turn": 1,
+          "prompt": "How many wooden wings were beside them on the platform after Zeb climbed up?",
+          "expected": "Eight wooden wings.",
+          "responses": {
+            "generator_only": {
+              "reply": "He left her unpicked.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "He left her unpicked.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "eight",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 12",
+                "start_line": 3285,
+                "end_line": 3305
+              }
+            }
+          }
+        },
+        {
+          "conversation": 12,
+          "turn": 1,
+          "prompt": "What color was the sunlight on the Wizard's face when Dorothy corrected him?",
+          "expected": "Violet.",
+          "responses": {
+            "generator_only": {
+              "reply": "In Ozma's room.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "In Ozma's room.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "violet",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": true,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 3",
+                "start_line": 886,
+                "end_line": 912
+              }
+            }
+          }
+        },
+        {
+          "conversation": 13,
+          "turn": 1,
+          "prompt": "Why did Eureka think the fish had no bones?",
+          "expected": "Nothing scratched her throat.",
+          "responses": {
+            "generator_only": {
+              "reply": "A kitten.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "It was eaten.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "I didn't feel them scratch my throat",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 5",
+                "start_line": 1530,
+                "end_line": 1556
+              }
+            }
+          }
+        },
+        {
+          "conversation": 14,
+          "turn": 1,
+          "prompt": "Who did the Scarecrow live with after Ozma defeated Jinjur?",
+          "expected": "Nick Chopper.",
+          "responses": {
+            "generator_only": {
+              "reply": "The Sawhorse.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "The Sawhorse.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "Nick Chopper",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": true,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 15",
+                "start_line": 4228,
+                "end_line": 4249
+              }
+            }
+          }
+        }
+      ]
+    },
+    "unseen_routing_check": {
+      "fixture": "data/oz_chat_unseen_routing_check.jsonl",
+      "test_sha256": "d4b6a70f79d73984cd28be186a30e0f1fea9e19d3a6ed30b69f4d329fefc6e99",
+      "conversations": 10,
+      "turns": 12,
+      "first_replies": 10,
+      "followups": 2,
+      "reference_reply_loss": 3.265854,
+      "scores": {
+        "generator_only": {
+          "correct": 0,
+          "correct_first_replies": 0,
+          "correct_followups": 0,
+          "correct_with_supporting_citation": 0,
+          "reference_matches": 0,
+          "generator_clean_stops": 12,
+          "generator_replies": 12,
+          "reply_methods": {
+            "generator": 12
+          }
+        },
+        "classifier_and_generator": {
+          "correct": 0,
+          "correct_first_replies": 0,
+          "correct_followups": 0,
+          "correct_with_supporting_citation": 0,
+          "reference_matches": 0,
+          "generator_clean_stops": 10,
+          "generator_replies": 10,
+          "reply_methods": {
+            "generator": 10,
+            "classifier": 2
+          }
+        },
+        "book_assist": {
+          "correct": 7,
+          "correct_first_replies": 6,
+          "correct_followups": 1,
+          "correct_with_supporting_citation": 7,
+          "reference_matches": 3,
+          "generator_clean_stops": 1,
+          "generator_replies": 1,
+          "reply_methods": {
+            "book": 9,
+            "classifier": 2,
+            "generator": 1
+          }
+        }
+      },
+      "reviewed_replies": [
+        {
+          "conversation": 1,
+          "turn": 1,
+          "prompt": "What position did the Mangaboo Prince offer if the Wizard beat the Sorcerer?",
+          "expected": "Chief Wizard of the domain.",
+          "responses": {
+            "generator_only": {
+              "reply": "He was tied to keep ruling.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "He was tied to keep ruling.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "Chief Wizard",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 3",
+                "start_line": 931,
+                "end_line": 955
+              }
+            }
+          }
+        },
+        {
+          "conversation": 2,
+          "turn": 1,
+          "prompt": "How big was the first piglet the Wizard produced beneath his hat?",
+          "expected": "No bigger than a mouse.",
+          "responses": {
+            "generator_only": {
+              "reply": "Revolvers.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "Revolvers.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "two",
+              "reply_method": "book",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": false,
+              "citation": {
+                "section": "Chapter 17",
+                "start_line": 4690,
+                "end_line": 4704
+              },
+              "review": "The citation is from a palace performance and the reply gives a count. The question asks about the first piglet’s size in the earlier scene."
+            }
+          }
+        },
+        {
+          "conversation": 3,
+          "turn": 1,
+          "prompt": "Why did Zeb put out the lanterns when the tunnel grew lighter?",
+          "expected": "To save the oil.",
+          "responses": {
+            "generator_only": {
+              "reply": "The Star of Royalty.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "The Star of Royalty.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "to save the oil",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": true,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 7",
+                "start_line": 1964,
+                "end_line": 1982
+              }
+            }
+          }
+        },
+        {
+          "conversation": 3,
+          "turn": 2,
+          "prompt": "What color was the light they saw next?",
+          "expected": "White.",
+          "responses": {
+            "generator_only": {
+              "reply": "In Ozma's room.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": true,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "In Ozma's room.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": true,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "white",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": true,
+              "history_used": true,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 7",
+                "start_line": 1976,
+                "end_line": 1989
+              }
+            }
+          }
+        },
+        {
+          "conversation": 4,
+          "turn": 1,
+          "prompt": "What stone was the mountain on the Voe side compared to?",
+          "expected": "Granite.",
+          "responses": {
+            "generator_only": {
+              "reply": "An unseen hand lifted her.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "An unseen hand lifted her.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "granite",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": true,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 8",
+                "start_line": 2016,
+                "end_line": 2036
+              }
+            }
+          }
+        },
+        {
+          "conversation": 5,
+          "turn": 1,
+          "prompt": "What fruit did the Wizard compare the look of dama-fruit to?",
+          "expected": "A peach.",
+          "responses": {
+            "generator_only": {
+              "reply": "A velvet costume.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "A velvet costume.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "peach",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 8",
+                "start_line": 2213,
+                "end_line": 2234
+              }
+            }
+          }
+        },
+        {
+          "conversation": 6,
+          "turn": 1,
+          "prompt": "What hid the view from the third landing on the mountain?",
+          "expected": "Thick banks of clouds.",
+          "responses": {
+            "generator_only": {
+              "reply": "The Royal Court Band.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "The Royal Court Band.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "rolling banks of clouds",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 11",
+                "start_line": 2763,
+                "end_line": 2784
+              }
+            }
+          }
+        },
+        {
+          "conversation": 7,
+          "turn": 1,
+          "prompt": "What kind of opening did the Gargoyles push the prisoners through?",
+          "expected": "A broad opening high beneath the roof.",
+          "responses": {
+            "generator_only": {
+              "reply": "The Gargoyles' wooden wings.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "The Gargoyles' wooden wings.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "a platform",
+              "reply_method": "book",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": false,
+              "citation": {
+                "section": "Chapter 12",
+                "start_line": 3107,
+                "end_line": 3123
+              },
+              "review": "The passage contains the evidence. The reply identifies the platform inside the opening instead of the opening itself."
+            }
+          }
+        },
+        {
+          "conversation": 8,
+          "turn": 1,
+          "prompt": "How did they cross the deep cracks in the floor beyond the Gargoyles?",
+          "expected": "They jumped over them.",
+          "responses": {
+            "generator_only": {
+              "reply": "A bonfire was lit.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "A bonfire was lit.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "they were able to jump over them",
+              "reply_method": "book",
+              "correct": true,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": true,
+              "citation": {
+                "section": "Chapter 13",
+                "start_line": 3438,
+                "end_line": 3453
+              }
+            }
+          }
+        },
+        {
+          "conversation": 9,
+          "turn": 1,
+          "prompt": "What did the Hungry Tiger strike when it knocked Jim over?",
+          "expected": "Jim's shoulder.",
+          "responses": {
+            "generator_only": {
+              "reply": "No, he wanted patter!",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "Purple.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "Purple.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            }
+          }
+        },
+        {
+          "conversation": 9,
+          "turn": 2,
+          "prompt": "Which animal was crouching on Jim's other side when he came to?",
+          "expected": "The Cowardly Lion.",
+          "responses": {
+            "generator_only": {
+              "reply": "A horse.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": true,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "The Sawhorse.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": true,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "The Sawhorse.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": true,
+              "clean_stop": true,
+              "source_supports_reply": null
+            }
+          }
+        },
+        {
+          "conversation": 10,
+          "turn": 1,
+          "prompt": "Where did Ozma say she had left the piglet when she sent Jellia to get it?",
+          "expected": "On her dressing table.",
+          "responses": {
+            "generator_only": {
+              "reply": "A still.",
+              "reply_method": "generator",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": true,
+              "source_supports_reply": null
+            },
+            "classifier_and_generator": {
+              "reply": "In Ozma's private rooms.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            },
+            "book_assist": {
+              "reply": "In Ozma's private rooms.",
+              "reply_method": "classifier",
+              "correct": false,
+              "reference_match": false,
+              "history_used": false,
+              "clean_stop": null,
+              "source_supports_reply": null
+            }
+          }
+        }
+      ]
+    }
+  },
+  "totals": {
+    "turns": 56,
+    "first_replies": 50,
+    "followups": 6,
+    "scores": {
+      "generator_only": {
+        "correct": 0,
+        "correct_first_replies": 0,
+        "correct_followups": 0,
+        "correct_with_supporting_citation": 0,
+        "reference_matches": 0,
+        "generator_clean_stops": 56,
+        "generator_replies": 56,
+        "reply_methods": {
+          "generator": 56
+        }
+      },
+      "classifier_and_generator": {
+        "correct": 0,
+        "correct_first_replies": 0,
+        "correct_followups": 0,
+        "correct_with_supporting_citation": 0,
+        "reference_matches": 0,
+        "generator_clean_stops": 44,
+        "generator_replies": 44,
+        "reply_methods": {
+          "generator": 44,
+          "classifier": 12
+        }
+      },
+      "book_assist": {
+        "correct": 32,
+        "correct_first_replies": 29,
+        "correct_followups": 3,
+        "correct_with_supporting_citation": 32,
+        "reference_matches": 12,
+        "generator_clean_stops": 9,
+        "generator_replies": 9,
+        "reply_methods": {
+          "generator": 9,
+          "book": 39,
+          "classifier": 8
+        }
+      }
+    }
+  }
+}

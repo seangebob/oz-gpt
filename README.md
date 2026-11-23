@@ -390,7 +390,7 @@ Issue numbers refer to the project bug review. Complete each stage in this order
 
 Cited answers can now take precedence over unrelated first-reply classifier answers. Book-assisted chat reached 6/16 and 8/14 on the two existing unseen-fact tests. The standalone generator still scores 0/16 and 0/14 after an excerpt-training trial. [Reviewed routing and training results](evaluations/oz_chat_unseen_routing_comparison.json) · [Earlier generator training](evaluations/oz_chat_generator_training_comparison.json)
 
-1. **Freeze the baselines.** Record generator-only and book-assisted scores using the same questions, checkpoints, and settings.
+1. **Freeze the baselines · complete.** On the same 56 turns and chat checkpoint, the generator alone and the generator with the classifier each scored 0/56. Book-assisted chat scored 32/56 with supporting citations. The snapshot records each reply, benchmark and checkpoint hashes, and rerun commands. [Frozen baselines](evaluations/oz_chat_unseen_baselines.json)
 2. **Build evidence-grounded training examples.** Pair each question with a short supporting passage and answer. Include similar questions where different evidence leads to different answers and passages that give too little information to answer.
 3. **Test whether the generator follows the evidence.** Give it the correct passage, a passage with a different answer, and an irrelevant passage. Keep entire fact families out of training and checkpoint selection.
 4. **Improve answer routing.** Check that a passage supports the requested fact and scene before its extract overrides the classifier. Measure correct answers, unsupported answers, and abstentions separately.
