@@ -261,13 +261,20 @@ Use `--book` to evaluate book lookup against the same conversations. Add `--chec
 python -m model.chat_evaluation run --book --checkpoint model/model-chat-retrained.pth --output oz-book-comparison.json
 ```
 
-Evaluate book lookup on the fresh 29-turn benchmark from the repo root.
+Evaluate book lookup on the 29-turn audit benchmark from the repo root.
 
 ```bash
 python -m model.chat_evaluation run --book --test-data data/oz_book_lookup_test.jsonl --output oz-book-fresh.json
 ```
 
 After the four book lookup repairs, first replies scored 12/20 and later turns improved from 4/9 to 5/9. The context-dependent subset scored 4/8 in both runs. One standalone trial question improved when it stopped using the previous turn. Correct answers with supporting citations rose from 15/29 to 16/29, and abstentions fell from seven to six. The original regression set stayed at 20/32 for correct, cited answers. [Reviewed results and per-turn citations](evaluations/oz_book_lookup_repair_comparison.json)
+
+Use the 40-turn generalization set to reproduce the comparison of follow-up context and answer selection. [Fresh conversations](data/oz_book_lookup_generalization_test.jsonl) · [Reviewed comparison](evaluations/oz_book_lookup_generalization_comparison.json)
+
+```bash
+python -m model.chat_evaluation run --book --history generated --trace-passages \
+  --test-data data/oz_book_lookup_generalization_test.jsonl --output oz-book-generalization.json
+```
 
 To investigate missed replies, add `--trace-passages` to save the ranked passages, the search query after follow-up rewriting, and the passage the reader selected.
 
@@ -349,7 +356,7 @@ Issue numbers refer to the project bug review. Complete each stage in this order
 ### Remaining repairs in order
 
 1. **#1 Improve factual accuracy in trained chat.** Compact history enabled context-dependent replies. The optional classifier improved first replies on both benchmarks by selecting answers learned during training. Generalization remains open at 0/16 on the latest fresh-fact test, and the generator alone still struggles on first replies. [First-reply and generalization results](evaluations/oz_chat_first_reply_generalization_comparison.json)
-2. **Verify book lookup on fresh conversations.** The original audit found supporting text on all 13 misses. Follow-up context and answer selection fixes raised the separate check from 0/5 to 4/5 on follow-ups and the audited set from 16/29 to 19/29 correct answers with support. The reader still abstains on why the Wizard suggested picking the Royal Princess. Reserve a fresh set and report first replies, follow-ups, and abstentions separately. [Case-by-case review](evaluations/oz_book_lookup_quality_review.json) · [Answer selection comparison](evaluations/oz_book_answer_selection_comparison.json)
+2. **Improve book lookup on the remaining misses.** The context and answer selection fixes recovered known misses. On the 40-turn generalization set, all three code versions scored 16/20 correct first replies and 10/20 correct follow-ups with supporting citations. Each abstained three times on first replies and six times on follow-ups. The latest reader saw supporting text on 13 of 14 misses. Improve reference resolution and answer completeness, then measure the next changes on a separate set. [Known-case comparison](evaluations/oz_book_answer_selection_comparison.json) · [Fresh comparison](evaluations/oz_book_lookup_generalization_comparison.json)
 
 ### Cleanup follow-ups
 

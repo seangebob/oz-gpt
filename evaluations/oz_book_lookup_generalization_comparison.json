@@ -1,0 +1,1536 @@
+{
+  "fixture": "data/oz_book_lookup_generalization_test.jsonl",
+  "fixture_commit": "a34210b5d207b256bc03039218364276e7c86e11",
+  "fixture_sha256": "9fff016f4c4d293ca411ca9afeabb3f1613daf39f7efb46b24c7dc601a2f25c8",
+  "book_sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9",
+  "reader_model": "deepset/minilm-uncased-squad2",
+  "reader_revision": "934656cdda79824eabf503ed56e15c01ddbdbe3f",
+  "conversations": 20,
+  "turns": 40,
+  "history": "generated",
+  "design": "The fixture was written and frozen before any of these evaluations. Every reference has book lines. Exact prompt duplicates were checked against the existing fixtures, and reference lines are disjoint from those in the three earlier book lookup fixtures. All questions use the same bundled book.",
+  "scoring": "A correct answer must convey the requested fact and cite a passage supporting it in the original conversation. Concise equivalents are accepted when the requested entity or relationship remains clear. An answer missing a requested distinction is marked incomplete even when the citation contains the missing detail. Outcomes are grouped where reply, citation, rewrite, and judgment agree across runs.",
+  "runs": [
+    {
+      "name": "baseline",
+      "code_commit": "ddb56e64bd80e1a1c538b4c8dd76aeff34182b8c",
+      "first_replies": {
+        "turns": 20,
+        "correct_with_support": 16,
+        "abstained": 3,
+        "incorrect": 0,
+        "incomplete": 1
+      },
+      "followups": {
+        "turns": 20,
+        "correct_with_support": 10,
+        "abstained": 6,
+        "incorrect": 4,
+        "incomplete": 0
+      },
+      "rereads_accepted": 0
+    },
+    {
+      "name": "followup_context",
+      "code_commit": "2b41394ee04ce7ae9bfd63da978c1f1d074f1677",
+      "first_replies": {
+        "turns": 20,
+        "correct_with_support": 16,
+        "abstained": 3,
+        "incorrect": 0,
+        "incomplete": 1
+      },
+      "followups": {
+        "turns": 20,
+        "correct_with_support": 10,
+        "abstained": 6,
+        "incorrect": 3,
+        "incomplete": 1
+      },
+      "rereads_accepted": 0
+    },
+    {
+      "name": "answer_selection",
+      "code_commit": "87c3d5381c480101c0868be9ae824393955dcee5",
+      "first_replies": {
+        "turns": 20,
+        "correct_with_support": 16,
+        "abstained": 3,
+        "incorrect": 0,
+        "incomplete": 1
+      },
+      "followups": {
+        "turns": 20,
+        "correct_with_support": 10,
+        "abstained": 6,
+        "incorrect": 3,
+        "incomplete": 1
+      },
+      "rereads_accepted": 0
+    }
+  ],
+  "current_misses_with_supporting_candidates": 13,
+  "current_misses_total": 14,
+  "rows": [
+    {
+      "conversation": 1,
+      "turn": 1,
+      "prompt": "In the preface, what job does Baum say he'd rather tell stories than take?",
+      "expected": "President of the United States.",
+      "book_lines": [
+        81,
+        85
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "the President",
+            "citation": {
+              "section": "Preface",
+              "start_line": 80,
+              "end_line": 97
+            },
+            "result": "correct_with_support",
+            "history_used": false,
+            "reader_query": "In the preface, what job does Baum say he'd rather tell stories than take?",
+            "selected_passage_rank": 2
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 2,
+      "turn": 1,
+      "prompt": "What did Dorothy and Zeb do with their hands when the buggy passed the bright colored suns?",
+      "expected": "They covered their faces to protect their eyes.",
+      "book_lines": [
+        447,
+        450
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "I couldn't find an answer supported by the book.",
+            "citation": null,
+            "result": "abstained",
+            "history_used": false,
+            "reader_query": "What did Dorothy and Zeb do with their hands when the buggy passed the bright colored suns?",
+            "selected_passage_rank": null
+          }
+        }
+      ],
+      "current_miss": {
+        "primary_failure": "confidence",
+        "supporting_candidates": [
+          {
+            "rank": 1,
+            "start_line": 444,
+            "end_line": 465,
+            "reader_span": "covered their faces",
+            "reader_margin": 2.075441
+          },
+          {
+            "rank": 2,
+            "start_line": 428,
+            "end_line": 452,
+            "reader_span": "covered their faces",
+            "reader_margin": 1.255507
+          }
+        ],
+        "review_note": "The first two passages produced the right action below the confidence requirements."
+      }
+    },
+    {
+      "conversation": 2,
+      "turn": 2,
+      "prompt": "What let them open their eyes again?",
+      "expected": "The top of the buggy blocked many of the bright rays.",
+      "book_lines": [
+        450,
+        452
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "I couldn't find an answer supported by the book.",
+            "citation": null,
+            "result": "abstained",
+            "history_used": true,
+            "reader_query": "What let the bright colored suns open the bright colored suns's eyes again?",
+            "selected_passage_rank": null
+          }
+        }
+      ],
+      "current_miss": {
+        "primary_failure": "followup_rewrite",
+        "supporting_candidates": [
+          {
+            "rank": 1,
+            "start_line": 444,
+            "end_line": 465,
+            "reader_span": "the top of the buggy shut out many of the piercing rays",
+            "reader_margin": 1.10423
+          },
+          {
+            "rank": 2,
+            "start_line": 428,
+            "end_line": 452,
+            "reader_span": "the top of the buggy",
+            "reader_margin": 0.87145
+          }
+        ],
+        "review_note": "The rewrite makes the suns open their own eyes. The correct explanation still appears in the weak top-ranked extract."
+      }
+    },
+    {
+      "conversation": 3,
+      "turn": 1,
+      "prompt": "What did the Sorcerer call the second rain when the Mangaboo Prince challenged him?",
+      "expected": "A Rain of People-and-Horse-and-Buggy.",
+      "book_lines": [
+        791,
+        798
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "a Rain of People-and-Horse-and-Buggy",
+            "citation": {
+              "section": "Chapter 3",
+              "start_line": 796,
+              "end_line": 824
+            },
+            "result": "correct_with_support",
+            "history_used": false,
+            "reader_query": "What did the Sorcerer call the second rain when the Mangaboo Prince challenged him?",
+            "selected_passage_rank": 2
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 3,
+      "turn": 2,
+      "prompt": "What else did he say fell along with them?",
+      "expected": "Some stones.",
+      "book_lines": [
+        796,
+        798
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "I couldn't find an answer supported by the book.",
+            "citation": null,
+            "result": "abstained",
+            "history_used": true,
+            "reader_query": "What else did the Sorcerer say fell along with them?",
+            "selected_passage_rank": null
+          }
+        }
+      ],
+      "current_miss": {
+        "primary_failure": "confidence",
+        "supporting_candidates": [
+          {
+            "rank": 5,
+            "start_line": 785,
+            "end_line": 812,
+            "reader_span": "some stones",
+            "reader_margin": -4.553124
+          },
+          {
+            "rank": 6,
+            "start_line": 796,
+            "end_line": 824,
+            "reader_span": "some stones",
+            "reader_margin": -3.984528
+          }
+        ],
+        "review_note": "Two passages produced the correct answer with negative confidence margins."
+      }
+    },
+    {
+      "conversation": 4,
+      "turn": 1,
+      "prompt": "What circus did the Wizard say he belonged to when talking to the Sorcerer?",
+      "expected": "Bailum & Barney's Great Consolidated Shows.",
+      "book_lines": [
+        929,
+        937
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "Bailum & Barney's Great Consolidated Shows",
+            "citation": {
+              "section": "Chapter 3",
+              "start_line": 931,
+              "end_line": 954
+            },
+            "result": "correct_with_support",
+            "history_used": false,
+            "reader_query": "What circus did the Wizard say he belonged to when talking to the Sorcerer?",
+            "selected_passage_rank": 2
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 4,
+      "turn": 2,
+      "prompt": "What did he do to draw crowds to it?",
+      "expected": "He went up in a balloon.",
+      "book_lines": [
+        935,
+        942
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline"
+          ],
+          "outcome": {
+            "reply": "I go up in a balloon",
+            "citation": {
+              "section": "Chapter 3",
+              "start_line": 918,
+              "end_line": 941
+            },
+            "result": "correct_with_support",
+            "history_used": true,
+            "reader_query": "What did he do to draw crowds to it (context: circus did the Wizard say he belonged to when talking to the Sorcerer)?",
+            "selected_passage_rank": 1
+          }
+        },
+        {
+          "runs": [
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "I go up in a balloon",
+            "citation": {
+              "section": "Chapter 3",
+              "start_line": 931,
+              "end_line": 954
+            },
+            "result": "correct_with_support",
+            "history_used": true,
+            "reader_query": "What did Wizard do to draw crowds to it?",
+            "selected_passage_rank": 1
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 4,
+      "turn": 3,
+      "prompt": "How many rings did the show have?",
+      "expected": "Three rings.",
+      "book_lines": [
+        935,
+        937
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "three",
+            "citation": {
+              "section": "Chapter 3",
+              "start_line": 931,
+              "end_line": 954
+            },
+            "result": "correct_with_support",
+            "history_used": false,
+            "reader_query": "How many rings did the show have?",
+            "selected_passage_rank": 1
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 5,
+      "turn": 1,
+      "prompt": "How long did it take the glass houses in the Mangaboo city to grow so large?",
+      "expected": "A good many years.",
+      "book_lines": [
+        1124,
+        1127
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "a good many years",
+            "citation": {
+              "section": "Chapter 4",
+              "start_line": 1113,
+              "end_line": 1135
+            },
+            "result": "correct_with_support",
+            "history_used": false,
+            "reader_query": "How long did it take the glass houses in the Mangaboo city to grow so large?",
+            "selected_passage_rank": 1
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 5,
+      "turn": 2,
+      "prompt": "How do they mend when the roofs crack?",
+      "expected": "They grow together again over time.",
+      "book_lines": [
+        1127,
+        1133
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "I couldn't find an answer supported by the book.",
+            "citation": null,
+            "result": "abstained",
+            "history_used": true,
+            "reader_query": "How do they mend when the roofs crack (context: long did it take the glass houses in the Mangaboo city to grow so large)?",
+            "selected_passage_rank": null
+          }
+        }
+      ],
+      "current_miss": {
+        "primary_failure": "span_extraction",
+        "supporting_candidates": [
+          {
+            "rank": 1,
+            "start_line": 1113,
+            "end_line": 1135,
+            "reader_span": "years",
+            "reader_margin": -0.261805
+          },
+          {
+            "rank": 2,
+            "start_line": 1126,
+            "end_line": 1148,
+            "reader_span": "many years",
+            "reader_margin": -6.318239
+          }
+        ],
+        "review_note": "The reader extracts how long the houses originally took to grow from passages that also explain how they mend."
+      }
+    },
+    {
+      "conversation": 5,
+      "turn": 3,
+      "prompt": "What caused that damage in the first place?",
+      "expected": "A Rain of Stones.",
+      "book_lines": [
+        1126,
+        1133
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "earthquake",
+            "citation": {
+              "section": "Chapter 2",
+              "start_line": 684,
+              "end_line": 703
+            },
+            "result": "incorrect",
+            "history_used": false,
+            "reader_query": "What caused that damage in the first place?",
+            "selected_passage_rank": 2
+          }
+        }
+      ],
+      "current_miss": {
+        "primary_failure": "retrieval",
+        "supporting_candidates": [],
+        "review_note": "The question lost the glass houses and roofs as context. The reader saw general references to the Rain of Stones, but no candidate directly connected it to the cracked roofs in this exchange."
+      }
+    },
+    {
+      "conversation": 6,
+      "turn": 1,
+      "prompt": "Why did the Wizard think it was so easy to walk in the air above the Mangaboo gardens?",
+      "expected": "They were close to the center of the earth, where the pull of gravity was slight.",
+      "book_lines": [
+        1404,
+        1415
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "we are close to the center of the earth",
+            "citation": {
+              "section": "Chapter 5",
+              "start_line": 1404,
+              "end_line": 1426
+            },
+            "result": "correct_with_support",
+            "history_used": false,
+            "reader_query": "Why did the Wizard think it was so easy to walk in the air above the Mangaboo gardens?",
+            "selected_passage_rank": 4
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 7,
+      "turn": 1,
+      "prompt": "How did the piglets look while watching Eureka eat a fish?",
+      "expected": "They looked frightened.",
+      "book_lines": [
+        1530,
+        1547
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "frightened eyes",
+            "citation": {
+              "section": "Chapter 5",
+              "start_line": 1530,
+              "end_line": 1556
+            },
+            "result": "correct_with_support",
+            "history_used": false,
+            "reader_query": "How did the piglets look while watching Eureka eat a fish?",
+            "selected_passage_rank": 2
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 7,
+      "turn": 2,
+      "prompt": "What did Dorothy promise them?",
+      "expected": "She would not let the kitten hurt them.",
+      "book_lines": [
+        1545,
+        1553
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "I couldn't find an answer supported by the book.",
+            "citation": null,
+            "result": "abstained",
+            "history_used": true,
+            "reader_query": "What did Dorothy promise them (context: did the piglets look while watching Eureka eat a fish)?",
+            "selected_passage_rank": null
+          }
+        }
+      ],
+      "current_miss": {
+        "primary_failure": "confidence",
+        "supporting_candidates": [
+          {
+            "rank": 2,
+            "start_line": 1530,
+            "end_line": 1556,
+            "reader_span": "did you eat the bones",
+            "reader_margin": 2.74407
+          },
+          {
+            "rank": 4,
+            "start_line": 1543,
+            "end_line": 1567,
+            "reader_span": "I'll not let the kitten hurt you",
+            "reader_margin": -4.397706
+          }
+        ],
+        "review_note": "The fourth candidate produced Dorothy’s promise with a negative confidence margin."
+      }
+    },
+    {
+      "conversation": 8,
+      "turn": 1,
+      "prompt": "Where did the Royal Princess threaten to throw the human visitors while in the House of the Sorcerer?",
+      "expected": "The Garden of the Twining Vines.",
+      "book_lines": [
+        1668,
+        1688
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "the Garden of the Twining Vines",
+            "citation": {
+              "section": "Chapter 6",
+              "start_line": 1686,
+              "end_line": 1701
+            },
+            "result": "correct_with_support",
+            "history_used": false,
+            "reader_query": "Where did the Royal Princess threaten to throw the human visitors while in the House of the Sorcerer?",
+            "selected_passage_rank": 2
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 8,
+      "turn": 2,
+      "prompt": "Where did she plan to send the animals instead?",
+      "expected": "The Black Pit in the mountains.",
+      "book_lines": [
+        1686,
+        1690
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "the Black Pit",
+            "citation": {
+              "section": "Chapter 6",
+              "start_line": 1686,
+              "end_line": 1701
+            },
+            "result": "correct_with_support",
+            "history_used": true,
+            "reader_query": "Where did the Royal Princess plan to send the animals instead?",
+            "selected_passage_rank": 4
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 9,
+      "turn": 1,
+      "prompt": "Which creatures in the brooks could the invisible family in Voe still see?",
+      "expected": "Fish.",
+      "book_lines": [
+        2295,
+        2300
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "fishes",
+            "citation": {
+              "section": "Chapter 9",
+              "start_line": 2297,
+              "end_line": 2314
+            },
+            "result": "correct_with_support",
+            "history_used": false,
+            "reader_query": "Which creatures in the brooks could the invisible family in Voe still see?",
+            "selected_passage_rank": 3
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 9,
+      "turn": 2,
+      "prompt": "What did the mother say they sometimes did with them?",
+      "expected": "They caught them to eat.",
+      "book_lines": [
+        2295,
+        2300
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "catch them to eat",
+            "citation": {
+              "section": "Chapter 9",
+              "start_line": 2283,
+              "end_line": 2302
+            },
+            "result": "correct_with_support",
+            "history_used": true,
+            "reader_query": "What did the mother say they sometimes did with them (context: Which creatures in the brooks could the invisible family in Voe still see)?",
+            "selected_passage_rank": 1
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 10,
+      "turn": 1,
+      "prompt": "What was the name of the champion from Voe who once fought the Gargoyles?",
+      "expected": "Overman-Anu.",
+      "book_lines": [
+        2362,
+        2373
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "Overman-Anu",
+            "citation": {
+              "section": "Chapter 9",
+              "start_line": 2369,
+              "end_line": 2390
+            },
+            "result": "correct_with_support",
+            "history_used": false,
+            "reader_query": "What was the name of the champion from Voe who once fought the Gargoyles?",
+            "selected_passage_rank": 2
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 10,
+      "turn": 2,
+      "prompt": "How many days did he fight them before he got away?",
+      "expected": "Nine days.",
+      "book_lines": [
+        2369,
+        2373
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "nine",
+            "citation": {
+              "section": "Chapter 9",
+              "start_line": 2358,
+              "end_line": 2378
+            },
+            "result": "correct_with_support",
+            "history_used": true,
+            "reader_query": "How many days did he fight them before he got away (context: was the name of the champion from Voe who once fought the Gargoyles)?",
+            "selected_passage_rank": 2
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 11,
+      "turn": 1,
+      "prompt": "Why did Zeb walk behind the buggy when Jim started up the stairs inside Pyramid Mountain?",
+      "expected": "To make sure nothing happened to the harness.",
+      "book_lines": [
+        2596,
+        2601
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "nothing happened to the harness",
+            "citation": {
+              "section": "Chapter 10",
+              "start_line": 2599,
+              "end_line": 2616
+            },
+            "result": "correct_with_support",
+            "history_used": false,
+            "reader_query": "Why did Zeb walk behind the buggy when Jim started up the stairs inside Pyramid Mountain?",
+            "selected_passage_rank": 4
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 12,
+      "turn": 1,
+      "prompt": "What did Jim ask the others to do when he first looked into the Country of the Gargoyles?",
+      "expected": "Go back down the stairs.",
+      "book_lines": [
+        2852,
+        2857
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "I couldn't find an answer supported by the book.",
+            "citation": null,
+            "result": "abstained",
+            "history_used": false,
+            "reader_query": "What did Jim ask the others to do when he first looked into the Country of the Gargoyles?",
+            "selected_passage_rank": null
+          }
+        }
+      ],
+      "current_miss": {
+        "primary_failure": "span_extraction",
+        "supporting_candidates": [
+          {
+            "rank": 23,
+            "start_line": 2843,
+            "end_line": 2867,
+            "reader_span": "help Jim pull the buggy from one step to another, or keep it from jamming against the rocky walls",
+            "reader_margin": -10.508121
+          }
+        ],
+        "review_note": "The relevant passage appears in the expanded search. The extract describes a different action on the stairs."
+      }
+    },
+    {
+      "conversation": 12,
+      "turn": 2,
+      "prompt": "Why did he want that?",
+      "expected": "He thought the place was dangerous and unfit for living creatures. Everything looked dead.",
+      "book_lines": [
+        2859,
+        2869
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "thinking he might find something proper to eat",
+            "citation": {
+              "section": "Chapter 4",
+              "start_line": 1089,
+              "end_line": 1109
+            },
+            "result": "incorrect",
+            "history_used": true,
+            "reader_query": "Why did Jim want that?",
+            "selected_passage_rank": 2
+          }
+        }
+      ],
+      "current_miss": {
+        "primary_failure": "answer_selection",
+        "supporting_candidates": [
+          {
+            "rank": 4,
+            "start_line": 2857,
+            "end_line": 2880,
+            "reader_span": "It's dangerous",
+            "reader_margin": -0.457565
+          }
+        ],
+        "review_note": "The response describes Jim wanting food in the Mangaboo country. The passage describing why he wanted to turn back received a weak span."
+      }
+    },
+    {
+      "conversation": 13,
+      "turn": 1,
+      "prompt": "Who picked up the Gargoyle with a crown carved into its head?",
+      "expected": "Zeb.",
+      "book_lines": [
+        3016,
+        3018
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "Zeb",
+            "citation": {
+              "section": "Chapter 11",
+              "start_line": 2997,
+              "end_line": 3018
+            },
+            "result": "correct_with_support",
+            "history_used": false,
+            "reader_query": "Who picked up the Gargoyle with a crown carved into its head?",
+            "selected_passage_rank": 2
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 13,
+      "turn": 2,
+      "prompt": "Where did he put it after tying it up?",
+      "expected": "In the buggy.",
+      "book_lines": [
+        3021,
+        3025
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "buggy",
+            "citation": {
+              "section": "Chapter 11",
+              "start_line": 3018,
+              "end_line": 3027
+            },
+            "result": "correct_with_support",
+            "history_used": true,
+            "reader_query": "Where did Zeb put Zeb after tying Zeb up?",
+            "selected_passage_rank": 8
+          }
+        }
+      ],
+      "review_note": "The cited answer is correct. The rewritten question incorrectly substitutes Zeb for the captive."
+    },
+    {
+      "conversation": 13,
+      "turn": 3,
+      "prompt": "Which parts of the captive had the strap pinned down?",
+      "expected": "Its wings and arms.",
+      "book_lines": [
+        3021,
+        3025
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "wings and arms",
+            "citation": {
+              "section": "Chapter 11",
+              "start_line": 3018,
+              "end_line": 3027
+            },
+            "result": "correct_with_support",
+            "history_used": false,
+            "reader_query": "Which parts of the captive had the strap pinned down?",
+            "selected_passage_rank": 1
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 14,
+      "turn": 1,
+      "prompt": "What did Zeb say they would steer with when Jim flew away from the Gargoyles?",
+      "expected": "The wings on the buggy.",
+      "book_lines": [
+        3342,
+        3355
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "wings",
+            "citation": {
+              "section": "Chapter 12",
+              "start_line": 3330,
+              "end_line": 3352
+            },
+            "result": "incomplete",
+            "history_used": false,
+            "reader_query": "What did Zeb say they would steer with when Jim flew away from the Gargoyles?",
+            "selected_passage_rank": 1
+          }
+        }
+      ],
+      "current_miss": {
+        "primary_failure": "incomplete_span",
+        "supporting_candidates": [
+          {
+            "rank": 1,
+            "start_line": 3330,
+            "end_line": 3352,
+            "reader_span": "wings",
+            "reader_margin": 10.515483
+          }
+        ],
+        "review_note": "The answer leaves out that Zeb meant the buggy’s wings. Jim’s own wings are also discussed in the same passage."
+      }
+    },
+    {
+      "conversation": 14,
+      "turn": 2,
+      "prompt": "What did Dorothy see coming after them when she looked back?",
+      "expected": "A great cloud of pursuing Gargoyles.",
+      "book_lines": [
+        3360,
+        3366
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline"
+          ],
+          "outcome": {
+            "reply": "the ground open in a wide crack",
+            "citation": {
+              "section": "Chapter 1",
+              "start_line": 293,
+              "end_line": 315
+            },
+            "result": "incorrect",
+            "history_used": true,
+            "reader_query": "What did Dorothy see coming after them when Zeb looked back?",
+            "selected_passage_rank": 8
+          }
+        },
+        {
+          "runs": [
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "a great cloud",
+            "citation": {
+              "section": "Chapter 12",
+              "start_line": 3355,
+              "end_line": 3368
+            },
+            "result": "incomplete",
+            "history_used": true,
+            "reader_query": "What did Dorothy see coming after them when she looked back (context: did Zeb say they would steer with when Jim flew away from the Gargoyles)?",
+            "selected_passage_rank": 2
+          }
+        }
+      ],
+      "current_miss": {
+        "primary_failure": "incomplete_span",
+        "supporting_candidates": [
+          {
+            "rank": 2,
+            "start_line": 3355,
+            "end_line": 3368,
+            "reader_span": "a great cloud",
+            "reader_margin": 6.960885
+          }
+        ],
+        "review_note": "The follow-up fix moved the answer from an unrelated earthquake passage to the correct pursuit. A great cloud omits what made up the cloud."
+      }
+    },
+    {
+      "conversation": 15,
+      "turn": 1,
+      "prompt": "Which two animals did the dragonette say they usually ate because people were scarce?",
+      "expected": "Elephants or buffaloes.",
+      "book_lines": [
+        3514,
+        3518
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "elephants or buffaloes",
+            "citation": {
+              "section": "Chapter 13",
+              "start_line": 3510,
+              "end_line": 3536
+            },
+            "result": "correct_with_support",
+            "history_used": false,
+            "reader_query": "Which two animals did the dragonette say they usually ate because people were scarce?",
+            "selected_passage_rank": 1
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 15,
+      "turn": 2,
+      "prompt": "How old did it say it and its siblings had just turned?",
+      "expected": "Sixty-six years old.",
+      "book_lines": [
+        3520,
+        3529
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "I couldn't find an answer supported by the book.",
+            "citation": null,
+            "result": "abstained",
+            "history_used": true,
+            "reader_query": "How old did it say it and its siblings had just turned (context: Which two animals did the dragonette say they usually ate because people were scarce)?",
+            "selected_passage_rank": null
+          }
+        }
+      ],
+      "current_miss": {
+        "primary_failure": "confidence",
+        "supporting_candidates": [
+          {
+            "rank": 1,
+            "start_line": 3510,
+            "end_line": 3536,
+            "reader_span": "sixty-six years old",
+            "reader_margin": 2.639715
+          }
+        ],
+        "review_note": "The top-ranked candidate produced the right age below the single-passage confidence requirement."
+      }
+    },
+    {
+      "conversation": 16,
+      "turn": 1,
+      "prompt": "Why was Ozma especially happy to have Dorothy beside her after the festivities?",
+      "expected": "Few girls her age could keep her company, so she often felt lonely.",
+      "book_lines": [
+        4888,
+        4895
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "girls of her own age with whom it was proper for the Princess to associate were very few",
+            "citation": {
+              "section": "Chapter 18",
+              "start_line": 4883,
+              "end_line": 4906
+            },
+            "result": "correct_with_support",
+            "history_used": false,
+            "reader_query": "Why was Ozma especially happy to have Dorothy beside her after the festivities?",
+            "selected_passage_rank": 1
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 17,
+      "turn": 1,
+      "prompt": "What was in the center of the royal flag carried in the Oz parade?",
+      "expected": "A large emerald-green star.",
+      "book_lines": [
+        4643,
+        4649
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "a large emerald-green star",
+            "citation": {
+              "section": "Chapter 17",
+              "start_line": 4640,
+              "end_line": 4655
+            },
+            "result": "correct_with_support",
+            "history_used": false,
+            "reader_query": "What was in the center of the royal flag carried in the Oz parade?",
+            "selected_passage_rank": 1
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 17,
+      "turn": 2,
+      "prompt": "What did it represent?",
+      "expected": "The Emerald City.",
+      "book_lines": [
+        4646,
+        4649
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "the four countries of Oz",
+            "citation": {
+              "section": "Chapter 17",
+              "start_line": 4640,
+              "end_line": 4655
+            },
+            "result": "incorrect",
+            "history_used": true,
+            "reader_query": "What did it represent (context: was in the center of the royal flag carried in the Oz parade)?",
+            "selected_passage_rank": 1
+          }
+        }
+      ],
+      "current_miss": {
+        "primary_failure": "answer_selection",
+        "supporting_candidates": [
+          {
+            "rank": 1,
+            "start_line": 4640,
+            "end_line": 4655,
+            "reader_span": "the four countries of Oz",
+            "reader_margin": 13.933636
+          },
+          {
+            "rank": 4,
+            "start_line": 4648,
+            "end_line": 4665,
+            "reader_span": "the four countries of Oz",
+            "reader_margin": 8.175676
+          }
+        ],
+        "review_note": "The selected passage describes both symbols. The answer describes the four flag colors instead of the star."
+      }
+    },
+    {
+      "conversation": 17,
+      "turn": 3,
+      "prompt": "What did the four colors around it stand for?",
+      "expected": "The four countries of Oz.",
+      "book_lines": [
+        4644,
+        4649
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "the four countries of Oz",
+            "citation": {
+              "section": "Chapter 17",
+              "start_line": 4640,
+              "end_line": 4655
+            },
+            "result": "correct_with_support",
+            "history_used": true,
+            "reader_query": "What did the four colors around it stand for (context: did it represent)?",
+            "selected_passage_rank": 1
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 18,
+      "turn": 1,
+      "prompt": "Which parts of the Sawhorse did Jim break when he kicked it after the race?",
+      "expected": "One leg and the left ear.",
+      "book_lines": [
+        4827,
+        4832
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "one of its legs and its left ear",
+            "citation": {
+              "section": "Chapter 17",
+              "start_line": 4831,
+              "end_line": 4847
+            },
+            "result": "correct_with_support",
+            "history_used": false,
+            "reader_query": "Which parts of the Sawhorse did Jim break when he kicked it after the race?",
+            "selected_passage_rank": 5
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 18,
+      "turn": 2,
+      "prompt": "Who made replacements for them?",
+      "expected": "The Tin Woodman.",
+      "book_lines": [
+        4856,
+        4859
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "Tin Woodman",
+            "citation": {
+              "section": "Chapter 17",
+              "start_line": 4841,
+              "end_line": 4859
+            },
+            "result": "correct_with_support",
+            "history_used": true,
+            "reader_query": "Who made replacements for them (context: Which parts of the Sawhorse did Jim break when he kicked it after the race)?",
+            "selected_passage_rank": 1
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 19,
+      "turn": 1,
+      "prompt": "What did the Scarecrow say about the mind's eye during the Woggle-Bug's speech?",
+      "expected": "The mind had no eye and was blind.",
+      "book_lines": [
+        5137,
+        5146
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "I couldn't find an answer supported by the book.",
+            "citation": null,
+            "result": "abstained",
+            "history_used": false,
+            "reader_query": "What did the Scarecrow say about the mind's eye during the Woggle-Bug's speech?",
+            "selected_passage_rank": null
+          }
+        }
+      ],
+      "current_miss": {
+        "primary_failure": "incomplete_span",
+        "supporting_candidates": [
+          {
+            "rank": 1,
+            "start_line": 5128,
+            "end_line": 5153,
+            "reader_span": "It's blind",
+            "reader_margin": 2.199798
+          }
+        ],
+        "review_note": "The top passage produced only the blind fragment, below the acceptance threshold."
+      }
+    },
+    {
+      "conversation": 19,
+      "turn": 2,
+      "prompt": "What did Ozma tell the Woggle-Bug about it?",
+      "expected": "If he had one, it was invisible.",
+      "book_lines": [
+        5145,
+        5149
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "I couldn't find an answer supported by the book.",
+            "citation": null,
+            "result": "abstained",
+            "history_used": true,
+            "reader_query": "What did Ozma tell the Woggle-Bug about the item the Scarecrow said about the mind's eye during the Woggle-Bug's speech?",
+            "selected_passage_rank": null
+          }
+        }
+      ],
+      "current_miss": {
+        "primary_failure": "followup_rewrite",
+        "supporting_candidates": [
+          {
+            "rank": 1,
+            "start_line": 5128,
+            "end_line": 5153,
+            "reader_span": "I say I see the criminal",
+            "reader_margin": -7.364715
+          },
+          {
+            "rank": 2,
+            "start_line": 5145,
+            "end_line": 5168,
+            "reader_span": "there is no piglet to be found anywhere",
+            "reader_margin": -7.716937
+          }
+        ],
+        "review_note": "The rewrite points to an unspecified item the Scarecrow spoke about. Both top passages contain Ozma’s answer."
+      }
+    },
+    {
+      "conversation": 20,
+      "turn": 1,
+      "prompt": "Where did Zeb say he and Jim belonged when he thanked Ozma at the end of the visit?",
+      "expected": "At the ranch.",
+      "book_lines": [
+        5404,
+        5410
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "at the ranch",
+            "citation": {
+              "section": "Chapter 20",
+              "start_line": 5397,
+              "end_line": 5418
+            },
+            "result": "correct_with_support",
+            "history_used": false,
+            "reader_query": "Where did Zeb say he and Jim belonged when he thanked Ozma at the end of the visit?",
+            "selected_passage_rank": 4
+          }
+        }
+      ]
+    },
+    {
+      "conversation": 20,
+      "turn": 2,
+      "prompt": "Who came out to meet them when they got there?",
+      "expected": "Uncle Hugson.",
+      "book_lines": [
+        5412,
+        5419
+      ],
+      "outcomes": [
+        {
+          "runs": [
+            "baseline",
+            "followup_context",
+            "answer_selection"
+          ],
+          "outcome": {
+            "reply": "Uncle Hugson",
+            "citation": {
+              "section": "Chapter 20",
+              "start_line": 5397,
+              "end_line": 5418
+            },
+            "result": "correct_with_support",
+            "history_used": true,
+            "reader_query": "Who came out to meet them when they got there (context: did Zeb say he and Jim belonged when he thanked Ozma at the end of the visit)?",
+            "selected_passage_rank": 4
+          }
+        }
+      ]
+    }
+  ]
+}
