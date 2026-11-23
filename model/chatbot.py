@@ -116,6 +116,8 @@ while True:
                 print(f'Source: {source.section}, lines {source.start_line}–{source.end_line}')
             elif args.chat and reply.reply_method == 'classifier':
                 print('Reply method: trained classifier')
+            elif args.book_assist and reply.reply_method == 'abstain':
+                print('Reply method: abstained')
             elif args.book_assist:
                 print('Reply method: trained generator')
             print()

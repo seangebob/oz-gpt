@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import torch
 
-from model.book_lookup import AnswerSpan, BookSession, Passage
+from model.book_lookup import AnswerSpan, BookIndex, BookSession, NO_ANSWER, Passage
 from model.chat_data import END_OF_TURN, ChatTokenizer, format_prompt, format_turn
 from model.chat_evaluation import correctness, generate_predictions, reference_matches
 from model.chat_session import ChatSession, DEFAULT_MAX_TOKENS, REPLY_RESERVE
@@ -107,6 +107,62 @@ class ChatEvaluationTests(unittest.TestCase):
                 self.assertIsNotNone(reply.passage_trace)
                 self.assertIsNone(book.previous_source)
                 self.assertEqual(book.previous_answer, 'A basket.')
+
+    def test_confirmed_excerpt_can_override_classifier_when_the_wording_differs(self):
+        index = BookIndex.from_text("CHAPTER 1.\n\nDorothy used a basket to carry the tools.")
+        passage, = index.passages
+
+        def read(question, passages):
+            return [AnswerSpan('a basket', 9, start=p.text.index('a basket')) for p in passages]
+
+        book = BookSession(index, Mock(read=Mock(side_effect=read)))
+        classifier = Mock(predict=Mock(return_value='A lantern.'))
+        chat = ChatSession(Mock(), ChatTokenizer(chars), first_reply_classifier=classifier, book_session=book)
+
+        result = chat.reply('What did Dorothy use to carry the tools up the hill?')
+
+        self.assertEqual((result.text, result.reply_method, result.source), ('a basket', 'book', passage))
+        self.assertIsNone(result.passage_trace)
+        self.assertEqual(book.previous_source, passage)
+        self.assertEqual(book.reader.read.call_count, 2)
+
+    def test_reported_speech_routes_to_a_passage_with_the_requested_speaker(self):
+        index = BookIndex.from_text(
+            'CHAPTER 1.\n\n"The word means strength," said Zeb.\n\n'
+            'CHAPTER 2.\n\n"The word means kindness," said Ozma.'
+        )
+        _, right = index.passages
+
+        def read(question, passages):
+            spans = []
+            for passage in passages:
+                wrong = passage.section == 'Chapter 1'
+                text = 'strength' if wrong else 'kindness'
+                spans.append(AnswerSpan(text, 13 if wrong else 9, start=passage.text.index(text)))
+            return spans
+
+        book = BookSession(index, Mock(read=Mock(side_effect=read)), trace_passages=True)
+        chat = ChatSession(Mock(), ChatTokenizer(chars), book_session=book)
+
+        result = chat.reply('What did Ozma say the word means?')
+
+        self.assertEqual((result.text, result.source), ('kindness', right))
+        self.assertEqual(result.passage_trace.reread.passage, right)
+        self.assertEqual(book.previous_source, right)
+
+    def test_bare_count_answer_to_a_size_question_abstains_without_remembering_it(self):
+        index = BookIndex.from_text('CHAPTER 1.\n\nThree automatons stood in the hall.')
+        reader = Mock(read=Mock(return_value=[AnswerSpan('Three', 10)]))
+        book = BookSession(index, reader, trace_passages=True)
+        model = Mock()
+        chat = ChatSession(model, ChatTokenizer(chars), book_session=book)
+
+        result = chat.reply('How big was the automaton in the hall?')
+
+        self.assertEqual((result.text, result.reply_method, result.source), (NO_ANSWER, 'abstain', None))
+        self.assertIsNone(book.previous_source)
+        self.assertFalse(chat.history)
+        model.generate.assert_not_called()
 
     def test_book_assistance_uses_cited_history_and_keeps_generator_fallback(self):
         tokenizer = ChatTokenizer(chars)

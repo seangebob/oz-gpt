@@ -1,0 +1,734 @@
+{
+  "baseline_code_commit": "f8677c85d61990e00bd8d1beadeb2b92864c7f01",
+  "design": "Compare book-assisted chat before and after scene checks and localized candidate rereads using identical inputs and checkpoints. The separate scene fixture and its reference answers were fixed before either version was scored on it.",
+  "scoring": "Count a reply as correct if it answers the question in the requested scene and its citation supports the fact when present. Count cited replies graded incorrect as unsupported or incomplete citations. Count abstentions separately from incorrect answers.",
+  "settings": {
+    "device": "cpu",
+    "torch_version": "2.13.0",
+    "cpu_threads": 2,
+    "decoding": "greedy",
+    "block_size": 128,
+    "max_tokens": 150,
+    "reply_reserve": 32,
+    "checkpoint": "model/model-chat-coverage-experiment.pth",
+    "checkpoint_sha256": "7bf86a87e46073d61ba3d803af7bbc26bf295e22f0ab0ff7ddbdf9694caee17d",
+    "history": "generated",
+    "history_packing": "compact_question_and_reply",
+    "first_reply_classifier": "model/model-first-replies.pth",
+    "first_reply_classifier_sha256": "b8fcdab44f94b3458a08460f7a32d7af67fddccca5084395c8f7bceadbba9219",
+    "book_assist": true,
+    "book": "wizard_of_oz.txt",
+    "book_sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9",
+    "reader_model": "deepset/minilm-uncased-squad2",
+    "reader_revision": "934656cdda79824eabf503ed56e15c01ddbdbe3f"
+  },
+  "reproduction": "OMP_NUM_THREADS=2 python -m model.chat_evaluation run --checkpoint model/model-chat-coverage-experiment.pth --first-reply-classifier model/model-first-replies.pth --book-assist --trace-passages --history generated --max-tokens 150 --test-data <fixture> --output <report>",
+  "frozen_baseline": "evaluations/oz_chat_unseen_baselines.json",
+  "benchmarks": {
+    "generalization_test": {
+      "fixture": "data/oz_chat_generalization_test.jsonl",
+      "sha256": "754bd9df3bd40ff8c7dd8456bebb81a9e16410f35e10e860ba36a45ae8d5f706",
+      "conversations": 16,
+      "turns": 16,
+      "first_replies": 16,
+      "followups": 0,
+      "scores": {
+        "before": {
+          "correct": 6,
+          "correct_first_replies": 6,
+          "correct_followups": 0,
+          "incorrect_answers": 10,
+          "supporting_citations": 6,
+          "unsupported_or_incomplete_citations": 3,
+          "abstentions": 0
+        },
+        "after": {
+          "correct": 10,
+          "correct_first_replies": 10,
+          "correct_followups": 0,
+          "incorrect_answers": 5,
+          "supporting_citations": 10,
+          "unsupported_or_incomplete_citations": 1,
+          "abstentions": 1
+        }
+      },
+      "changed_replies": [
+        {
+          "conversation": 2,
+          "turn": 1,
+          "prompt": "Where did the Mangaboo Prince wear the star when he first questioned Zeb?",
+          "expected": "In his hair, above his forehead.",
+          "before": {
+            "reply": "brow",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 5",
+              "start_line": 1381,
+              "end_line": 1402
+            },
+            "correct": false
+          },
+          "after": {
+            "reply": "I couldn't find an answer supported by the book.",
+            "method": "abstain",
+            "citation": null,
+            "correct": false
+          },
+          "review": "The previous citation describes a different man and chapter. The new route abstains."
+        },
+        {
+          "conversation": 6,
+          "turn": 1,
+          "prompt": "What did the piglets nibble when the Wizard set them on the grass?",
+          "expected": "Tender blades of grass.",
+          "before": {
+            "reply": "He gathered the piglets.",
+            "method": "classifier",
+            "citation": null,
+            "correct": false
+          },
+          "after": {
+            "reply": "the tender blades",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 5",
+              "start_line": 1460,
+              "end_line": 1489
+            },
+            "correct": true
+          },
+          "review": "The pigs are nibbling tender blades of grass."
+        },
+        {
+          "conversation": 10,
+          "turn": 1,
+          "prompt": "What did the Wizard take out of his satchel to attach the wings to Jim?",
+          "expected": "A spool of strong wire.",
+          "before": {
+            "reply": "Revolvers.",
+            "method": "classifier",
+            "citation": null,
+            "correct": false
+          },
+          "after": {
+            "reply": "a spool of strong wire",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 12",
+              "start_line": 3307,
+              "end_line": 3327
+            },
+            "correct": true
+          },
+          "review": "The Wizard takes a spool of strong wire from his satchel."
+        },
+        {
+          "conversation": 12,
+          "turn": 1,
+          "prompt": "What did Ozma say the word Oz means in her language?",
+          "expected": "Great and Good.",
+          "before": {
+            "reply": "the Great and Terrible",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 3",
+              "start_line": 849,
+              "end_line": 871
+            },
+            "correct": false
+          },
+          "after": {
+            "reply": "Great and Good",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 15",
+              "start_line": 4163,
+              "end_line": 4177
+            },
+            "correct": true
+          },
+          "review": "Ozma gives the meaning of Oz in her own language."
+        },
+        {
+          "conversation": 16,
+          "turn": 1,
+          "prompt": "What was attached around the brim of the Munchkin wrestler's hat?",
+          "expected": "Little bells.",
+          "before": {
+            "reply": "Ozma's saddle.",
+            "method": "classifier",
+            "citation": null,
+            "correct": false
+          },
+          "after": {
+            "reply": "little bells",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 17",
+              "start_line": 4736,
+              "end_line": 4750
+            },
+            "correct": true
+          },
+          "review": "Little bells are attached to the harness."
+        }
+      ]
+    },
+    "book_assist_test": {
+      "fixture": "data/oz_chat_book_assist_test.jsonl",
+      "sha256": "f70ed25474943f335a8ebe4b6c2648a19a3650fc0842dd2c539593d264cc3e59",
+      "conversations": 10,
+      "turns": 14,
+      "first_replies": 10,
+      "followups": 4,
+      "scores": {
+        "before": {
+          "correct": 8,
+          "correct_first_replies": 6,
+          "correct_followups": 2,
+          "incorrect_answers": 6,
+          "supporting_citations": 8,
+          "unsupported_or_incomplete_citations": 1,
+          "abstentions": 0
+        },
+        "after": {
+          "correct": 9,
+          "correct_first_replies": 7,
+          "correct_followups": 2,
+          "incorrect_answers": 5,
+          "supporting_citations": 9,
+          "unsupported_or_incomplete_citations": 0,
+          "abstentions": 0
+        }
+      },
+      "changed_replies": [
+        {
+          "conversation": 4,
+          "turn": 1,
+          "prompt": "Who inspected the Wizard's hat before he did his trick for the Mangaboos?",
+          "expected": "The Sorcerer.",
+          "before": {
+            "reply": "citizens",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 17",
+              "start_line": 4681,
+              "end_line": 4698
+            },
+            "correct": false
+          },
+          "after": {
+            "reply": "the Sorcerer",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 3",
+              "start_line": 975,
+              "end_line": 1000
+            },
+            "correct": true
+          },
+          "review": "The Sorcerer is the one who examined the hat."
+        }
+      ]
+    },
+    "coverage_unseen": {
+      "fixture": "data/oz_chat_coverage_unseen.jsonl",
+      "sha256": "6383d67937572fc8a5a209deb42f3298529aa08e641550c2fbc4981b69683625",
+      "conversations": 14,
+      "turns": 14,
+      "first_replies": 14,
+      "followups": 0,
+      "scores": {
+        "before": {
+          "correct": 11,
+          "correct_first_replies": 11,
+          "correct_followups": 0,
+          "incorrect_answers": 3,
+          "supporting_citations": 11,
+          "unsupported_or_incomplete_citations": 1,
+          "abstentions": 0
+        },
+        "after": {
+          "correct": 11,
+          "correct_first_replies": 11,
+          "correct_followups": 0,
+          "incorrect_answers": 2,
+          "supporting_citations": 11,
+          "unsupported_or_incomplete_citations": 0,
+          "abstentions": 1
+        }
+      },
+      "changed_replies": [
+        {
+          "conversation": 8,
+          "turn": 1,
+          "prompt": "Where did Dorothy threaten to send Eureka if she would not come out?",
+          "expected": "The Country of the Gurgles.",
+          "before": {
+            "reply": "Princess Ozma",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 18",
+              "start_line": 4941,
+              "end_line": 4977
+            },
+            "correct": false
+          },
+          "after": {
+            "reply": "I couldn't find an answer supported by the book.",
+            "method": "abstain",
+            "citation": null,
+            "correct": false
+          },
+          "review": "The previous reply names a character for a location question. The new route abstains."
+        }
+      ]
+    },
+    "unseen_routing_check": {
+      "fixture": "data/oz_chat_unseen_routing_check.jsonl",
+      "sha256": "d4b6a70f79d73984cd28be186a30e0f1fea9e19d3a6ed30b69f4d329fefc6e99",
+      "conversations": 10,
+      "turns": 12,
+      "first_replies": 10,
+      "followups": 2,
+      "scores": {
+        "before": {
+          "correct": 7,
+          "correct_first_replies": 6,
+          "correct_followups": 1,
+          "incorrect_answers": 5,
+          "supporting_citations": 7,
+          "unsupported_or_incomplete_citations": 2,
+          "abstentions": 0
+        },
+        "after": {
+          "correct": 8,
+          "correct_first_replies": 7,
+          "correct_followups": 1,
+          "incorrect_answers": 3,
+          "supporting_citations": 8,
+          "unsupported_or_incomplete_citations": 1,
+          "abstentions": 1
+        }
+      },
+      "changed_replies": [
+        {
+          "conversation": 2,
+          "turn": 1,
+          "prompt": "How big was the first piglet the Wizard produced beneath his hat?",
+          "expected": "No bigger than a mouse.",
+          "before": {
+            "reply": "two",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 17",
+              "start_line": 4690,
+              "end_line": 4704
+            },
+            "correct": false
+          },
+          "after": {
+            "reply": "I couldn't find an answer supported by the book.",
+            "method": "abstain",
+            "citation": null,
+            "correct": false
+          },
+          "review": "The previous reply gives a count for a question about size. The new route abstains."
+        },
+        {
+          "conversation": 10,
+          "turn": 1,
+          "prompt": "Where did Ozma say she had left the piglet when she sent Jellia to get it?",
+          "expected": "On her dressing table.",
+          "before": {
+            "reply": "In Ozma's private rooms.",
+            "method": "classifier",
+            "citation": null,
+            "correct": false
+          },
+          "after": {
+            "reply": "on the dressing-table",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 18",
+              "start_line": 4898,
+              "end_line": 4924
+            },
+            "correct": true
+          },
+          "review": "The cited passage locates it on the dressing-table."
+        }
+      ]
+    },
+    "scene_routing_test": {
+      "fixture": "data/oz_chat_scene_routing_test.jsonl",
+      "sha256": "732bbd8cb46fd8c633f0eaff160f28002bf1086f99d745060adcf53c179ee861",
+      "conversations": 8,
+      "turns": 11,
+      "first_replies": 8,
+      "followups": 3,
+      "scores": {
+        "before": {
+          "correct": 6,
+          "correct_first_replies": 4,
+          "correct_followups": 2,
+          "incorrect_answers": 5,
+          "supporting_citations": 6,
+          "unsupported_or_incomplete_citations": 1,
+          "abstentions": 0
+        },
+        "after": {
+          "correct": 7,
+          "correct_first_replies": 5,
+          "correct_followups": 2,
+          "incorrect_answers": 4,
+          "supporting_citations": 7,
+          "unsupported_or_incomplete_citations": 3,
+          "abstentions": 0
+        }
+      },
+      "reviewed_replies": [
+        {
+          "conversation": 1,
+          "turn": 1,
+          "prompt": "What did the Wizard compare the hot cavern to after the escape from the Gargoyles?",
+          "expected": "A bake-oven.",
+          "before": {
+            "reply": "A bonfire was lit.",
+            "method": "classifier",
+            "citation": null,
+            "correct": false
+          },
+          "after": {
+            "reply": "bake-oven",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 13",
+              "start_line": 3398,
+              "end_line": 3415
+            },
+            "correct": true
+          },
+          "review": "The cavern is compared with a bake-oven."
+        },
+        {
+          "conversation": 1,
+          "turn": 2,
+          "prompt": "What did he propose they explore next?",
+          "expected": "The mountain, to find an escape.",
+          "before": {
+            "reply": "Dorothy recognized him.",
+            "method": "generator",
+            "citation": null,
+            "correct": false
+          },
+          "after": {
+            "reply": "where this tunnel",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 7",
+              "start_line": 1943,
+              "end_line": 1960
+            },
+            "correct": false
+          },
+          "review": "The new citation refers to a tunnel in an earlier chapter. They proposed exploring the mountain to find a way out."
+        },
+        {
+          "conversation": 2,
+          "turn": 1,
+          "prompt": "When did the Princess expect the next Sorcerer to be ready to pick after losing Gwig?",
+          "expected": "In a few days.",
+          "before": {
+            "reply": "a few days",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 6",
+              "start_line": 1696,
+              "end_line": 1713
+            },
+            "correct": true
+          },
+          "after": {
+            "reply": "a few days",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 6",
+              "start_line": 1696,
+              "end_line": 1713
+            },
+            "correct": true
+          },
+          "review": "The cited line says a new Sorcerer would be ready in a few days."
+        },
+        {
+          "conversation": 3,
+          "turn": 1,
+          "prompt": "What did Zeb say must not break if Jim was to outrun the bears?",
+          "expected": "The harness or the buggy.",
+          "before": {
+            "reply": "harness or the buggy",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 9",
+              "start_line": 2538,
+              "end_line": 2557
+            },
+            "correct": true
+          },
+          "after": {
+            "reply": "harness or the buggy",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 9",
+              "start_line": 2538,
+              "end_line": 2557
+            },
+            "correct": true
+          },
+          "review": "Zeb names the harness and the buggy as the things that must hold."
+        },
+        {
+          "conversation": 4,
+          "turn": 1,
+          "prompt": "What did Ozma tell the Public Accuser to do during Eureka's trial?",
+          "expected": "Continue without interruption.",
+          "before": {
+            "reply": "The Woggle-Bug.",
+            "method": "classifier",
+            "citation": null,
+            "correct": false
+          },
+          "after": {
+            "reply": "summon the Court to meet in the Throne Room at three o'clock",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 18",
+              "start_line": 4995,
+              "end_line": 5019
+            },
+            "correct": false
+          },
+          "review": "The new citation gives Ozma's instruction before the trial. During the trial she tells the Public Accuser to continue without interruption."
+        },
+        {
+          "conversation": 5,
+          "turn": 1,
+          "prompt": "How big did the birds near the black sea seem to Zeb?",
+          "expected": "Enormous.",
+          "before": {
+            "reply": "enormous",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 10",
+              "start_line": 2628,
+              "end_line": 2648
+            },
+            "correct": true
+          },
+          "after": {
+            "reply": "enormous",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 10",
+              "start_line": 2628,
+              "end_line": 2648
+            },
+            "correct": true
+          },
+          "review": "Zeb says the birds looked enormous."
+        },
+        {
+          "conversation": 5,
+          "turn": 2,
+          "prompt": "What stories did they remind him of?",
+          "expected": "The Arabian Nights.",
+          "before": {
+            "reply": "the rocs he had read about in the Arabian Nights",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 10",
+              "start_line": 2640,
+              "end_line": 2659
+            },
+            "correct": true
+          },
+          "after": {
+            "reply": "the rocs he had read about in the Arabian Nights",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 10",
+              "start_line": 2640,
+              "end_line": 2659
+            },
+            "correct": true
+          },
+          "review": "Zeb recalls the rocs in the Arabian Nights."
+        },
+        {
+          "conversation": 6,
+          "turn": 1,
+          "prompt": "What did Ozma do with the Wizard's piglet after the trial?",
+          "expected": "She gave it back to the Wizard.",
+          "before": {
+            "reply": "save Eureka's life",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 18",
+              "start_line": 5043,
+              "end_line": 5062
+            },
+            "correct": false
+          },
+          "after": {
+            "reply": "save Eureka's life",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 18",
+              "start_line": 5043,
+              "end_line": 5062
+            },
+            "correct": false
+          },
+          "review": "Both replies come from the plan before the trial. Ozma returns the Wizard's piglet afterward."
+        },
+        {
+          "conversation": 6,
+          "turn": 2,
+          "prompt": "Where did she take her own?",
+          "expected": "Into her apartments in the palace.",
+          "before": {
+            "reply": "the apartments of the palace where she lived",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 19",
+              "start_line": 5307,
+              "end_line": 5321
+            },
+            "correct": true
+          },
+          "after": {
+            "reply": "the apartments of the palace where she lived",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 19",
+              "start_line": 5307,
+              "end_line": 5321
+            },
+            "correct": true
+          },
+          "review": "Ozma carries her piglet to her apartments in the palace."
+        },
+        {
+          "conversation": 7,
+          "turn": 1,
+          "prompt": "What did the Tin Woodman say he couldn't judge since he never ate?",
+          "expected": "How the piglet would taste.",
+          "before": {
+            "reply": "Officers of Oz.",
+            "method": "classifier",
+            "citation": null,
+            "correct": false
+          },
+          "after": {
+            "reply": "Officers of Oz.",
+            "method": "classifier",
+            "citation": null,
+            "correct": false
+          },
+          "review": "The Tin Woodman cannot judge how the piglet would taste."
+        },
+        {
+          "conversation": 8,
+          "turn": 1,
+          "prompt": "What lit the stairway after the party set out from Voe?",
+          "expected": "The Wizard's lanterns.",
+          "before": {
+            "reply": "lanterns",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 10",
+              "start_line": 2610,
+              "end_line": 2626
+            },
+            "correct": true
+          },
+          "after": {
+            "reply": "lanterns",
+            "method": "book",
+            "citation": {
+              "section": "Chapter 10",
+              "start_line": 2610,
+              "end_line": 2626
+            },
+            "correct": true
+          },
+          "review": "The Wizard's lanterns illuminated the stairway."
+        }
+      ]
+    }
+  },
+  "frozen_totals": {
+    "turns": 56,
+    "scores": {
+      "before": {
+        "correct": 32,
+        "correct_first_replies": 29,
+        "correct_followups": 3,
+        "incorrect_answers": 24,
+        "supporting_citations": 32,
+        "unsupported_or_incomplete_citations": 7,
+        "abstentions": 0
+      },
+      "after": {
+        "correct": 38,
+        "correct_first_replies": 35,
+        "correct_followups": 3,
+        "incorrect_answers": 15,
+        "supporting_citations": 38,
+        "unsupported_or_incomplete_citations": 2,
+        "abstentions": 3
+      }
+    }
+  },
+  "regression_checks": {
+    "coverage_test": {
+      "fixture": "data/oz_chat_coverage_test.jsonl",
+      "sha256": "7a82ab6453a1154655931cd258a91af9710d402580bbe159359edb43f9eba838",
+      "conversations": 30,
+      "turns": 50,
+      "first_replies": 30,
+      "followups": 20,
+      "correct": 31,
+      "changed_replies_or_citations": 0
+    },
+    "memory_test": {
+      "fixture": "data/oz_chat_memory_test.jsonl",
+      "sha256": "2624fe8edbf3ae5c728ec16277f5eae2ecd1691b21ca8668708db9d755aaa061",
+      "conversations": 18,
+      "turns": 36,
+      "first_replies": 18,
+      "followups": 18,
+      "correct": 25,
+      "changed_replies_or_citations": 0
+    },
+    "test": {
+      "fixture": "data/oz_chat_test.jsonl",
+      "sha256": "1c29194de5fcf79db46c2097ba1fd8e150c205cddd22e33a9b1b0d96052755ea",
+      "conversations": 24,
+      "turns": 32,
+      "first_replies": 24,
+      "followups": 8,
+      "correct": 15,
+      "changed_replies_or_citations": 0
+    },
+    "standalone_book": {
+      "fixture": "data/oz_book_lookup_generalization_test.jsonl",
+      "sha256": "9fff016f4c4d293ca411ca9afeabb3f1613daf39f7efb46b24c7dc601a2f25c8",
+      "turns": 40,
+      "correct": 40,
+      "changed_replies_or_citations": 0
+    }
+  },
+  "conclusion": "Scene checks improved accuracy on the frozen and separate scene benchmarks. The separate fixture exposed new unsupported citations from an earlier tunnel and from instructions before the trial. Unassisted chat outputs were identical throughout the matched comparisons."
+}

@@ -24,6 +24,7 @@ FOLLOWUP_RECHECK_MARGIN = 5.0
 EXPANDED_MATCH_FRACTION = 0.75
 MIN_ANSWER_MARGIN = 2.0
 MIN_SINGLE_PASSAGE_MARGIN = 3.25
+MIN_ROUTE_CONFIRMATION_MARGIN = 6.0
 ANSWER_AGREEMENT_BONUS = 0.5
 RETRIEVAL_SCORE_WEIGHT = 0.5
 ANSWER_SCORE_TOLERANCE = 0.02
@@ -1099,7 +1100,32 @@ class BookSession:
             return None
         return PassageReread(question, passage, checked, excerpt=excerpt)
 
-    def reply(self, question, *, remember=True, remember_abstentions=True):
+    def confirm_candidates(self, trace, accepts, *, source=None):
+        # The local comparison accounts for silent-e variation such as nibble and nibbled.
+        def terms(text):
+            return {term.removesuffix('e') if len(term) > 4 else term for term in search_terms(text)}
+
+        query_terms = terms(trace.query)
+        minimum_overlap = max(2, len(query_terms) / 2) if source is not None else 2
+        confirmed = []
+        for (passage, _), span in zip(trace.candidates[:SEARCH_LIMIT], trace.spans[:SEARCH_LIMIT]):
+            if (source is not None and source != passage) or span.margin < 0 or not span.text:
+                continue
+            if not accepts(passage, span.text):
+                continue
+            excerpt, offset = _answer_sentence(passage, span, neighbors=1)
+            if len(query_terms.intersection(terms(excerpt))) < minimum_overlap:
+                continue
+            reread = self._confirm_span(trace.query, passage, span, excerpt, offset)
+            if (reread is not None and reread.span.margin >= MIN_ROUTE_CONFIRMATION_MARGIN
+                    and accepts(passage, reread.span.text)):
+                confirmed.append(reread)
+        return max(confirmed, key=lambda reread: reread.span.margin, default=None)
+
+    def remember_reply(self, reply):
+        self._remember_resolved(reply.passage_trace.query, reply.text, reply.source)
+
+    def reply(self, question, *, remember=True, remember_abstentions=True, include_trace=False):
         question = question.strip()
         if not question:
             raise ValueError('Empty prompt — please enter text')
@@ -1152,7 +1178,7 @@ class BookSession:
                 if sentence and len(sentence.split()) <= 32:
                     text = sentence
         trace = None
-        if self.trace_passages:
+        if self.trace_passages or include_trace:
             trace = PassageTrace(reader_question, earlier_question, earlier_answer, tuple(candidates), tuple(spans),
                                  rejected_query=rejected_query, reread=reread)
         if remember and (source is not None or remember_abstentions):

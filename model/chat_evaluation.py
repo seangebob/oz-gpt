@@ -195,8 +195,8 @@ def print_summary(path, report):
             print(f'  Correct first replies with support: {grounded_correctness(first)}')
             print(f'  Correct follow-ups with support:    {grounded_correctness(followups)}')
             print(f'  Replies with a source:  {sourced}/{len(rows)}')
-            if book_mode:
-                print(f'  Abstentions:           {len(rows) - sourced}/{len(rows)}')
+            abstentions = len(rows) - sourced if book_mode else sum(row.get('reply_method') == 'abstain' for row in rows)
+            print(f'  Abstentions:           {abstentions}/{len(rows)}')
             found, missing, pending = passage_review_counts(rows)
             if found or missing or pending:
                 print(f'  Passage reviews:        {found} with evidence, {missing} without evidence, {pending} pending')

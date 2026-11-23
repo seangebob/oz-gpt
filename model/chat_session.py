@@ -1,10 +1,12 @@
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import re
 
 import torch
 
-from model.book_lookup import Passage, PassageTrace, search_terms, uses_book_history
+from model.book_lookup import (
+    BOOK_NAME, NO_ANSWER, REPORTING_ACTOR, Passage, PassageTrace, search_terms, uses_book_history,
+)
 from model.chat_data import END_MARKER, END_OF_TURN, REPLY_RESERVE, format_compact_turn, format_prompt, format_turn, pack_history
 from model.model import block_size
 
@@ -17,16 +19,37 @@ UNANCHORED_EVENT = re.compile(
     r'(?:what (?:happened|came) (?:next|afterwards?)|why did (?:that|this|it) (?:happen|occur))\W*',
     re.IGNORECASE,
 )
+SIZE_QUESTION = re.compile(r'^how (?:big|small|large|tall|high|wide)\b', re.IGNORECASE)
+BARE_COUNT = re.compile(
+    r"(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|dozen)[.!]?",
+    re.IGNORECASE,
+)
+SCENE_CLAUSE = re.compile(r'\b(?:when|while|after|before|during)\b', re.IGNORECASE)
+PROPER_WORD = re.compile(r"\b[A-Z][a-z]+(?:-[A-Z][a-z]+)*\b")
 
 
-def _prefer_book_answer(question_terms, classified, book_reply):
-    book_terms = set(search_terms(book_reply.text))
-    # Keep equivalent answers in the trained conversation path. Accept a different
-    # answer when the reader found a citation that covers most of the question.
-    if not book_terms.difference(search_terms(classified)):
+def _scene_terms(question):
+    anchors = set()
+    reporting = REPORTING_ACTOR.search(question)
+    if reporting:
+        anchors.update(search_terms(reporting[1]))
+    time_clause = SCENE_CLAUSE.search(question.partition(' ')[2])
+    if time_clause:
+        setting = time_clause.string[time_clause.end():]
+        for name in PROPER_WORD.findall(setting):
+            anchors.update(search_terms(name))
+        for name in BOOK_NAME.finditer(setting):
+            anchors.update(search_terms(name[0]))
+    return anchors
+
+
+def _answer_type_matches(question, text):
+    if SIZE_QUESTION.match(question) and BARE_COUNT.fullmatch(text):
         return False
-    matched = len(question_terms.intersection(search_terms(book_reply.source.text)))
-    return matched >= MIN_BOOK_OVERRIDE_COVERAGE * len(question_terms)
+    if question.casefold().startswith('where '):
+        name = re.sub(r'^(?:the |princess )+', '', text.strip(' .!?'), flags=re.IGNORECASE)
+        return not BOOK_NAME.fullmatch(name)
+    return True
 
 
 @dataclass(frozen=True)
@@ -70,6 +93,37 @@ class ChatSession:
         while len(self.history) > 1 and sum(len(formatter(*turn)) for turn in self.history) > block_size:
             self.history.popleft()
 
+    def _route_book_reply(self, question, book_reply, classified, question_terms):
+        if book_reply.source is None:
+            return None
+        trace = book_reply.passage_trace
+        # A resolved follow-up already carries the earlier scene into lookup.
+        anchors = set() if book_reply.history_used else _scene_terms(question)
+
+        def accepts(passage, answer):
+            return anchors.issubset(search_terms(passage.text)) and _answer_type_matches(question, answer)
+
+        eligible = accepts(book_reply.source, book_reply.text)
+        if eligible:
+            if classified is None:
+                return book_reply
+            classifier_terms = set(search_terms(classified))
+            if not set(search_terms(book_reply.text)).difference(classifier_terms):
+                return None
+            passage_terms = set(search_terms(book_reply.source.text))
+            if len(question_terms & passage_terms) >= MIN_BOOK_OVERRIDE_COVERAGE * len(question_terms):
+                return book_reply
+            # Relax the overlap check only for concrete fact or location questions.
+            if (not question.casefold().startswith(('what ', 'where '))
+                    or classifier_terms.issubset(passage_terms)):
+                return None
+
+        reread = self.book_session.confirm_candidates(trace, accepts, source=book_reply.source if eligible else None)
+        if reread is None:
+            return None
+        return replace(book_reply, text=reread.span.text, source=reread.passage,
+                       passage_trace=replace(trace, reread=reread))
+
     @torch.inference_mode()
     def reply(self, user_text, *, remember=True):
         user_text = user_text.strip()
@@ -101,28 +155,34 @@ class ChatSession:
                 and (classified is None or len(question_terms) >= 2)
                 and (self._first_reply or self.book_session.previous_source is not None
                      or not uses_book_history(user_text))):
-            book_reply = self.book_session.reply(user_text, remember=remember and classified is None,
-                                                 remember_abstentions=False)
-            if (book_reply.source is not None
-                    and (classified is None or _prefer_book_answer(question_terms, classified, book_reply))):
+            book_reply = self.book_session.reply(user_text, remember=False, include_trace=True)
+            routed = self._route_book_reply(user_text, book_reply, classified, question_terms)
+            if routed is not None:
                 self._first_reply = False
                 if remember:
-                    if classified is not None:
-                        self.book_session.remember(user_text, book_reply.text, source=book_reply.source)
-                    if set(book_reply.text) <= self.tokenizer.ids.keys():
-                        self._remember_generation(user_text, book_reply.text)
+                    self.book_session.remember_reply(routed)
+                    if set(routed.text) <= self.tokenizer.ids.keys():
+                        self._remember_generation(user_text, routed.text)
                     else:
                         # Keep the cited turn in book history. Generation requires its own vocabulary.
                         self.history.clear()
-                return ChatReply(book_reply.text, False, book_reply.history_used, False,
-                                 reply_method='book', source=book_reply.source, passage_trace=book_reply.passage_trace)
+                trace = routed.passage_trace if self.book_session.trace_passages else None
+                return ChatReply(routed.text, False, routed.history_used, False,
+                                 reply_method='book', source=routed.source, passage_trace=trace)
+            if book_reply.source is not None and classified is None:
+                self._first_reply = False
+                trace = book_reply.passage_trace if self.book_session.trace_passages else None
+                return ChatReply(NO_ANSWER, False, book_reply.history_used, False,
+                                 reply_method='abstain', passage_trace=trace)
+
+        trace = book_reply.passage_trace if book_reply and self.book_session.trace_passages else None
 
         if classified is not None:
             if remember:
                 self.remember(user_text, classified)
             self._first_reply = False
             return ChatReply(classified, False, False, False, reply_method='classifier',
-                             passage_trace=book_reply.passage_trace if book_reply else None)
+                             passage_trace=trace)
 
         context = torch.tensor([token_ids], dtype=torch.long, device=self.device)
         generated = self.model.generate(
@@ -136,5 +196,5 @@ class ChatSession:
             self.remember(user_text, text)
         return ChatReply(
             text=text, ended_with_marker=ended, history_used=formatted != prompt,
-            history_compacted=compacted, passage_trace=book_reply.passage_trace if book_reply else None,
+            history_compacted=compacted, passage_trace=trace,
         )
