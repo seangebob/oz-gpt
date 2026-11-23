@@ -150,6 +150,41 @@ class ChatEvaluationTests(unittest.TestCase):
         self.assertEqual(result.passage_trace.reread.passage, right)
         self.assertEqual(book.previous_source, right)
 
+    def scene_chat(self, passages, answer_passage, answer):
+        def read(_question, candidates):
+            return [AnswerSpan(answer, 9, start=passage.text.index(answer)) if passage == answer_passage
+                    else AnswerSpan('', -1) for passage in candidates]
+
+        book = BookSession(BookIndex(passages), Mock(read=Mock(side_effect=read)), trace_passages=True)
+        return ChatSession(Mock(), ChatTokenizer(chars), book_session=book)
+
+    def test_scene_name_can_appear_elsewhere_in_the_cited_chapter(self):
+        opening = Passage('Chapter 2', 1, 2, 'Zeb entered the glass hall.')
+        cited = Passage('Chapter 2', 5, 6, 'The Prince wore a star on his brow.')
+        chat = self.scene_chat([opening, cited], cited, 'brow')
+
+        result = chat.reply('Where did the Prince wear the star when he questioned Zeb?')
+
+        self.assertEqual((result.text, result.reply_method, result.source), ('brow', 'book', cited))
+        chat.model.generate.assert_not_called()
+
+    def test_scene_name_missing_from_the_cited_chapter_still_abstains(self):
+        cited = Passage('Chapter 2', 5, 6, 'The Prince wore a star on his brow.')
+        elsewhere = Passage('Chapter 5', 9, 10, 'Zeb fed the horse.')
+        chat = self.scene_chat([cited, elsewhere], cited, 'brow')
+
+        result = chat.reply('Where did the Prince wear the star when he questioned Zeb?')
+
+        self.assertEqual((result.text, result.reply_method, result.source), (NO_ANSWER, 'abstain', None))
+
+    def test_common_noun_reporter_is_not_a_required_scene_name(self):
+        cited = Passage('Chapter 6', 1, 2, 'From above, the vines looked like snakes.')
+        chat = self.scene_chat([cited], cited, 'snakes')
+
+        result = chat.reply('What did the group say the vines looked like?')
+
+        self.assertEqual((result.text, result.reply_method, result.source), ('snakes', 'book', cited))
+
     def test_bare_count_answer_to_a_size_question_abstains_without_remembering_it(self):
         index = BookIndex.from_text('CHAPTER 1.\n\nThree automatons stood in the hall.')
         reader = Mock(read=Mock(return_value=[AnswerSpan('Three', 10)]))

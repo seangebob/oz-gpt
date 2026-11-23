@@ -619,6 +619,9 @@ class BookIndex:
         self.heading_terms = {
             passage.section: set(search_terms(passage.heading)) for passage in self.passages if passage.heading
         }
+        self.section_terms = {section: set(terms) for section, terms in self.heading_terms.items()}
+        for passage, terms in zip(self.passages, self.frequencies):
+            self.section_terms.setdefault(passage.section, set()).update(terms)
         self.average_length = max(sum(self.span_lengths) / len(self.span_lengths), 1)
         document_counts = Counter(word for terms in self.frequencies for word in terms)
         total = len(self.passages)
@@ -1193,6 +1196,9 @@ class BookSession:
         if begin >= span.start + len(span.text) or span.start >= begin + len(checked.text):
             return None
         return PassageReread(question, passage, checked, excerpt=excerpt)
+
+    def chapter_terms(self, passage):
+        return self.index.section_terms.get(passage.section, set()) | set(search_terms(passage.text))
 
     def confirm_candidates(self, trace, accepts, *, source=None):
         # The local comparison accounts for silent-e variation such as nibble and nibbled.
