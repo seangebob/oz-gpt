@@ -1,0 +1,402 @@
+{
+  "baseline_code_commit": "2fff235aefe5480e54af3a79c1bca03863e78352",
+  "history": "generated",
+  "book_sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9",
+  "reader_model": "deepset/minilm-uncased-squad2",
+  "reader_revision": "934656cdda79824eabf503ed56e15c01ddbdbe3f",
+  "review_method": "Review changed replies and citations against the question and book text. The three target cases were already known and guided the changes. Preserve earlier correctness judgments when a reply and citation match. Review every reply on the separate check.",
+  "target_benchmark": {
+    "fixture": "data/oz_book_lookup_generalization_test.jsonl",
+    "test_sha256": "9fff016f4c4d293ca411ca9afeabb3f1613daf39f7efb46b24c7dc601a2f25c8",
+    "turns": 40,
+    "correct_first_replies_with_support": {
+      "before": 20,
+      "after": 20,
+      "total": 20
+    },
+    "correct_followups_with_support": {
+      "before": 17,
+      "after": 20,
+      "total": 20
+    },
+    "abstentions": {
+      "before": 2,
+      "after": 0
+    },
+    "changed_replies": [
+      {
+        "conversation": 3,
+        "turn": 2,
+        "prompt": "What else did he say fell along with them?",
+        "expected": "Some stones.",
+        "before": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "What else did the Sorcerer say fell along with them?",
+          "reread": null
+        },
+        "after": {
+          "reply": "some stones",
+          "citation": {
+            "section": "Chapter 3",
+            "start_line": 796,
+            "end_line": 824
+          },
+          "reader_query": "What else did the Sorcerer say fell along with them?",
+          "reread": {
+            "query": "What else fell with the people, horse and buggy?",
+            "span": "some stones",
+            "margin": 6.359222,
+            "excerpt": null
+          }
+        },
+        "verdict_before": "abstained",
+        "verdict_after": "correct_with_support",
+        "review": "The rewrite expands the list in the prior quoted name. The new extract comes from the Sorcerer’s description of the second rain."
+      },
+      {
+        "conversation": 5,
+        "turn": 2,
+        "prompt": "How do they mend when the roofs crack?",
+        "expected": "They grow together again over time.",
+        "before": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "How do they mend when the roofs crack (context: long did it take the glass houses in the Mangaboo city to grow so large)?",
+          "reread": null
+        },
+        "after": {
+          "reply": "No; but they will grow together again, in time, and we must wait until they do.",
+          "citation": {
+            "section": "Chapter 4",
+            "start_line": 1113,
+            "end_line": 1135
+          },
+          "reader_query": "How do they mend when the roofs crack (context: long did it take the glass houses in the Mangaboo city to grow so large)?",
+          "reread": {
+            "query": "What will they do if the people cannot mend them?",
+            "span": "grow together again",
+            "margin": 7.613215,
+            "excerpt": "\"Of course,\" he replied. \"But it took a good many years for them to grow as large and fine as they are now. That is why we are so angry when a Rain of Stones comes to break our towers and crack our roofs.\" \"Can't you mend them?\" she enquired. \"No; but they will grow together again, in time, and we must wait until they do.\""
+          }
+        },
+        "verdict_before": "abstained",
+        "verdict_after": "correct_with_support",
+        "review": "The adjacent question and answer distinguish how the roofs mend from how long the houses took to grow. The reply now includes both the method and the wait."
+      },
+      {
+        "conversation": 12,
+        "turn": 2,
+        "prompt": "Why did he want that?",
+        "expected": "He thought the place was dangerous and unfit for living creatures. Everything looked dead.",
+        "before": {
+          "reply": "It's dangerous",
+          "citation": {
+            "section": "Chapter 11",
+            "start_line": 2857,
+            "end_line": 2880
+          },
+          "reader_query": "Why did Jim want that?",
+          "reread": {
+            "query": "Why did Jim want them to go down again?",
+            "span": "It's dangerous",
+            "margin": 3.99246,
+            "excerpt": "\"Everything,\" grumbled the horse. \"I've taken a look at this place, and it's no fit country for real creatures to go to. Everything's dead, up there--no flesh or blood or growing thing anywhere.\" \"Never mind; we can't turn back,\" said Dorothy; \"and we don't intend to stay there, anyhow.\" \"It's dangerous,\" growled Jim, in a stubborn tone."
+          }
+        },
+        "after": {
+          "reply": "It's dangerous. I've taken a look at this place, and it's no fit country for real creatures to go to. Everything's dead, up there--no flesh or blood or growing thing anywhere.",
+          "citation": {
+            "section": "Chapter 11",
+            "start_line": 2857,
+            "end_line": 2880
+          },
+          "reader_query": "Why did Jim want that?",
+          "reread": {
+            "query": "Why did Jim think it was dangerous?",
+            "span": "Everything's dead",
+            "margin": 5.349968,
+            "excerpt": "\"Everything,\" grumbled the horse. \"I've taken a look at this place, and it's no fit country for real creatures to go to. Everything's dead, up there--no flesh or blood or growing thing anywhere.\""
+          }
+        },
+        "verdict_before": "partial",
+        "verdict_after": "correct_with_support",
+        "review": "The same passage attributes the danger to Jim and records his explanation that the country was dead and unfit for living creatures."
+      }
+    ]
+  },
+  "separate_questions": {
+    "fixture": "data/oz_book_lookup_followup_check.jsonl",
+    "test_sha256": "8a38106e57a6830b5e0aa0817e4e13485383f0c40785da18650c4396057d4dde",
+    "turns": 12,
+    "use": "These questions were frozen before either run and use annotated source ranges absent from earlier fixtures.",
+    "correct_first_replies_with_support": {
+      "before": 6,
+      "after": 6,
+      "total": 6
+    },
+    "correct_followups_with_support": {
+      "before": 1,
+      "after": 1,
+      "total": 6
+    },
+    "reviewed_replies": [
+      {
+        "conversation": 1,
+        "turn": 1,
+        "prompt": "How did Dorothy and the buggy move along the river before the others joined her?",
+        "expected": "They floated downstream with the current.",
+        "both_runs": {
+          "reply": "floated slowly",
+          "citation": {
+            "section": "Chapter 9",
+            "start_line": 2495,
+            "end_line": 2513
+          },
+          "reader_query": "How did Dorothy and the buggy move along the river before the others joined her?",
+          "reread": null
+        },
+        "verdict": "correct_with_support",
+        "review": "Dorothy and the buggy floated downstream with the current."
+      },
+      {
+        "conversation": 1,
+        "turn": 2,
+        "prompt": "What did the Wizard take out to treat Jim’s cuts when they caught up?",
+        "expected": "Sticking-plaster.",
+        "both_runs": {
+          "reply": "sticking-plaster",
+          "citation": {
+            "section": "Chapter 9",
+            "start_line": 2495,
+            "end_line": 2513
+          },
+          "reader_query": "What did the Wizard take out to treat Jim’s cuts when they caught up (context: did Dorothy and the buggy move along the river before the others joined her)?",
+          "reread": null
+        },
+        "verdict": "correct_with_support",
+        "review": "The Wizard used sticking-plaster to mend Jim’s cuts."
+      },
+      {
+        "conversation": 2,
+        "turn": 1,
+        "prompt": "Why did the children light a lantern before going down from the platform in the Gargoyles’ house?",
+        "expected": "To show them the way.",
+        "both_runs": {
+          "reply": "to show them the way",
+          "citation": {
+            "section": "Chapter 12",
+            "start_line": 3144,
+            "end_line": 3160
+          },
+          "reader_query": "Why did the children light a lantern before going down from the platform in the Gargoyles’ house?",
+          "reread": null
+        },
+        "verdict": "correct_with_support",
+        "review": "The passage says they lit the lantern to show them the way downstairs."
+      },
+      {
+        "conversation": 2,
+        "turn": 2,
+        "prompt": "What did they find on the floors below?",
+        "expected": "Several stories of empty rooms.",
+        "both_runs": {
+          "reply": "enough oil",
+          "citation": {
+            "section": "Chapter 13",
+            "start_line": 3424,
+            "end_line": 3445
+          },
+          "reader_query": "What did they find on the floors below (context: did the children light a lantern before going down from the platform in the Gargoyles' house)?",
+          "reread": null
+        },
+        "verdict": "incorrect",
+        "review": "The reply moves to a later cave scene. They found empty rooms below the platform."
+      },
+      {
+        "conversation": 3,
+        "turn": 1,
+        "prompt": "Why did the Wizard say the Gargoyles chose a time during the day to rest?",
+        "expected": "There was no night in their country.",
+        "both_runs": {
+          "reply": "there is no night",
+          "citation": {
+            "section": "Chapter 12",
+            "start_line": 3154,
+            "end_line": 3171
+          },
+          "reader_query": "Why did the Wizard say the Gargoyles chose a time during the day to rest?",
+          "reread": null
+        },
+        "verdict": "correct_with_support",
+        "review": "The Wizard explains that they choose a time to rest because there is no night."
+      },
+      {
+        "conversation": 3,
+        "turn": 2,
+        "prompt": "Who yawned and said he was sleepy right afterward?",
+        "expected": "Zeb.",
+        "both_runs": {
+          "reply": "Zeb",
+          "citation": {
+            "section": "Chapter 6",
+            "start_line": 1629,
+            "end_line": 1647
+          },
+          "reader_query": "Who yawned and said the Wizard was sleepy right afterward?",
+          "reread": null
+        },
+        "verdict": "unsupported",
+        "review": "Zeb is the right character. The citation shows him yawning in a different chapter."
+      },
+      {
+        "conversation": 4,
+        "turn": 1,
+        "prompt": "What did Jim say shows where he has been cut?",
+        "expected": "The blood that runs out.",
+        "both_runs": {
+          "reply": "the blood runs out",
+          "citation": {
+            "section": "Chapter 16",
+            "start_line": 4482,
+            "end_line": 4505
+          },
+          "reader_query": "What did Jim say shows where he has been cut?",
+          "reread": null
+        },
+        "verdict": "correct_with_support",
+        "review": "Jim says the blood runs out to show where he was cut."
+      },
+      {
+        "conversation": 4,
+        "turn": 2,
+        "prompt": "What did the Sawhorse say it felt when it got a splinter?",
+        "expected": "It felt nothing.",
+        "both_runs": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "What did the Sawhorse say the item Jim said shows where he has been cut felt when the item Jim said shows where he has been cut got a splinter?",
+          "reread": null
+        },
+        "verdict": "abstained",
+        "review": "The Sawhorse says it never feels a break or splinter."
+      },
+      {
+        "conversation": 5,
+        "turn": 1,
+        "prompt": "Who did the Wizard tell the piglets to ask if he was a humbug?",
+        "expected": "Dorothy.",
+        "both_runs": {
+          "reply": "Dorothy",
+          "citation": {
+            "section": "Chapter 14",
+            "start_line": 3743,
+            "end_line": 3765
+          },
+          "reader_query": "Who did the Wizard tell the piglets to ask if he was a humbug?",
+          "reread": null
+        },
+        "verdict": "correct_with_support",
+        "review": "The Wizard says to ask Dorothy."
+      },
+      {
+        "conversation": 5,
+        "turn": 2,
+        "prompt": "What did she say he needed to perform his tricks?",
+        "expected": "His tools and machinery.",
+        "both_runs": {
+          "reply": "eight piglets",
+          "citation": {
+            "section": "Chapter 19",
+            "start_line": 5249,
+            "end_line": 5274
+          },
+          "reader_query": "What did Dorothy say Wizard needed to perform Wizard's tricks?",
+          "reread": null
+        },
+        "verdict": "incorrect",
+        "review": "The question asks what tools he needs, and the cited passage concerns the piglet trial."
+      },
+      {
+        "conversation": 6,
+        "turn": 1,
+        "prompt": "What did the Woggle-Bug say he did not like Dorothy to upset during the trial?",
+        "expected": "His thoughts.",
+        "both_runs": {
+          "reply": "my thoughts arranged in good order I do not like to have anything upset them or throw them into confusion",
+          "citation": {
+            "section": "Chapter 19",
+            "start_line": 5102,
+            "end_line": 5122
+          },
+          "reader_query": "What did the Woggle-Bug say he did not like Dorothy to upset during the trial?",
+          "reread": null
+        },
+        "verdict": "correct_with_support",
+        "review": "The Woggle-Bug asks Dorothy to leave his ordered thoughts undisturbed."
+      },
+      {
+        "conversation": 6,
+        "turn": 2,
+        "prompt": "What did the Scarecrow say about good thoughts?",
+        "expected": "They would not become confused.",
+        "both_runs": {
+          "reply": "My thoughts are always----\"",
+          "citation": {
+            "section": "Chapter 19",
+            "start_line": 5113,
+            "end_line": 5136
+          },
+          "reader_query": "What did the Scarecrow say about good thoughts?",
+          "reread": null
+        },
+        "verdict": "incorrect",
+        "review": "The reply starts his next thought. The requested statement is that good thoughts do not become confused."
+      }
+    ]
+  },
+  "other_regression_fixtures": [
+    {
+      "fixture": "data/oz_book_lookup_test.jsonl",
+      "test_sha256": "fdb302e5e6c8fc12d6de0cde1f96d3489982657d0ddb97b23173a2b3d495b625",
+      "turns": 29,
+      "changed_replies_or_citations": 0
+    },
+    {
+      "fixture": "data/oz_book_lookup_quality_test.jsonl",
+      "test_sha256": "2fdc91b949111fc3485cd984027240a4b56325f08f5282301f55ee7158166cca",
+      "turns": 26,
+      "changed_replies_or_citations": 0
+    },
+    {
+      "fixture": "data/oz_chat_test.jsonl",
+      "test_sha256": "1c29194de5fcf79db46c2097ba1fd8e150c205cddd22e33a9b1b0d96052755ea",
+      "turns": 32,
+      "changed_replies_or_citations": 0
+    },
+    {
+      "fixture": "data/oz_book_lookup_dev.jsonl",
+      "test_sha256": "dad905b394e32445e8a3c744be8e00d61ad95692d63f5aa53a29d6ed27883608",
+      "turns": 20,
+      "changed_replies_or_citations": 0
+    },
+    {
+      "fixture": "data/oz_book_lookup_completion_check.jsonl",
+      "test_sha256": "4f4a837be34798205d7300011e2f2b95c85f3920bc1bc3d19cd72b6db35675ca",
+      "turns": 11,
+      "changed_replies_or_citations": 0
+    },
+    {
+      "fixture": "data/oz_book_lookup_confidence_check.jsonl",
+      "test_sha256": "b259a317a0fc8afea9d16096c78e04e7e3e3db90da9b06dfb7687ab58dc30f62",
+      "turns": 12,
+      "changed_replies_or_citations": 0
+    },
+    {
+      "fixture": "data/oz_book_lookup_dialogue_check.jsonl",
+      "test_sha256": "1d84d4030cc3a73922d94bfcaa4554bc90d5efae7801fac9180b2d0073f5bb69",
+      "turns": 12,
+      "changed_replies_or_citations": 0
+    }
+  ]
+}

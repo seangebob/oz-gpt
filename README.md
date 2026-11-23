@@ -387,7 +387,7 @@ Issue numbers refer to the project bug review. Complete each stage in this order
 ### Remaining repairs in order
 
 1. **#1 Improve factual accuracy in trained chat.** Cited answers can now take precedence over unrelated first-reply classifier answers. Book-assisted chat reached 6/16 and 8/14 on the two existing unseen-fact tests. The standalone generator still scores 0/16 and 0/14 after an excerpt-training trial. [Reviewed routing and training results](evaluations/oz_chat_unseen_routing_comparison.json) · [Earlier generator training](evaluations/oz_chat_generator_training_comparison.json)
-2. **Improve book lookup on the remaining misses.** Dialogue rereads and speaker tracking raised the reviewed score from 33/40 to 37/40 correct replies with supporting citations. First replies reached 20/20 and follow-ups reached 17/20. Jim’s reason for turning back is now supported but incomplete. The two remaining abstentions concern the second rain and how cracked roofs mend. A 12-turn dialogue check scored 6/12 before and after. [Dialogue review](evaluations/oz_book_dialogue_comparison.json) · [Earlier confidence and context review](evaluations/oz_book_confidence_context_comparison.json)
+2. **Validate book lookup on new conversations.** All three previously reviewed misses now have supporting answers. The 40-turn benchmark rose from 37/40 to 40/40, with 20/20 first replies and 20/20 follow-ups. The separate follow-up check scored 7/12 in both runs, with 6/6 first replies and 1/6 follow-ups supported. [Remaining follow-up review](evaluations/oz_book_remaining_followups_comparison.json) · [Earlier dialogue review](evaluations/oz_book_dialogue_comparison.json)
 
 ### Cleanup follow-ups
 

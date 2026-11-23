@@ -257,6 +257,88 @@ THE WORKSHOP
         self.assertEqual(reply.text, NO_ANSWER)
         self.assertEqual(reply.passage_trace.query, 'What did Ezra tell Dana about the clock?')
 
+    def test_companion_followup_unpacks_a_quoted_list_and_reads_only_the_same_scene(self):
+        quoted_name = 'A Parade of Dancers-and-Drummers-and-Singers'
+        scene = Passage('Chapter 1', 10, 15, f'Dana called it {quoted_name}. Lanterns came with them.')
+        distant = Passage('Chapter 2', 30, 35, 'Umbrellas came with the dancers and drummers.')
+        index = Mock(search=Mock(return_value=[(distant, 4), (scene, 3)]))
+        reader = Mock(read=Mock(side_effect=[
+            [AnswerSpan('Umbrellas', 0), AnswerSpan('Lanterns', 0)],
+            [AnswerSpan('Lanterns', 8)],
+        ]))
+        session = BookSession(index, reader, trace_passages=True)
+        session.remember('What did Dana call the procession?', quoted_name, source=scene)
+
+        reply = session.reply('What else did she say came along with them?')
+
+        self.assertEqual((reply.text, reply.source), ('Lanterns', scene))
+        reader.read.assert_called_with('What else came with the dancers, drummers and singers?', [scene])
+
+    def test_repair_followup_confirms_a_reply_about_the_requested_damage(self):
+        for repair_question in ("Can't you mend them?", 'Could we repair them?'):
+            with self.subTest(repair_question=repair_question):
+                book = f"""CHAPTER 1.
+
+THE WORKSHOP
+
+Dana explained how the planks split in the sun.
+
+"{repair_question}" asked Ezra.
+
+"No, resin slowly closes the cracks," replied Dana.
+
+CHAPTER 2.
+
+THE GARDEN
+
+The gardeners repainted their fence.
+"""
+                index = BookIndex.from_text(book)
+                workshop, garden = index.passages
+                reader = Mock(read=Mock(side_effect=[
+                    [AnswerSpan('repainted their fence', 0), AnswerSpan('in the sun', 0)],
+                    [AnswerSpan('resin slowly closes the cracks', 7)],
+                ]))
+                session = BookSession(index, reader, trace_passages=True)
+                session.remember('Who described the wood at the workshop?', 'Dana', source=workshop)
+                with patch.object(index, 'search', return_value=[(garden, 4), (workshop, 3)]):
+                    reply = session.reply('How will they repair themselves when the planks split?')
+
+                self.assertEqual((reply.text, reply.source), ('No, resin slowly closes the cracks', workshop))
+                self.assertIn(repair_question, reply.passage_trace.reread.excerpt)
+
+    def test_request_reason_expands_only_when_the_detail_belongs_to_the_same_speaker(self):
+        for speaker in ('Dana', 'Ezra'):
+            with self.subTest(speaker=speaker):
+                book = f"""CHAPTER 1.
+
+THE WORKSHOP
+
+"There are cracks across the floor," explained {speaker}.
+
+"I don't see them," said Ezra.
+
+"It's unsafe," said Dana.
+"""
+                index = BookIndex.from_text(book)
+                passage, = index.passages
+
+                def read(query, passages):
+                    if query == 'Why did Dana want them to wait outside?':
+                        return [AnswerSpan("It's unsafe", 6)]
+                    if query == 'Why did Dana think it was unsafe?':
+                        self.assertIn('cracks across the floor', passages[0].text)
+                        return [AnswerSpan('cracks across the floor', 7)]
+                    return [AnswerSpan('', -3)]
+
+                session = BookSession(index, Mock(read=Mock(side_effect=read)))
+                session.remember('What did Dana ask everyone to do when they reached the Workshop?',
+                                 'wait outside', source=passage)
+                reply = session.reply('Why did she want that?')
+
+                detail = '. There are cracks across the floor' if speaker == 'Dana' else ''
+                self.assertEqual((reply.text, reply.source), ("It's unsafe" + detail, passage))
+
     def test_request_reason_rejects_a_confident_answer_from_another_scene(self):
         book = """CHAPTER 1.
 

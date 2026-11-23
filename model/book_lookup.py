@@ -62,11 +62,13 @@ SPEECH_TOPIC = re.compile(
 )
 GROUP_REQUEST = re.compile(rf"(?i:what did) ({NAME}) (?i:ask (?:the others|everyone|them) to do when) (.+?)\W*$")
 REQUEST_REASON = re.compile(r"why did (?:he|she|they) (?:want|suggest) (?:it|that)\W*", re.IGNORECASE)
-SPEECH_VERB = r'said|declared|answered|replied|asked|murmured|cried|added|exclaimed|returned|growled'
+SPEECH_VERB = r'said|declared|answered|replied|asked|murmured|cried|added|exclaimed|returned|growled|grumbled|explained'
+SPEECH_ALIASES = {'ozma': 'the Princess', 'jim': 'the horse'}
+TAGGED_SPEAKER = rf"(?:{NAME}|{'|'.join(map(re.escape, SPEECH_ALIASES.values()))})"
 SPEECH_TAG = re.compile(
-    rf'(?:(?:{SPEECH_VERB}) (?P<after>{NAME})|(?P<before>{NAME}) (?:{SPEECH_VERB}))(?=[,.; ]|$)',
+    rf'(?:(?:{SPEECH_VERB}) (?P<after>{TAGGED_SPEAKER})|(?P<before>{TAGGED_SPEAKER}) (?:{SPEECH_VERB}))(?=[,.; ]|$)',
 )
-SPEECH_ALIASES = {'ozma': 'the Princess'}
+DESCRIPTION = re.compile(r"(?:it is|it's) (.+?)\W*", re.IGNORECASE)
 SPEECH_QUOTE = re.compile(r'"[^"]+"')
 PROMISE = re.compile(rf'(?i:what did) ({NAME}) (?i:promise (?:him|her|them))\W*')
 APPEARANCE = re.compile(r"how did ((?:the|this|that) [a-z][\w -]*?) (?:look|seem)\b", re.IGNORECASE)
@@ -87,6 +89,13 @@ DAMAGE_CLAUSE = re.compile(
     r"\bwhen ((?:the|a|an) [\w'-]+(?: [\w'-]+){0,3}) "
     r'(crack|cracked|break|broke|shatter|shattered|collapse|collapsed|split)$', re.IGNORECASE,
 )
+REPAIR_FOLLOWUP = re.compile(r"how (?:do|will) they (?:mend|repair themselves) when\b", re.IGNORECASE)
+REPAIR_EXCHANGE = re.compile(r'''^"(?:can(?:'t)?|could(?:n't)?) (?:you|we) (mend|repair) them\?"''', re.IGNORECASE)
+REPAIR_REFUSAL = re.compile(r'^"(No[.,;!] [^"]+)"', re.IGNORECASE)
+LIST_COMPANIONS = re.compile(
+    r"what else (?:did (?:he|she|they) (?:say|report) )?([a-z]+) (?:along )?with them\W*", re.IGNORECASE,
+)
+COMPOUND_LIST = re.compile(r"\bof ((?:[a-z]+-and-)+[a-z]+)$", re.IGNORECASE)
 ABOUT_SUBJECT = re.compile(rf'(?i:what about) ({NAME})\W*')
 RECIPIENT = re.compile(rf'\b(?i:give|gave|offer|offered|lend|lent|send|sent|show|showed|bring|brought) ({NAME})(?= )')
 NAME_ANSWER = re.compile(r"(?:(?i:the) )?[A-Z][a-z][\w'-]*(?: [A-Z][a-z][\w'-]*){0,3}")
@@ -841,7 +850,13 @@ class BookSession:
         promise = PROMISE.fullmatch(question)
         recipient = APPEARANCE.match(self.previous_question)
         reassurance = promise and recipient and source is None and DISTRESS.search(answer)
-        if reassurance:
+        companions = LIST_COMPANIONS.fullmatch(question)
+        listed = COMPOUND_LIST.search(answer.strip(' ."!?'))
+        if source is None and companions and listed:
+            *others, last = listed[1].lower().split('-and-')
+            group = ', '.join(others) + ' and ' + last
+            query = f'What else {companions[1].lower()} with the {group}?'
+        elif reassurance:
             query = f'What did {promise[1]} tell {recipient[1]} to reassure them?'
         elif meaning and MEANS_ANSWER.fullmatch(answer):
             referent = re.sub(r'^(?:a|an|the) ', '', answer, flags=re.IGNORECASE)
@@ -883,6 +898,31 @@ class BookSession:
         _, source = _select_answer(eligible, spans, query)
         return next((PassageReread(query, passage, span) for (passage, _), span in candidates_and_spans
                      if passage == source), None)
+
+    def _reread_repair(self, question, candidates):
+        damage = DAMAGE_CLAUSE.search(question.rstrip('?.!'))
+        if self.previous_source is None or not REPAIR_FOLLOWUP.match(question) or not damage:
+            return None
+        terms = set(search_terms(damage[1]))
+        action = DAMAGE_VERBS.get(damage[2].lower(), damage[2].lower())
+        for passage, _ in candidates[:SEARCH_LIMIT]:
+            if not _overlapping_passages(passage, self.previous_source):
+                continue
+            paragraphs = _complete_paragraphs(passage)
+            for incident, spoken_question, response in zip(paragraphs, paragraphs[1:], paragraphs[2:]):
+                exchange = REPAIR_EXCHANGE.match(spoken_question)
+                refusal = REPAIR_REFUSAL.match(response)
+                scene_terms = set(search_terms(incident))
+                if not (exchange and refusal and terms.issubset(scene_terms)
+                        and scene_terms.intersection({action, damage[2].lower()})):
+                    continue
+                excerpt = ' '.join((incident, spoken_question, response))
+                query = f'What will they do if the people cannot {exchange[1].lower()} them?'
+                checked, = self.reader.read(query, [replace(passage, text=excerpt)])
+                if checked.margin >= MIN_SINGLE_PASSAGE_MARGIN and checked.text and checked.text in refusal[1]:
+                    answer = refusal[1].rstrip(',') if len(refusal[1].split()) <= 32 else None
+                    return PassageReread(query, passage, checked, excerpt=excerpt, answer=answer)
+        return None
 
     def _reread_collective(self, question, passage, span):
         collective = COLLECTIVE.fullmatch(span.text)
@@ -991,8 +1031,35 @@ class BookSession:
                 excerpt = ' '.join(paragraphs[max(0, i - 2):i + 1])
                 checked, = self.reader.read(query, [replace(passage, text=excerpt)])
                 if checked.margin >= MIN_SINGLE_PASSAGE_MARGIN and checked.text and checked.text in speech:
-                    confirmed.append(PassageReread(query, passage, checked, excerpt=excerpt))
-        return max(confirmed, key=lambda read: read.span.margin, default=None)
+                    reread = PassageReread(query, passage, checked, excerpt=excerpt)
+                    confirmed.append((reread, paragraphs[max(0, i - 2):i]))
+        if not confirmed:
+            return None
+        best, lead_in = max(confirmed, key=lambda result: result[0].span.margin)
+        return self._expand_request_reason(speaker, best, lead_in)
+
+    def _expand_request_reason(self, speaker, reason, lead_in):
+        description = DESCRIPTION.fullmatch(reason.span.text)
+        if not description:
+            return reason
+        speaker_key = _person_key(speaker)
+        alias = SPEECH_ALIASES.get(speaker_key)
+        query = f'Why did {speaker} think it was {description[1]}?'
+        for paragraph in reversed(lead_in):
+            attributed_to, speech = _tagged_speech(paragraph)
+            if _person_key(attributed_to) != speaker_key and attributed_to != alias:
+                continue
+            checked, = self.reader.read(query, [replace(reason.passage, text=paragraph)])
+            if checked.margin < MIN_SINGLE_PASSAGE_MARGIN or not checked.text:
+                continue
+            # Keep the longer explanation only when the reader confirms words in the same speaker's quote.
+            detail = next((quote.strip('"').rstrip(',') for quote in SPEECH_QUOTE.findall(speech)
+                           if checked.text in quote and 4 <= len(quote.split()) <= 40
+                           and reason.span.text.casefold() not in quote.casefold()), None)
+            if detail:
+                answer = f'{reason.span.text.rstrip(".!?")}. {detail}'
+                return PassageReread(query, reason.passage, checked, excerpt=paragraph, answer=answer)
+        return reason
 
     def _reread_sentence(self, question, passage, span):
         excerpt, offset = _answer_sentence(passage, span)
@@ -1062,8 +1129,10 @@ class BookSession:
             text, source = NO_ANSWER, None
             reread = self._reread_request_reason(previous_request[1], candidates)
         elif reread is None and source is None and candidates and spans:
+            reread = self._reread_repair(question, candidates) if history_used else None
             previous = self.previous_source if history_used else None
-            reread = self._reread_speech(reader_question, candidates, previous)
+            if reread is None:
+                reread = self._reread_speech(reader_question, candidates, previous)
             if reread is None:
                 reread = self._reread_group_request(reader_question, candidates)
             if reread is None and not speech_echo:
