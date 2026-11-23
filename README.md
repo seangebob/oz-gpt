@@ -204,6 +204,16 @@ Ask `What animals remained in the Wizard's performing act when the princess had 
 
 On the fresh paraphrase test the coverage checkpoint improved first replies from 1/30 to 8/30 and follow-ups from 0/20 to 5/20. It answered both turns correctly in 3/20 multi-turn conversations. With history disabled its follow-up score was 0/20. On the earlier memory test it got 3/18 first replies and 11/18 follow-ups, compared with 7/18 and 9/18 for the starting checkpoint. It remains opt-in and scored 0/14 on facts absent from chat training. [Reviewed coverage benchmark and training runs](evaluations/oz_chat_fact_coverage_comparison.json)
 
+### Try the generator paraphrase experiment
+
+```bash
+python -m model.chatbot --chat model/model-chat-paraphrase-experiment.pth
+```
+
+This checkpoint fine-tunes the coverage generator on five question phrasings for each of 16 additional book facts. Try `What did Ozma say the Wizard would be if he made his home in Oz?` from a fresh conversation. The checkpoint answered 5/16 on each of two reserved wording sets, with a different set of facts correct in each. Its coverage benchmark score was 6/50, compared with 13/50 for the starting checkpoint. Both scored zero on the 16-question and 14-question unseen-fact sets. [Training settings and reviewed results](evaluations/oz_chat_generator_training_comparison.json)
+
+Use `--reply-start-weight 4` with `model.chat_training` to reproduce the controlled experiment that increased the loss weight on the first 12 answer characters. The paraphrase checkpoint uses the ordinary reply loss.
+
 ### Use the trained first-reply classifier
 
 The classifier learns from the first replies in the chat training examples. It selects an answer when its score clears a threshold. With the command below, the coverage checkpoint generates replies on lower scores and on later turns. The terminal labels classifier replies. Type `/reset` to start a fresh conversation on another topic.
@@ -374,7 +384,7 @@ Issue numbers refer to the project bug review. Complete each stage in this order
 
 ### Remaining repairs in order
 
-1. **#1 Improve factual accuracy in trained chat.** The classifier improves first replies about facts taught in chat training. Optional book assistance now answers some facts absent from chat training, scoring 5/16 on the earlier test and 7/14 on a separate check. Improving the generator’s factual accuracy using its own weights remains open. [Trained-chat results](evaluations/oz_chat_first_reply_generalization_comparison.json) · [Book assistance results](evaluations/oz_chat_book_assist_comparison.json)
+1. **#1 Improve factual accuracy in trained chat.** A generator-only training run learned to answer some fresh phrasings of 16 additional supervised facts. Accuracy on facts absent from chat training remains open. Book assistance scored 5/16 on the earlier unseen-fact test and 7/14 on a separate check. [Generator training comparison](evaluations/oz_chat_generator_training_comparison.json) · [Book assistance results](evaluations/oz_chat_book_assist_comparison.json)
 2. **Improve book lookup on the remaining misses.** Verifying weak extracts and carrying the right subject into follow-ups raised the reviewed set from 29/40 to 33/40 correct answers with supporting citations. First replies scored 18/20, follow-ups scored 15/20, and abstentions fell from nine to six. A separate 12-turn check rose from 9/12 to 10/12. The seven remaining misses include weak dialogue extracts and a follow-up that shifts to the wrong scene. [Answer completeness comparison](evaluations/oz_book_answer_completion_comparison.json) · [Confidence and context review](evaluations/oz_book_confidence_context_comparison.json)
 
 ### Cleanup follow-ups

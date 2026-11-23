@@ -10,7 +10,7 @@ import torch
 from torch.nn import functional as F
 
 from model.chat_data import (
-    CHAT_TRAIN_OUTPUT, CHAT_FORMAT_VERSION, COMPACT_CHAT_FORMAT_VERSION, IGNORE_TARGET, MODEL_CONFIG,
+    CHAT_TRAIN_OUTPUT, CHAT_FORMAT_VERSION, COMPACT_CHAT_FORMAT_VERSION, END_OF_TURN, IGNORE_TARGET, MODEL_CONFIG,
     ChatTokenizer, collate_examples, conversation_turns, encode_conversations, load_chat_checkpoint, load_examples,
     read_conversations, reference_matches,
 )
@@ -23,6 +23,7 @@ from model.training import save_checkpoint as save_new_checkpoint
 
 DATA_DIR = Path(__file__).resolve().parents[1] / 'data'
 ANSWER_CLASS_WEIGHT = 0.5
+REPLY_START_CHARS = 12
 
 
 @torch.no_grad()
@@ -66,10 +67,22 @@ def pad_prompt(example, newline_id, rng):
     return [newline_id] * padding + inputs, [IGNORE_TARGET] * padding + targets
 
 
-def answer_class_loss(model, classifier, inputs, targets, classes):
+def generation_loss(logits, targets, start_weight):
+    if start_weight == 1:
+        return F.cross_entropy(logits.flatten(0, 1), targets.flatten())
+    active = targets.ne(IGNORE_TARGET)
+    position = active.cumsum(dim=1)
+    reply_length = active.sum(dim=1, keepdim=True) - len(END_OF_TURN)
+    start = active & (position <= REPLY_START_CHARS) & (position <= reply_length)
+    weights = active.to(logits.dtype) + start.to(logits.dtype) * (start_weight - 1)
+    token_loss = F.cross_entropy(logits.transpose(1, 2), targets, reduction='none')
+    return (token_loss * weights).sum() / weights.sum()
+
+
+def answer_class_loss(model, classifier, inputs, targets, classes, *, start_weight=1):
     hidden = model.hidden_states(inputs)
     logits = model.lm_head(hidden)
-    reply_loss = F.cross_entropy(logits.flatten(0, 1), targets.flatten())
+    reply_loss = generation_loss(logits, targets, start_weight)
     # The last prompt character can see the question and history, but no answer tokens.
     prompt_end = targets.eq(IGNORE_TARGET).cumprod(1).sum(1)
     question_states = hidden[torch.arange(inputs.size(0), device=inputs.device), prompt_end]
@@ -129,6 +142,8 @@ def main():
                         help='Balance distinct replies or sample training examples uniformly')
     parser.add_argument('--answer-class', action='store_true',
                         help='Experiment with predicting the entire reply from the question during training')
+    parser.add_argument('--reply-start-weight', type=float, default=1,
+                        help=f'Loss weight for the first {REPLY_START_CHARS} reply characters (default: 1)')
     parser.add_argument('--compact-history', action='store_true',
                         help='Train with shorter labels for previous questions and replies')
     parser.add_argument('--history-answer-dropout', type=float, default=0,
@@ -141,6 +156,8 @@ def main():
         parser.error('Steps, batch size, evaluation interval, and learning rate must be positive and finite.')
     if not 0 <= args.history_answer_dropout <= 1:
         parser.error('--history-answer-dropout must be between 0 and 1.')
+    if not 1 <= args.reply_start_weight < float('inf'):
+        parser.error('--reply-start-weight must be at least 1 and finite.')
     if args.select_by == 'balanced-first' and not args.dev_data:
         parser.error('--select-by balanced-first requires --dev-data.')
     datasets = [args.train_data, args.val_data, *args.dev_data]
@@ -191,6 +208,8 @@ def main():
     optimizer = torch.optim.AdamW(parameters, lr=args.lr)
     print(f'Starting checkpoint: {start_checkpoint} | history packing: {tokenizer.history_packing}')
     print(f'Device: {args.device} | train replies: {len(train_examples)} | validation replies: {len(val_examples)}')
+    if args.reply_start_weight != 1:
+        print(f'Reply start weight: {args.reply_start_weight} for the first {REPLY_START_CHARS} characters')
     initial_loss = evaluate(model, val_examples, args.batch_size, args.device)
     print(f'Starting checkpoint | validation reply loss {initial_loss:.4f}')
 
@@ -210,7 +229,11 @@ def main():
         inputs, targets = inputs.to(args.device), targets.to(args.device)
         optimizer.zero_grad(set_to_none=True)
         if args.answer_class:
-            loss, reply_loss = answer_class_loss(model, classifier, inputs, targets, labels)
+            loss, reply_loss = answer_class_loss(model, classifier, inputs, targets, labels,
+                                                 start_weight=args.reply_start_weight)
+        elif args.reply_start_weight != 1:
+            logits, _ = model(inputs)
+            loss = reply_loss = generation_loss(logits, targets, args.reply_start_weight)
         else:
             _, reply_loss = model(inputs, targets)
             loss = reply_loss

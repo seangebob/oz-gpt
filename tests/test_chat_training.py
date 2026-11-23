@@ -14,7 +14,9 @@ from model.chat_data import (
     END_OF_TURN, IGNORE_TARGET, ChatTokenizer, collate_examples, format_prompt,
     encode_conversations, format_turn, load_chat_checkpoint, load_examples, pack_history, with_history,
 )
-from model.chat_training import DATA_DIR, DevelopmentMatches, development_score, main as train_chat, save_checkpoint
+from model.chat_training import (
+    DATA_DIR, DevelopmentMatches, development_score, generation_loss, main as train_chat, save_checkpoint,
+)
 from model.chat_session import ChatSession
 from model.model import GPTLanguageModel, block_size, chars
 
@@ -34,6 +36,22 @@ def normalized_messages(conversations, role, *, first_only=False):
 
 
 class ChatTrainingTests(unittest.TestCase):
+    def test_reply_start_loss_only_upweights_answer_characters(self):
+        marker_size = len(END_OF_TURN)
+        targets = torch.tensor([
+            [IGNORE_TARGET] + [1] * (14 + marker_size),
+            [IGNORE_TARGET, 0] + [1] * marker_size + [IGNORE_TARGET] * 13,
+        ])
+        scores = torch.arange(targets.numel(), dtype=torch.float32).reshape(targets.shape) / 7
+        logits = torch.stack((scores, torch.zeros_like(scores)), dim=-1)
+        token_losses = torch.nn.functional.cross_entropy(logits.transpose(1, 2), targets, reduction='none')
+        boosted = token_losses[0, 1:13].sum() + token_losses[1, 1]
+        expected = (token_losses.sum() + 3 * boosted) / (targets.ne(IGNORE_TARGET).sum() + 3 * 13)
+
+        torch.testing.assert_close(generation_loss(logits, targets, 4), expected)
+        torch.testing.assert_close(generation_loss(logits, targets, 1),
+                                   token_losses.sum() / targets.ne(IGNORE_TARGET).sum())
+
     def setUp(self):
         self.tokenizer = ChatTokenizer(chars)
 

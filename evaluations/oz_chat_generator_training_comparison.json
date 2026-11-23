@@ -1,0 +1,1071 @@
+{
+  "baseline_code_commit": "2f9113a202e3f117178dc88bd52cc11d7f28b44d",
+  "evaluation": {
+    "history": "generated",
+    "device": "cpu",
+    "decoding": "greedy",
+    "block_size": 128,
+    "max_tokens": 150,
+    "reply_reserve": 32,
+    "scoring": "Review replies for the requested fact and accept equivalent wording or unambiguous spelling errors. All runs use the generator by itself."
+  },
+  "data": {
+    "training": {
+      "path": "data/oz_chat_train.jsonl",
+      "sha256": "ca4821a560569e0af1fbbf40602f0bd9e1360c309effcd159e5893ba7c4f518d"
+    },
+    "validation": {
+      "path": "data/oz_chat_val.jsonl",
+      "sha256": "a924141fbc366b0167493aea4f26b59b6cd0b7a6346cda0b916d0888d69b8499"
+    },
+    "memory_development": {
+      "path": "data/oz_chat_memory_dev.jsonl",
+      "sha256": "8a824b3ea6c60f16b38b4491b2292c364b06c457f1992978113e3c02e3d2a2c1"
+    },
+    "coverage_development": {
+      "path": "data/oz_chat_coverage_dev.jsonl",
+      "sha256": "c1b52caac49bd15f59f05e0a806f933df9e42008a47d6c54f7d244eef481964c"
+    },
+    "extension": {
+      "path": "data/oz_chat_generator_train_extension.jsonl",
+      "sha256": "72dfc3b2fa129c67ac6cd66480c927830abae0cc007c2f9db904aab582df5bd6"
+    },
+    "paraphrase_development": {
+      "path": "data/oz_chat_generator_paraphrase_dev.jsonl",
+      "sha256": "679ec9268023d5fdd88c5acee764cd499452c65514ca51e28f56d32f05883967"
+    },
+    "reserved_phrasings": {
+      "path": "data/oz_chat_generator_transfer_test.jsonl",
+      "sha256": "5ba311db8d40d2932e172b4e3b8ab0bfdabaafdc55760c5df7b49cdf7f2358e5"
+    },
+    "second_check": {
+      "path": "data/oz_chat_generator_additional_check.jsonl",
+      "sha256": "d4ce55c43127452a82c51e40d4ae1ff8c7fdc304f5f51010bf39c6d7c6f6691d"
+    }
+  },
+  "split_design": "Source ranges for the additional fact families are outside the source annotations in the previous fixtures. The extension and its paraphrase checks ask about the same 16 facts with different phrasing. The earlier paraphrases became a development set for the last training run after the initial evaluation. The two unseen-fact checks and the original chat benchmark were kept outside supervision and selection.",
+  "shared_training_settings": {
+    "device": "mps",
+    "torch_version": "2.13.0",
+    "batch_size": 8,
+    "eval_every": 300,
+    "lr": 9e-05,
+    "sampling": "uniform",
+    "history_answer_dropout": 0.5,
+    "select_by": "balanced-first"
+  },
+  "checkpoints": {
+    "starting": {
+      "checkpoint": "model/model-chat-coverage-experiment.pth",
+      "checkpoint_sha256": "7bf86a87e46073d61ba3d803af7bbc26bf295e22f0ab0ff7ddbdf9694caee17d"
+    },
+    "resumed_control": {
+      "checkpoint_sha256": "8ee1bfc817d01fc449ad54097ad536dbe6b7c5a3a1d78352ce8c853af03c7e03",
+      "selected_step": 600,
+      "validation_reply_loss": 3.7534,
+      "development_log": [
+        "Step  300 | train reply loss 0.0413 | validation reply loss 3.7118 | development reference matches 28/86 | first replies oz_chat_memory_dev.jsonl 7/18, oz_chat_coverage_dev.jsonl 5/30",
+        "Step  600 | train reply loss 0.0301 | validation reply loss 3.7534 | development reference matches 31/86 | first replies oz_chat_memory_dev.jsonl 5/18, oz_chat_coverage_dev.jsonl 7/30",
+        "Step  900 | train reply loss 0.1302 | validation reply loss 3.8386 | development reference matches 28/86 | first replies oz_chat_memory_dev.jsonl 3/18, oz_chat_coverage_dev.jsonl 7/30",
+        "Step 1200 | train reply loss 0.0351 | validation reply loss 3.8973 | development reference matches 31/86 | first replies oz_chat_memory_dev.jsonl 7/18, oz_chat_coverage_dev.jsonl 6/30"
+      ],
+      "starting_checkpoint": "starting",
+      "train_data": "training",
+      "seed": 7,
+      "max_steps": 1200,
+      "reply_start_weight": 1
+    },
+    "reply_start_weighted": {
+      "checkpoint_sha256": "c3ba3f02b1566b01253664549b29681f9bc0b3a1a4ea5a440ccbe21c298e668d",
+      "selected_step": 600,
+      "validation_reply_loss": 3.7381,
+      "development_log": [
+        "Step  300 | train reply loss 0.0566 | validation reply loss 3.7029 | development reference matches 31/86 | first replies oz_chat_memory_dev.jsonl 6/18, oz_chat_coverage_dev.jsonl 5/30",
+        "Step  600 | train reply loss 0.0410 | validation reply loss 3.7381 | development reference matches 32/86 | first replies oz_chat_memory_dev.jsonl 4/18, oz_chat_coverage_dev.jsonl 8/30",
+        "Step  900 | train reply loss 0.1329 | validation reply loss 3.7476 | development reference matches 26/86 | first replies oz_chat_memory_dev.jsonl 3/18, oz_chat_coverage_dev.jsonl 4/30",
+        "Step 1200 | train reply loss 0.0435 | validation reply loss 3.8350 | development reference matches 32/86 | first replies oz_chat_memory_dev.jsonl 6/18, oz_chat_coverage_dev.jsonl 5/30"
+      ],
+      "starting_checkpoint": "starting",
+      "train_data": "training",
+      "seed": 7,
+      "max_steps": 1200,
+      "reply_start_weight": 4,
+      "weighted_characters": 12
+    },
+    "two_phrasing_expansion": {
+      "checkpoint_sha256": "f406ff8e1102a3e2c8deff1c02dd891b7d5a9133450e3f3175da23ec6cbcf91f",
+      "selected_step": 900,
+      "validation_reply_loss": 3.7545,
+      "development_log": [
+        "Step  300 | train reply loss 0.0844 | validation reply loss 3.5254 | development reference matches 25/86 | first replies oz_chat_memory_dev.jsonl 5/18, oz_chat_coverage_dev.jsonl 4/30",
+        "Step  600 | train reply loss 0.0889 | validation reply loss 3.5502 | development reference matches 27/86 | first replies oz_chat_memory_dev.jsonl 3/18, oz_chat_coverage_dev.jsonl 4/30",
+        "Step  900 | train reply loss 0.0416 | validation reply loss 3.7545 | development reference matches 31/86 | first replies oz_chat_memory_dev.jsonl 5/18, oz_chat_coverage_dev.jsonl 7/30",
+        "Step 1200 | train reply loss 0.0180 | validation reply loss 3.7622 | development reference matches 31/86 | first replies oz_chat_memory_dev.jsonl 4/18, oz_chat_coverage_dev.jsonl 7/30"
+      ],
+      "starting_checkpoint": "starting",
+      "train_data": "Original training plus four copies of the first 32 lines of the extension.",
+      "train_sha256": "56734ab1668513f2602ad899c9dc8abc2a1ed125e6dc787c57811ed70a51e5be",
+      "extension_rows_per_fact": 2,
+      "seed": 7,
+      "max_steps": 1200,
+      "reply_start_weight": 1
+    },
+    "five_phrasing_expansion": {
+      "checkpoint_sha256": "93c84e538c97d65115b14ef02c0a18f290826b9576de8620f03697a36df9aa49",
+      "selected_step": 1500,
+      "validation_reply_loss": 3.9837,
+      "development_log": [
+        "Step  300 | train reply loss 0.0613 | validation reply loss 3.8163 | development reference matches 31/102 | first replies oz_chat_memory_dev.jsonl 3/18, oz_chat_coverage_dev.jsonl 4/30, oz_chat_generator_paraphrase_test.jsonl 4/16",
+        "Step  600 | train reply loss 0.1086 | validation reply loss 3.8493 | development reference matches 32/102 | first replies oz_chat_memory_dev.jsonl 3/18, oz_chat_coverage_dev.jsonl 4/30, oz_chat_generator_paraphrase_test.jsonl 5/16",
+        "Step  900 | train reply loss 0.0398 | validation reply loss 3.9436 | development reference matches 27/102 | first replies oz_chat_memory_dev.jsonl 5/18, oz_chat_coverage_dev.jsonl 0/30, oz_chat_generator_paraphrase_test.jsonl 5/16",
+        "Step 1200 | train reply loss 0.0384 | validation reply loss 4.0093 | development reference matches 24/102 | first replies oz_chat_memory_dev.jsonl 3/18, oz_chat_coverage_dev.jsonl 2/30, oz_chat_generator_paraphrase_test.jsonl 6/16",
+        "Step 1500 | train reply loss 0.0413 | validation reply loss 3.9837 | development reference matches 33/102 | first replies oz_chat_memory_dev.jsonl 5/18, oz_chat_coverage_dev.jsonl 4/30, oz_chat_generator_paraphrase_test.jsonl 6/16",
+        "Step 1800 | train reply loss 0.0110 | validation reply loss 4.0294 | development reference matches 32/102 | first replies oz_chat_memory_dev.jsonl 5/18, oz_chat_coverage_dev.jsonl 2/30, oz_chat_generator_paraphrase_test.jsonl 5/16"
+      ],
+      "checkpoint": "model/model-chat-paraphrase-experiment.pth",
+      "starting_checkpoint": "two_phrasing_expansion",
+      "train_data": "Original training plus six copies of the complete extension.",
+      "train_sha256": "f112fc0e8376d62d5096e38271ac814c450c9c4adc3f75bb476001a01fdc6535",
+      "extension_rows_per_fact": 5,
+      "additional_dev_file": "data/oz_chat_generator_paraphrase_dev.jsonl",
+      "seed": 17,
+      "max_steps": 1800,
+      "reply_start_weight": 1
+    }
+  },
+  "blend_selection": {
+    "rule": "Keep at least the starting combined reference matches across the two existing development sets, allow at most one lost match per set, and gain at least one match on the paraphrase development set. Rank eligible blends by paraphrase matches, then the two older development sets.",
+    "selected": null,
+    "candidates": [
+      {
+        "name": "starting",
+        "blend": null,
+        "dev_set_results": [
+          {
+            "first_matches": 4,
+            "first_replies": 18,
+            "matches": 19,
+            "replies": 36
+          },
+          {
+            "first_matches": 7,
+            "first_replies": 30,
+            "matches": 15,
+            "replies": 50
+          },
+          {
+            "first_matches": 0,
+            "first_replies": 16,
+            "matches": 0,
+            "replies": 16
+          }
+        ]
+      },
+      {
+        "name": "expanded",
+        "blend": null,
+        "dev_set_results": [
+          {
+            "first_matches": 5,
+            "first_replies": 18,
+            "matches": 18,
+            "replies": 36
+          },
+          {
+            "first_matches": 7,
+            "first_replies": 30,
+            "matches": 13,
+            "replies": 50
+          },
+          {
+            "first_matches": 1,
+            "first_replies": 16,
+            "matches": 1,
+            "replies": 16
+          }
+        ]
+      },
+      {
+        "name": "varied",
+        "blend": null,
+        "dev_set_results": [
+          {
+            "first_matches": 5,
+            "first_replies": 18,
+            "matches": 17,
+            "replies": 36
+          },
+          {
+            "first_matches": 4,
+            "first_replies": 30,
+            "matches": 10,
+            "replies": 50
+          },
+          {
+            "first_matches": 6,
+            "first_replies": 16,
+            "matches": 6,
+            "replies": 16
+          }
+        ]
+      },
+      {
+        "name": "expanded-0.25",
+        "blend": {
+          "starting_weight": 0.75,
+          "trained_weight": 0.25,
+          "trained_checkpoint": "expanded"
+        },
+        "dev_set_results": [
+          {
+            "first_matches": 5,
+            "first_replies": 18,
+            "matches": 18,
+            "replies": 36
+          },
+          {
+            "first_matches": 5,
+            "first_replies": 30,
+            "matches": 15,
+            "replies": 50
+          },
+          {
+            "first_matches": 0,
+            "first_replies": 16,
+            "matches": 0,
+            "replies": 16
+          }
+        ]
+      },
+      {
+        "name": "expanded-0.5",
+        "blend": {
+          "starting_weight": 0.5,
+          "trained_weight": 0.5,
+          "trained_checkpoint": "expanded"
+        },
+        "dev_set_results": [
+          {
+            "first_matches": 5,
+            "first_replies": 18,
+            "matches": 17,
+            "replies": 36
+          },
+          {
+            "first_matches": 6,
+            "first_replies": 30,
+            "matches": 17,
+            "replies": 50
+          },
+          {
+            "first_matches": 0,
+            "first_replies": 16,
+            "matches": 0,
+            "replies": 16
+          }
+        ]
+      },
+      {
+        "name": "expanded-0.75",
+        "blend": {
+          "starting_weight": 0.25,
+          "trained_weight": 0.75,
+          "trained_checkpoint": "expanded"
+        },
+        "dev_set_results": [
+          {
+            "first_matches": 5,
+            "first_replies": 18,
+            "matches": 18,
+            "replies": 36
+          },
+          {
+            "first_matches": 7,
+            "first_replies": 30,
+            "matches": 17,
+            "replies": 50
+          },
+          {
+            "first_matches": 0,
+            "first_replies": 16,
+            "matches": 0,
+            "replies": 16
+          }
+        ]
+      },
+      {
+        "name": "varied-0.2",
+        "blend": {
+          "starting_weight": 0.8,
+          "trained_weight": 0.2,
+          "trained_checkpoint": "varied"
+        },
+        "dev_set_results": [
+          {
+            "first_matches": 5,
+            "first_replies": 18,
+            "matches": 20,
+            "replies": 36
+          },
+          {
+            "first_matches": 6,
+            "first_replies": 30,
+            "matches": 16,
+            "replies": 50
+          },
+          {
+            "first_matches": 0,
+            "first_replies": 16,
+            "matches": 0,
+            "replies": 16
+          }
+        ]
+      },
+      {
+        "name": "varied-0.4",
+        "blend": {
+          "starting_weight": 0.6,
+          "trained_weight": 0.4,
+          "trained_checkpoint": "varied"
+        },
+        "dev_set_results": [
+          {
+            "first_matches": 4,
+            "first_replies": 18,
+            "matches": 18,
+            "replies": 36
+          },
+          {
+            "first_matches": 6,
+            "first_replies": 30,
+            "matches": 15,
+            "replies": 50
+          },
+          {
+            "first_matches": 0,
+            "first_replies": 16,
+            "matches": 0,
+            "replies": 16
+          }
+        ]
+      },
+      {
+        "name": "varied-0.6",
+        "blend": {
+          "starting_weight": 0.4,
+          "trained_weight": 0.6,
+          "trained_checkpoint": "varied"
+        },
+        "dev_set_results": [
+          {
+            "first_matches": 3,
+            "first_replies": 18,
+            "matches": 16,
+            "replies": 36
+          },
+          {
+            "first_matches": 6,
+            "first_replies": 30,
+            "matches": 14,
+            "replies": 50
+          },
+          {
+            "first_matches": 1,
+            "first_replies": 16,
+            "matches": 1,
+            "replies": 16
+          }
+        ]
+      },
+      {
+        "name": "varied-0.8",
+        "blend": {
+          "starting_weight": 0.19999999999999996,
+          "trained_weight": 0.8,
+          "trained_checkpoint": "varied"
+        },
+        "dev_set_results": [
+          {
+            "first_matches": 4,
+            "first_replies": 18,
+            "matches": 16,
+            "replies": 36
+          },
+          {
+            "first_matches": 4,
+            "first_replies": 30,
+            "matches": 10,
+            "replies": 50
+          },
+          {
+            "first_matches": 4,
+            "first_replies": 16,
+            "matches": 4,
+            "replies": 16
+          }
+        ]
+      },
+      {
+        "name": "expanded-varied-0.3",
+        "blend": {
+          "expanded_weight": 0.7,
+          "varied_weight": 0.3
+        },
+        "dev_set_results": [
+          {
+            "first_matches": 5,
+            "first_replies": 18,
+            "matches": 18,
+            "replies": 36
+          },
+          {
+            "first_matches": 6,
+            "first_replies": 30,
+            "matches": 14,
+            "replies": 50
+          },
+          {
+            "first_matches": 4,
+            "first_replies": 16,
+            "matches": 4,
+            "replies": 16
+          }
+        ]
+      },
+      {
+        "name": "expanded-varied-0.6",
+        "blend": {
+          "expanded_weight": 0.4,
+          "varied_weight": 0.6
+        },
+        "dev_set_results": [
+          {
+            "first_matches": 5,
+            "first_replies": 18,
+            "matches": 18,
+            "replies": 36
+          },
+          {
+            "first_matches": 5,
+            "first_replies": 30,
+            "matches": 12,
+            "replies": 50
+          },
+          {
+            "first_matches": 6,
+            "first_replies": 16,
+            "matches": 6,
+            "replies": 16
+          }
+        ]
+      }
+    ]
+  },
+  "benchmarks": {
+    "memory": {
+      "test_file": "data/oz_chat_memory_test.jsonl",
+      "test_sha256": "2624fe8edbf3ae5c728ec16277f5eae2ecd1691b21ca8668708db9d755aaa061",
+      "scores": {
+        "starting": {
+          "correct_first_replies": 3,
+          "first_replies": 18,
+          "correct_followups": 11,
+          "followups": 18,
+          "clean_stops": 36,
+          "reference_reply_loss": 0.129439
+        },
+        "resumed_control": {
+          "correct_first_replies": 3,
+          "first_replies": 18,
+          "correct_followups": 7,
+          "followups": 18,
+          "clean_stops": 36,
+          "reference_reply_loss": 0.108221
+        },
+        "reply_start_weighted": {
+          "correct_first_replies": 2,
+          "first_replies": 18,
+          "correct_followups": 7,
+          "followups": 18,
+          "clean_stops": 36,
+          "reference_reply_loss": 0.11488
+        },
+        "two_phrasing_expansion": {
+          "correct_first_replies": 5,
+          "first_replies": 18,
+          "correct_followups": 9,
+          "followups": 18,
+          "clean_stops": 36,
+          "reference_reply_loss": 0.11958
+        },
+        "five_phrasing_expansion": {
+          "correct_first_replies": 4,
+          "first_replies": 18,
+          "correct_followups": 9,
+          "followups": 18,
+          "clean_stops": 36,
+          "reference_reply_loss": 0.158961
+        }
+      }
+    },
+    "coverage": {
+      "test_file": "data/oz_chat_coverage_test.jsonl",
+      "test_sha256": "7a82ab6453a1154655931cd258a91af9710d402580bbe159359edb43f9eba838",
+      "scores": {
+        "starting": {
+          "correct_first_replies": 8,
+          "first_replies": 30,
+          "correct_followups": 5,
+          "followups": 20,
+          "clean_stops": 50,
+          "reference_reply_loss": 0.157392
+        },
+        "resumed_control": {
+          "correct_first_replies": 4,
+          "first_replies": 30,
+          "correct_followups": 4,
+          "followups": 20,
+          "clean_stops": 50,
+          "reference_reply_loss": 0.169506
+        },
+        "reply_start_weighted": {
+          "correct_first_replies": 3,
+          "first_replies": 30,
+          "correct_followups": 5,
+          "followups": 20,
+          "clean_stops": 49,
+          "reference_reply_loss": 0.18617
+        },
+        "two_phrasing_expansion": {
+          "correct_first_replies": 7,
+          "first_replies": 30,
+          "correct_followups": 7,
+          "followups": 20,
+          "clean_stops": 50,
+          "reference_reply_loss": 0.175798
+        },
+        "five_phrasing_expansion": {
+          "correct_first_replies": 3,
+          "first_replies": 30,
+          "correct_followups": 3,
+          "followups": 20,
+          "clean_stops": 50,
+          "reference_reply_loss": 0.197529
+        }
+      }
+    },
+    "unseen": {
+      "test_file": "data/oz_chat_generalization_test.jsonl",
+      "test_sha256": "754bd9df3bd40ff8c7dd8456bebb81a9e16410f35e10e860ba36a45ae8d5f706",
+      "scores": {
+        "starting": {
+          "correct_first_replies": 0,
+          "first_replies": 16,
+          "correct_followups": 0,
+          "followups": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 3.451118
+        },
+        "resumed_control": {
+          "correct_first_replies": 0,
+          "first_replies": 16,
+          "correct_followups": 0,
+          "followups": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 3.60078
+        },
+        "reply_start_weighted": {
+          "correct_first_replies": 0,
+          "first_replies": 16,
+          "correct_followups": 0,
+          "followups": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 3.580444
+        },
+        "two_phrasing_expansion": {
+          "correct_first_replies": 0,
+          "first_replies": 16,
+          "correct_followups": 0,
+          "followups": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 3.497167
+        },
+        "five_phrasing_expansion": {
+          "correct_first_replies": 0,
+          "first_replies": 16,
+          "correct_followups": 0,
+          "followups": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 3.870838
+        }
+      }
+    },
+    "unseen-new": {
+      "test_file": "data/oz_chat_book_assist_test.jsonl",
+      "test_sha256": "f70ed25474943f335a8ebe4b6c2648a19a3650fc0842dd2c539593d264cc3e59",
+      "scores": {
+        "starting": {
+          "correct_first_replies": 0,
+          "first_replies": 10,
+          "correct_followups": 0,
+          "followups": 4,
+          "clean_stops": 14,
+          "reference_reply_loss": 2.977537
+        },
+        "resumed_control": {
+          "correct_first_replies": 0,
+          "first_replies": 10,
+          "correct_followups": 0,
+          "followups": 4,
+          "clean_stops": 14,
+          "reference_reply_loss": 3.038976
+        },
+        "reply_start_weighted": {
+          "correct_first_replies": 0,
+          "first_replies": 10,
+          "correct_followups": 0,
+          "followups": 4,
+          "clean_stops": 13,
+          "reference_reply_loss": 2.945194
+        },
+        "two_phrasing_expansion": {
+          "correct_first_replies": 0,
+          "first_replies": 10,
+          "correct_followups": 0,
+          "followups": 4,
+          "clean_stops": 14,
+          "reference_reply_loss": 2.982256
+        },
+        "five_phrasing_expansion": {
+          "correct_first_replies": 0,
+          "first_replies": 10,
+          "correct_followups": 0,
+          "followups": 4,
+          "clean_stops": 14,
+          "reference_reply_loss": 3.370341
+        }
+      }
+    },
+    "original": {
+      "test_file": "data/oz_chat_test.jsonl",
+      "test_sha256": "1c29194de5fcf79db46c2097ba1fd8e150c205cddd22e33a9b1b0d96052755ea",
+      "scores": {
+        "starting": {
+          "correct_first_replies": 0,
+          "first_replies": 24,
+          "correct_followups": 0,
+          "followups": 8,
+          "clean_stops": 32,
+          "reference_reply_loss": 2.979727
+        },
+        "resumed_control": {
+          "correct_first_replies": 0,
+          "first_replies": 24,
+          "correct_followups": 0,
+          "followups": 8,
+          "clean_stops": 32,
+          "reference_reply_loss": 3.104301
+        },
+        "reply_start_weighted": {
+          "correct_first_replies": 0,
+          "first_replies": 24,
+          "correct_followups": 0,
+          "followups": 8,
+          "clean_stops": 32,
+          "reference_reply_loss": 3.106052
+        },
+        "two_phrasing_expansion": {
+          "correct_first_replies": 0,
+          "first_replies": 24,
+          "correct_followups": 0,
+          "followups": 8,
+          "clean_stops": 32,
+          "reference_reply_loss": 3.085539
+        },
+        "five_phrasing_expansion": {
+          "correct_first_replies": 0,
+          "first_replies": 24,
+          "correct_followups": 0,
+          "followups": 8,
+          "clean_stops": 32,
+          "reference_reply_loss": 3.451926
+        }
+      }
+    },
+    "extension": {
+      "test_file": "data/oz_chat_generator_paraphrase_dev.jsonl",
+      "test_sha256": "679ec9268023d5fdd88c5acee764cd499452c65514ca51e28f56d32f05883967",
+      "scores": {
+        "starting": {
+          "correct_first_replies": 0,
+          "first_replies": 16,
+          "correct_followups": 0,
+          "followups": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 3.014359
+        },
+        "resumed_control": {
+          "correct_first_replies": 0,
+          "first_replies": 16,
+          "correct_followups": 0,
+          "followups": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 3.167463
+        },
+        "reply_start_weighted": {
+          "correct_first_replies": 0,
+          "first_replies": 16,
+          "correct_followups": 0,
+          "followups": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 3.153035
+        },
+        "two_phrasing_expansion": {
+          "correct_first_replies": 1,
+          "first_replies": 16,
+          "correct_followups": 0,
+          "followups": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 0.429312
+        }
+      }
+    },
+    "reserved_phrasings": {
+      "test_file": "data/oz_chat_generator_transfer_test.jsonl",
+      "test_sha256": "5ba311db8d40d2932e172b4e3b8ab0bfdabaafdc55760c5df7b49cdf7f2358e5",
+      "scores": {
+        "starting": {
+          "correct_first_replies": 0,
+          "first_replies": 16,
+          "correct_followups": 0,
+          "followups": 0,
+          "clean_stops": 15,
+          "reference_reply_loss": 3.12822
+        },
+        "resumed_control": {
+          "correct_first_replies": 0,
+          "first_replies": 16,
+          "correct_followups": 0,
+          "followups": 0,
+          "clean_stops": 15,
+          "reference_reply_loss": 3.277126
+        },
+        "reply_start_weighted": {
+          "correct_first_replies": 0,
+          "first_replies": 16,
+          "correct_followups": 0,
+          "followups": 0,
+          "clean_stops": 15,
+          "reference_reply_loss": 3.227297
+        },
+        "two_phrasing_expansion": {
+          "correct_first_replies": 2,
+          "first_replies": 16,
+          "correct_followups": 0,
+          "followups": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 0.564874
+        },
+        "five_phrasing_expansion": {
+          "correct_first_replies": 5,
+          "first_replies": 16,
+          "correct_followups": 0,
+          "followups": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 0.28641
+        }
+      },
+      "review": [
+        {
+          "conversation": 1,
+          "prompt": "What color was the man dressed in when he emerged through the hole in the roof?",
+          "expected": "Green.",
+          "starting_reply": "stair.",
+          "retrained_reply": "Green.",
+          "retrained_correct": true
+        },
+        {
+          "conversation": 2,
+          "prompt": "What did Dorothy see the stranger do when he reached the roof's edge?",
+          "expected": "He walked on the air.",
+          "starting_reply": "A bunpicked.",
+          "retrained_reply": "A buggy seat.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 3,
+          "prompt": "Why did the children blend in at the balloon's arrival?",
+          "expected": "Same size as the Mangaboos.",
+          "starting_reply": "Tree.",
+          "retrained_reply": "A striped pattern.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 4,
+          "prompt": "Where was Eureka resting while the crowds looked up at the balloon?",
+          "expected": "On the buggy seat.",
+          "starting_reply": "She was taken to prison.",
+          "retrained_reply": "On the buggy seat.",
+          "retrained_correct": true
+        },
+        {
+          "conversation": 5,
+          "prompt": "What rule does the Prince give for sprouting Mangaboos?",
+          "expected": "They must be planted at once.",
+          "starting_reply": "She got the Star of Royalty.",
+          "retrained_reply": "She got the Star of Royalty.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 6,
+          "prompt": "Which bush has produced the country's leaders since long ago?",
+          "expected": "The Royal Bush.",
+          "starting_reply": "The Woggle-Bug.",
+          "retrained_reply": "They hunhooked her.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 7,
+          "prompt": "Where does a Mangaboo's outfit come from before the person is picked?",
+          "expected": "It grew on their bodies.",
+          "starting_reply": "He was tied to a treep ruling.",
+          "retrained_reply": "The Woggle-Bug.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 8,
+          "prompt": "What did the group compare the writhing tangle of vines to when they looked down?",
+          "expected": "A nest of snakes.",
+          "starting_reply": "He bowed.",
+          "retrained_reply": "He walked air.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 9,
+          "prompt": "What sound broke the quiet on the path toward the first cottage in Voe?",
+          "expected": "A bird twittering.",
+          "starting_reply": "A ballog.",
+          "retrained_reply": "A bird twittering.",
+          "retrained_correct": true
+        },
+        {
+          "conversation": 10,
+          "prompt": "What was the Wizard's guess about why the wooden creatures delayed killing them?",
+          "expected": "For a ceremony.",
+          "starting_reply": "Red her.",
+          "retrained_reply": "Red her.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 11,
+          "prompt": "What did the kitten liken the mouths of the creatures in the round cavern to?",
+          "expected": "Coal-scuttles.",
+          "starting_reply": "The jurors.",
+          "retrained_reply": "Coal-scuttles.",
+          "retrained_correct": true
+        },
+        {
+          "conversation": 12,
+          "prompt": "How far back in years did the dragonette claim its ancestry went?",
+          "expected": "About twenty thousand years.",
+          "starting_reply": "They walked on water.",
+          "retrained_reply": "It was eaten.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 13,
+          "prompt": "What title went with Ozma's offer of a permanent home to the Wizard?",
+          "expected": "Official Wizard.",
+          "starting_reply": "A velver.",
+          "retrained_reply": "Ozma's saddle.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 14,
+          "prompt": "What plant did Jim munch when the Lion and Tiger spoke with him?",
+          "expected": "Clover.",
+          "starting_reply": "No, he wanted it uncooked.",
+          "retrained_reply": "Clover.",
+          "retrained_correct": true
+        },
+        {
+          "conversation": 15,
+          "prompt": "What was the number of lawyers in fairyland when they were preparing for the trial?",
+          "expected": "None.",
+          "starting_reply": "He was tied the piglets.\n[EN",
+          "retrained_reply": "He walked away.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 16,
+          "prompt": "What gift did the girl get from the Braided Man after bringing the blue ribbon?",
+          "expected": "A box of rustles.",
+          "starting_reply": "He bowed.",
+          "retrained_reply": "He bowed.",
+          "retrained_correct": false
+        }
+      ]
+    },
+    "second_check": {
+      "test_file": "data/oz_chat_generator_additional_check.jsonl",
+      "test_sha256": "d4ce55c43127452a82c51e40d4ae1ff8c7fdc304f5f51010bf39c6d7c6f6691d",
+      "scores": {
+        "starting": {
+          "correct_first_replies": 0,
+          "first_replies": 16,
+          "correct_followups": 0,
+          "followups": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 2.935623
+        },
+        "two_phrasing_expansion": {
+          "correct_first_replies": 2,
+          "first_replies": 16,
+          "correct_followups": 0,
+          "followups": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 0.326008
+        },
+        "five_phrasing_expansion": {
+          "correct_first_replies": 5,
+          "first_replies": 16,
+          "correct_followups": 0,
+          "followups": 0,
+          "clean_stops": 16,
+          "reference_reply_loss": 0.12075
+        }
+      },
+      "review": [
+        {
+          "conversation": 1,
+          "prompt": "The first man on the glass rooftop had clothes in what color?",
+          "expected": "Green.",
+          "starting_reply": "The Sawhorse.",
+          "retrained_reply": "The Woggle-Bug.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 2,
+          "prompt": "How did the stranger carry on after reaching the edge of the glass roof?",
+          "expected": "He walked on the air.",
+          "starting_reply": "In the planted on a roof.",
+          "retrained_reply": "He walked on the air.",
+          "retrained_correct": true
+        },
+        {
+          "conversation": 3,
+          "prompt": "Why did nobody pay special attention to Dorothy and Zeb as the balloon fell?",
+          "expected": "Same size as the Mangaboos.",
+          "starting_reply": "A striped pattern.",
+          "retrained_reply": "Silver.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 4,
+          "prompt": "What was Eureka's sleeping spot as the balloon came down?",
+          "expected": "On the buggy seat.",
+          "starting_reply": "At the eather.",
+          "retrained_reply": "Nine.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 5,
+          "prompt": "When a Mangaboo grows shoots, what do they do to it?",
+          "expected": "They must be planted at once.",
+          "starting_reply": "She was tic onfire.",
+          "retrained_reply": "It grew on their bodies.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 6,
+          "prompt": "What was the plant that produced the Mangaboo royal line?",
+          "expected": "The Royal Bush.",
+          "starting_reply": "They walked on water.",
+          "retrained_reply": "The Royal Court Band.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 7,
+          "prompt": "Why is a Mangaboo clothed even while still on its plant?",
+          "expected": "It grew on their bodies.",
+          "starting_reply": "The Valley of Voe.",
+          "retrained_reply": "The Royal Bush.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 8,
+          "prompt": "What did the group say the moving vines looked like from above?",
+          "expected": "A nest of snakes.",
+          "starting_reply": "The jurors.",
+          "retrained_reply": "An orname.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 9,
+          "prompt": "What did the group hear in Voe without finding the creature making it?",
+          "expected": "A bird twittering.",
+          "starting_reply": "There were no stairs.",
+          "retrained_reply": "A nesch.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 10,
+          "prompt": "What did the Wizard imagine the Gargoyles would use their prisoners for?",
+          "expected": "For a ceremony.",
+          "starting_reply": "Revolvers.",
+          "retrained_reply": "For a ceremony.",
+          "retrained_correct": true
+        },
+        {
+          "conversation": 11,
+          "prompt": "How did Eureka describe the shape of the dragonettes' mouths?",
+          "expected": "Coal-scuttles.",
+          "starting_reply": "A button.",
+          "retrained_reply": "She got the Star of Royalty.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 12,
+          "prompt": "How many years back did the young dragon trace its ancestors?",
+          "expected": "About twenty thousand years.",
+          "starting_reply": "A suit-case.",
+          "retrained_reply": "About twenty thousand years.",
+          "retrained_correct": true
+        },
+        {
+          "conversation": 13,
+          "prompt": "What did Ozma say the Wizard would be if he made his home in Oz?",
+          "expected": "Official Wizard.",
+          "starting_reply": "Piglets.",
+          "retrained_reply": "Official Wizard.",
+          "retrained_correct": true
+        },
+        {
+          "conversation": 14,
+          "prompt": "What did Jim graze on when he stopped for breakfast with the beasts?",
+          "expected": "Clover.",
+          "starting_reply": "The Sawhorse won.",
+          "retrained_reply": "A striped pattern.",
+          "retrained_correct": false
+        },
+        {
+          "conversation": 15,
+          "prompt": "How many lawyers were available for the kitten's case?",
+          "expected": "None.",
+          "starting_reply": "Piglets.",
+          "retrained_reply": "None.",
+          "retrained_correct": true
+        },
+        {
+          "conversation": 16,
+          "prompt": "After getting the blue ribbon, what did the Braided Man offer the little girl?",
+          "expected": "A box of rustles.",
+          "starting_reply": "He bowed.",
+          "retrained_reply": "It let on the picket.",
+          "retrained_correct": false
+        }
+      ]
+    }
+  },
+  "retrained_facts_correct_in_both_reserved_phrasings": 0
+}
