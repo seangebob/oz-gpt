@@ -56,6 +56,21 @@ QUESTION_ACTOR = re.compile(
 )
 COORDINATED_ACTOR = re.compile(rf'(?i: and) ({NAME})(?= |$)')
 PLURAL_PERSON = re.compile(r'\b(?:they|them|their)\b', re.IGNORECASE)
+SPEECH_TOPIC = re.compile(
+    rf"(?i:what did) (?P<speaker>{NAME}) (?:(?i:say)|(?i:tell) (?P<listener>{NAME})) "
+    r"(?i:about) (?P<topic>.+?)(?: (?i:during|when|while|after|before) .+)?[?.!]*$",
+)
+GROUP_REQUEST = re.compile(rf"(?i:what did) ({NAME}) (?i:ask (?:the others|everyone|them) to do when) (.+?)\W*$")
+REQUEST_REASON = re.compile(r"why did (?:he|she|they) (?:want|suggest) (?:it|that)\W*", re.IGNORECASE)
+SPEECH_VERB = r'said|declared|answered|replied|asked|murmured|cried|added|exclaimed|returned|growled'
+SPEECH_TAG = re.compile(
+    rf'(?:(?:{SPEECH_VERB}) (?P<after>{NAME})|(?P<before>{NAME}) (?:{SPEECH_VERB}))(?=[,.; ]|$)',
+)
+SPEECH_ALIASES = {'ozma': 'the Princess'}
+SPEECH_QUOTE = re.compile(r'"[^"]+"')
+PROMISE = re.compile(rf'(?i:what did) ({NAME}) (?i:promise (?:him|her|them))\W*')
+APPEARANCE = re.compile(r"how did ((?:the|this|that) [a-z][\w -]*?) (?:look|seem)\b", re.IGNORECASE)
+DISTRESS = re.compile(r"\b(?:afraid|alarmed|frightened|scared|terrified|worried)\b", re.IGNORECASE)
 TIME_CLAUSE = re.compile(r'\b(?:when|while|after|before)\b', re.IGNORECASE)
 REPORTING_ACTOR = re.compile(
     rf'(?i:\b(?:did|does)) ({NAME}|(?i:the [a-z-]+(?: [a-z-]+){{0,3}})) (?i:say|claim|report)\b',
@@ -200,6 +215,11 @@ def followup_question(question, previous_question, previous_answer):
     if DAMAGE_REFERENCE.fullmatch(question) and (damage := DAMAGE_CLAUSE.search(previous_question)):
         target, action = damage[1], damage[2].lower()
         return f'What caused {target} to {DAMAGE_VERBS.get(action, action)}?'
+    speech = SPEECH_TOPIC.fullmatch(question)
+    previous_speech = SPEECH_TOPIC.fullmatch(previous_question)
+    if speech and previous_speech and speech['topic'].lower() in {'it', 'that'}:
+        begin, end = speech.span('topic')
+        return question[:begin] + previous_speech['topic'] + question[end:]
     named = NAMED_SUBJECT.fullmatch(previous_question)
     prior_action = ACTION_ACTOR.fullmatch(previous_question)
     actor = named[1] if named else ''
@@ -372,6 +392,7 @@ class Passage:
     heading: str = ''
     word_start: int = field(default=0, repr=False, compare=False)
     sentence_starts: tuple[int, ...] = field(default=(), repr=False, compare=False)
+    paragraph_bounds: tuple[int, ...] = field(default=(), repr=False, compare=False)
 
 
 @dataclass(frozen=True)
@@ -395,6 +416,7 @@ class PassageReread:
     passage: Passage
     span: AnswerSpan
     excerpt: str | None = None
+    answer: str | None = None
 
 
 @dataclass(frozen=True)
@@ -460,6 +482,7 @@ def _passage_windows(text):
             passage = Passage(
                 label, window[0][1], window[-1][1], ' '.join(word for word, _ in window), heading,
                 word_start=offset, sentence_starts=tuple(sentences[first_index:last_index]),
+                paragraph_bounds=tuple(paragraphs[bisect_left(paragraphs, offset):bisect_right(paragraphs, limit)]),
             )
             prefix = suffix = None
             if 0 < offset - first <= PASSAGE_CONTEXT_WORDS:
@@ -708,6 +731,34 @@ def _answer_sentence(passage, span, *, neighbors=0):
     return excerpt, begin
 
 
+def _complete_paragraphs(passage):
+    offsets = [word.start() for word in re.finditer(r'\S+', passage.text)] + [len(passage.text)]
+    boundaries = [offsets[start - passage.word_start] for start in passage.paragraph_bounds]
+    return [passage.text[begin:end].rstrip() for begin, end in zip(boundaries, boundaries[1:])]
+
+
+def _tagged_speech(paragraph):
+    quotes = list(SPEECH_QUOTE.finditer(paragraph))
+    if not 1 <= len(quotes) <= 2 or not paragraph.startswith('"') or paragraph.count('"') != 2 * len(quotes):
+        return '', ''
+    tag_end = quotes[1].start() if len(quotes) == 2 else len(paragraph)
+    tag = SPEECH_TAG.match(paragraph[quotes[0].end():tag_end].lstrip(' ,;'))
+    if not tag:
+        return '', ''
+    speech = paragraph[:quotes[-1].end()] if len(quotes) == 2 else quotes[0][0]
+    return tag['after'] or tag['before'], speech
+
+
+def _repeated_speech(question, previous_question, text, previous_answer):
+    request = SPEECH_TOPIC.fullmatch(question)
+    previous = SPEECH_TOPIC.fullmatch(previous_question)
+    return (
+        request and previous and request['topic'].lower() in {'it', 'that'}
+        and _person_key(request['speaker']) != _person_key(previous['speaker'])
+        and text.strip(' ".,!?').casefold() == previous_answer.strip(' ".,!?').casefold()
+    )
+
+
 def _overlapping_passages(first, second):
     return (first.section == second.section and first.start_line <= second.end_line
             and second.start_line <= first.end_line)
@@ -787,7 +838,12 @@ class BookSession:
 
         meaning = SYMBOL_MEANING.fullmatch(question)
         reaction = REACTION.fullmatch(question)
-        if meaning and MEANS_ANSWER.fullmatch(answer):
+        promise = PROMISE.fullmatch(question)
+        recipient = APPEARANCE.match(self.previous_question)
+        reassurance = promise and recipient and source is None and DISTRESS.search(answer)
+        if reassurance:
+            query = f'What did {promise[1]} tell {recipient[1]} to reassure them?'
+        elif meaning and MEANS_ANSWER.fullmatch(answer):
             referent = re.sub(r'^(?:a|an|the) ', '', answer, flags=re.IGNORECASE)
             query = f'What {meaning[1].lower()} the {referent} {meaning[2].lower()}?'
         elif len(set(search_terms(answer))) < 3:
@@ -815,6 +871,12 @@ class BookSession:
         candidates_and_spans = [(candidate, span) for candidate, span in zip(local, checked)
                                 if span.text and span.text.casefold() not in answer.casefold()
                                 and answer.casefold() not in span.text.casefold()]
+        if reassurance:
+            candidates_and_spans = [
+                (candidate, span) for candidate, span in candidates_and_spans
+                if any(span.text.strip('"') in speech and _person_key(person) == _person_key(promise[1])
+                       for person, speech in map(_tagged_speech, _complete_paragraphs(candidate[0])))
+            ]
         if not candidates_and_spans:
             return None
         eligible, spans = zip(*candidates_and_spans)
@@ -841,6 +903,96 @@ class BookSession:
                 or _answer_sentence(passage, checked) != (sentence, offset)):
             return None
         return PassageReread(query, passage, checked)
+
+    def _reread_speech(self, question, candidates, previous=None):
+        request = SPEECH_TOPIC.fullmatch(question)
+        if not request:
+            return None
+        speaker, listener, topic = request.group('speaker', 'listener', 'topic')
+        terms = set(search_terms(topic))
+        if not terms or topic.lower() in {'it', 'that'}:
+            return None
+
+        confirmed = {}
+        for passage, _ in candidates[:SEARCH_LIMIT]:
+            if previous is not None and not _overlapping_passages(passage, previous):
+                continue
+            paragraphs = _complete_paragraphs(passage)
+            for i, paragraph in enumerate(paragraphs):
+                attributed_to, speech = _tagged_speech(paragraph)
+                if not speech or speech in confirmed:
+                    continue
+                excerpt, query = paragraph, question
+                if listener:
+                    # In a dialogue, the previous speaker can ask the named person directly.
+                    lead_in = paragraphs[i - 1] if i else ''
+                    asking, spoken_question = _tagged_speech(lead_in)
+                    addressed = re.search(
+                        rf'\b(?:asking|appealing to|turning to) {re.escape(speaker)}\b', lead_in, re.IGNORECASE,
+                    )
+                    if (_person_key(asking) != _person_key(listener) or '?' not in spoken_question
+                            or not terms.issubset(search_terms(spoken_question))):
+                        continue
+                    if _person_key(attributed_to) != _person_key(speaker):
+                        if not addressed or attributed_to != SPEECH_ALIASES.get(_person_key(speaker)):
+                            continue
+                        query = question.replace(speaker, attributed_to, 1)
+                    excerpt = ' '.join(paragraphs[i - 1:i + 2])
+                elif _person_key(attributed_to) != _person_key(speaker) or not terms.issubset(search_terms(speech)):
+                    continue
+                checked, = self.reader.read(query, [replace(passage, text=excerpt)])
+                extract = checked.text.strip(' "')
+                if (checked.margin >= MIN_SINGLE_PASSAGE_MARGIN and extract
+                        and any(extract in quote for quote in SPEECH_QUOTE.findall(speech))):
+                    # Include both parts of a split quotation when they share the same attribution.
+                    answer = speech if speech.count('"') > 2 else speech.strip('"').rstrip(',')
+                    confirmed[speech] = PassageReread(query, passage, checked, excerpt=excerpt, answer=answer)
+        return next(iter(confirmed.values())) if len(confirmed) == 1 else None
+
+    def _reread_group_request(self, question, candidates):
+        request = GROUP_REQUEST.fullmatch(question)
+        if not request:
+            return None
+        speaker, setting = request.groups()
+        place = re.findall(r'\b[A-Z][a-z-]+\b', setting)
+        if not place:
+            return None
+        query = f'What did {speaker} suggest they should do?'
+        confirmed = {}
+        for passage, _ in candidates:
+            if not set(search_terms(place[-1])).intersection(search_terms(passage.heading)):
+                continue
+            paragraphs = _complete_paragraphs(passage)
+            for narration, speech in zip(paragraphs, paragraphs[1:]):
+                if not re.match(rf'{re.escape(speaker)}\b', narration, re.IGNORECASE):
+                    continue
+                quote = re.match(r'^"(Let\'s [^"]+)" (?:he|she) said\b', speech)
+                if not quote:
+                    continue
+                excerpt = f'{narration} {speech}'
+                checked, = self.reader.read(query, [replace(passage, text=excerpt)])
+                if checked.margin >= MIN_SINGLE_PASSAGE_MARGIN and checked.text and checked.text in quote[1]:
+                    confirmed[quote[1]] = PassageReread(query, passage, checked, excerpt=excerpt)
+        return next(iter(confirmed.values())) if len(confirmed) == 1 else None
+
+    def _reread_request_reason(self, speaker, candidates):
+        previous = self.previous_source
+        action = re.sub(r"^let's ", '', self.previous_answer.rstrip('!.?'), flags=re.IGNORECASE)
+        query = f'Why did {speaker} want them to {action}?'
+        confirmed = []
+        for passage, _ in candidates:
+            if not _overlapping_passages(passage, previous):
+                continue
+            paragraphs = _complete_paragraphs(passage)
+            for i, paragraph in enumerate(paragraphs):
+                attributed_to, speech = _tagged_speech(paragraph)
+                if _person_key(attributed_to) != _person_key(speaker):
+                    continue
+                excerpt = ' '.join(paragraphs[max(0, i - 2):i + 1])
+                checked, = self.reader.read(query, [replace(passage, text=excerpt)])
+                if checked.margin >= MIN_SINGLE_PASSAGE_MARGIN and checked.text and checked.text in speech:
+                    confirmed.append(PassageReread(query, passage, checked, excerpt=excerpt))
+        return max(confirmed, key=lambda read: read.span.margin, default=None)
 
     def _reread_sentence(self, question, passage, span):
         excerpt, offset = _answer_sentence(passage, span)
@@ -899,9 +1051,23 @@ class BookSession:
             if fallback[1] is not None:
                 text, source, candidates, spans = fallback
                 rejected_query, reader_question = reader_question, question
+        speech_echo = source is not None and _repeated_speech(question, earlier_question, text, earlier_answer)
+        if speech_echo:
+            text, source = NO_ANSWER, None
         reread = self._reread_followup(question, text, source, candidates) if history_used else None
-        if reread is None and source is None and candidates and spans:
-            reread = self._reread_sentence(reader_question, candidates[0][0], spans[0])
+        previous_request = GROUP_REQUEST.fullmatch(earlier_question)
+        reason = previous_request and self.previous_source and REQUEST_REASON.fullmatch(question)
+        if reread is None and reason and (source is None or not _overlapping_passages(source, self.previous_source)):
+            # A short question about a quoted request cannot point to a different scene.
+            text, source = NO_ANSWER, None
+            reread = self._reread_request_reason(previous_request[1], candidates)
+        elif reread is None and source is None and candidates and spans:
+            previous = self.previous_source if history_used else None
+            reread = self._reread_speech(reader_question, candidates, previous)
+            if reread is None:
+                reread = self._reread_group_request(reader_question, candidates)
+            if reread is None and not speech_echo:
+                reread = self._reread_sentence(reader_question, candidates[0][0], spans[0])
         elif reread is None and source is not None:
             selected = next((span for (passage, _), span in zip(candidates, spans) if passage == source), None)
             if selected is not None and selected.start is not None:
@@ -909,7 +1075,9 @@ class BookSession:
                 if reread is None:
                     text = _instrument_answer(question, source, selected)
         if reread is not None:
-            text, source = reread.span.text, reread.passage
+            text, source = reread.answer or reread.span.text, reread.passage
+            if PROMISE.fullmatch(question):
+                text = text.strip('"')
             if reread.excerpt is None and REACTION.fullmatch(question):
                 sentence, _ = _answer_sentence(source, reread.span)
                 if sentence and len(sentence.split()) <= 32:

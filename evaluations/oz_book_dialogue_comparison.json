@@ -1,0 +1,466 @@
+{
+  "baseline_code_commit": "d1ff50e23a119fe84e08ed9d866dde20f456bc36",
+  "history": "generated",
+  "book_sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9",
+  "reader_model": "deepset/minilm-uncased-squad2",
+  "reader_revision": "934656cdda79824eabf503ed56e15c01ddbdbe3f",
+  "review_method": "All changed benchmark replies were reviewed against the question, expected answer and cited lines. Preserve earlier correctness judgments when the reply and citation match. A partial answer is excluded from the correct count.",
+  "reviewed_questions": {
+    "fixture": "data/oz_book_lookup_generalization_test.jsonl",
+    "test_sha256": "9fff016f4c4d293ca411ca9afeabb3f1613daf39f7efb46b24c7dc601a2f25c8",
+    "turns": 40,
+    "correct_first_replies_with_support": {
+      "before": 18,
+      "after": 20,
+      "total": 20
+    },
+    "correct_followups_with_support": {
+      "before": 15,
+      "after": 17,
+      "total": 20
+    },
+    "abstentions": {
+      "before": 6,
+      "after": 2
+    },
+    "reviewed_misses": [
+      {
+        "conversation": 3,
+        "turn": 2,
+        "prompt": "What else did he say fell along with them?",
+        "expected": "Some stones.",
+        "before": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "What else did the Sorcerer say fell along with them?",
+          "reread": null
+        },
+        "after": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "What else did the Sorcerer say fell along with them?",
+          "reread": null
+        },
+        "verdict_after": "abstained",
+        "review": "Both runs find references to stones. The reader still lacks confidence that these are the stones from the second rain."
+      },
+      {
+        "conversation": 5,
+        "turn": 2,
+        "prompt": "How do they mend when the roofs crack?",
+        "expected": "They grow together again over time.",
+        "before": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "How do they mend when the roofs crack (context: long did it take the glass houses in the Mangaboo city to grow so large)?",
+          "reread": null
+        },
+        "after": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "How do they mend when the roofs crack (context: long did it take the glass houses in the Mangaboo city to grow so large)?",
+          "reread": null
+        },
+        "verdict_after": "abstained",
+        "review": "The passage explains that the houses grow together again. The reader still extracts the time it took the houses to grow originally."
+      },
+      {
+        "conversation": 7,
+        "turn": 2,
+        "prompt": "What did Dorothy promise them?",
+        "expected": "She would not let the kitten hurt them.",
+        "before": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "What did Dorothy promise them (context: did the piglets look while watching Eureka eat a fish)?",
+          "reread": null
+        },
+        "after": {
+          "reply": "I'll not let the kitten hurt you.",
+          "citation": {
+            "section": "Chapter 5",
+            "start_line": 1530,
+            "end_line": 1556
+          },
+          "reader_query": "What did Dorothy promise them (context: did the piglets look while watching Eureka eat a fish)?",
+          "reread": {
+            "query": "What did Dorothy tell the piglets to reassure them?",
+            "span": "I'll not let the kitten hurt you.\"",
+            "margin": 8.584233,
+            "excerpt": null
+          }
+        },
+        "verdict_after": "correct",
+        "review": "The reader verifies the promise in Dorothy’s own dialogue near the frightened piglets."
+      },
+      {
+        "conversation": 12,
+        "turn": 1,
+        "prompt": "What did Jim ask the others to do when he first looked into the Country of the Gargoyles?",
+        "expected": "Go back down the stairs.",
+        "before": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "What did Jim ask the others to do when he first looked into the Country of the Gargoyles?",
+          "reread": null
+        },
+        "after": {
+          "reply": "go down again",
+          "citation": {
+            "section": "Chapter 11",
+            "start_line": 2843,
+            "end_line": 2867
+          },
+          "reader_query": "What did Jim ask the others to do when he first looked into the Country of the Gargoyles?",
+          "reread": {
+            "query": "What did Jim suggest they should do?",
+            "span": "go down again",
+            "margin": 7.630698,
+            "excerpt": "Jim, who was in advance, saw the last stair before him and stuck his head above the rocky sides of the stairway. Then he halted, ducked down and began to back up, so that he nearly fell with the buggy onto the others. \"Let's go down again!\" he said, in his hoarse voice."
+          }
+        },
+        "verdict_after": "correct",
+        "review": "The neighboring paragraph names Jim and the reader confirms his suggestion to go back down."
+      },
+      {
+        "conversation": 12,
+        "turn": 2,
+        "prompt": "Why did he want that?",
+        "expected": "He thought the place was dangerous and unfit for living creatures. Everything looked dead.",
+        "before": {
+          "reply": "thinking he might find something proper to eat",
+          "citation": {
+            "section": "Chapter 4",
+            "start_line": 1089,
+            "end_line": 1109
+          },
+          "reader_query": "Why did Jim want that?",
+          "reread": null
+        },
+        "after": {
+          "reply": "It's dangerous",
+          "citation": {
+            "section": "Chapter 11",
+            "start_line": 2857,
+            "end_line": 2880
+          },
+          "reader_query": "Why did Jim want that?",
+          "reread": {
+            "query": "Why did Jim want them to go down again?",
+            "span": "It's dangerous",
+            "margin": 3.99246,
+            "excerpt": "\"Everything,\" grumbled the horse. \"I've taken a look at this place, and it's no fit country for real creatures to go to. Everything's dead, up there--no flesh or blood or growing thing anywhere.\" \"Never mind; we can't turn back,\" said Dorothy; \"and we don't intend to stay there, anyhow.\" \"It's dangerous,\" growled Jim, in a stubborn tone."
+          }
+        },
+        "verdict_after": "partial",
+        "review": "The reply stays in the Gargoyles scene and gives Jim’s stated reason. It leaves out his explanation that the place appeared dead and unfit for living creatures."
+      },
+      {
+        "conversation": 19,
+        "turn": 1,
+        "prompt": "What did the Scarecrow say about the mind's eye during the Woggle-Bug's speech?",
+        "expected": "The mind had no eye and was blind.",
+        "before": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "What did the Scarecrow say about the mind's eye during the Woggle-Bug's speech?",
+          "reread": null
+        },
+        "after": {
+          "reply": "\"The mind has no eye,\" declared the Scarecrow. \"It's blind.\"",
+          "citation": {
+            "section": "Chapter 19",
+            "start_line": 5128,
+            "end_line": 5153
+          },
+          "reader_query": "What did the Scarecrow say about the mind's eye during the Woggle-Bug's speech?",
+          "reread": {
+            "query": "What did the Scarecrow say about the mind's eye during the Woggle-Bug's speech?",
+            "span": "It's blind",
+            "margin": 7.898249,
+            "excerpt": "\"The mind has no eye,\" declared the Scarecrow. \"It's blind.\""
+          }
+        },
+        "verdict_after": "correct",
+        "review": "The full statement includes both parts of the Scarecrow’s attributed quote."
+      },
+      {
+        "conversation": 19,
+        "turn": 2,
+        "prompt": "What did Ozma tell the Woggle-Bug about it?",
+        "expected": "If he had one, it was invisible.",
+        "before": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "What did Ozma tell the Woggle-Bug about the item the Scarecrow said about the mind's eye during the Woggle-Bug's speech?",
+          "reread": null
+        },
+        "after": {
+          "reply": "If you have, it is invisible",
+          "citation": {
+            "section": "Chapter 19",
+            "start_line": 5128,
+            "end_line": 5153
+          },
+          "reader_query": "What did Ozma tell the Woggle-Bug about the mind's eye?",
+          "reread": {
+            "query": "What did the Princess tell the Woggle-Bug about the mind's eye?",
+            "span": "it is invisible",
+            "margin": 6.819967,
+            "excerpt": "\"Your Highness,\" cried the Woggle-Bug, appealing to Ozma, \"have I a mind's eye, or haven't I?\" \"If you have, it is invisible,\" said the Princess."
+          }
+        },
+        "verdict_after": "correct",
+        "review": "The follow-up retains the earlier topic. The cited exchange names the Woggle-Bug as the person asking Ozma about his mind’s eye."
+      }
+    ]
+  },
+  "new_dialogue_questions": {
+    "fixture": "data/oz_book_lookup_dialogue_check.jsonl",
+    "test_sha256": "1d84d4030cc3a73922d94bfcaa4554bc90d5efae7801fac9180b2d0073f5bb69",
+    "turns": 12,
+    "use": "New questions were written from the source and frozen before either version saw the fixture. The first edited run repeated Dorothy’s answer for the Braided Man. The repeated-speaker guard was added after that check and both versions were compared again.",
+    "correct_first_replies_with_support": {
+      "before": 5,
+      "after": 5,
+      "total": 7
+    },
+    "correct_followups_with_support": {
+      "before": 1,
+      "after": 1,
+      "total": 5
+    },
+    "abstentions": {
+      "before": 4,
+      "after": 4
+    },
+    "reviewed_turns": [
+      {
+        "conversation": 1,
+        "turn": 1,
+        "prompt": "What did Dorothy say about living among the Mangaboos when the Wizard suggested fighting?",
+        "expected": "She would rather die there than live any longer among them.",
+        "reply_and_citation": {
+          "reply": "I'd as soon die here as live much longer among those cruel and heartless people.\"",
+          "citation": {
+            "section": "Chapter 7",
+            "start_line": 1903,
+            "end_line": 1924
+          },
+          "reader_query": "What did Dorothy say about living among the Mangaboos when the Wizard suggested fighting?",
+          "reread": null
+        },
+        "verdict_in_both_runs": "correct"
+      },
+      {
+        "conversation": 1,
+        "turn": 2,
+        "prompt": "What did the Wizard tell the children about it?",
+        "expected": "He would go along with whatever they decided, but they could not live long in the cavern.",
+        "reply_and_citation": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "What did the Wizard tell the children about the item Dorothy said about living among the Mangaboos when the Wizard suggested fighting?",
+          "reread": null
+        },
+        "verdict_in_both_runs": "abstained"
+      },
+      {
+        "conversation": 2,
+        "turn": 1,
+        "prompt": "What did the Wizard tell Jim about crossing the last stretch of the Valley of Voe?",
+        "expected": "He had to make a dash and run as fast as he could.",
+        "reply_and_citation": {
+          "reply": "if there is any way we can get out of your beautiful Valley, and on top of the Earth again",
+          "citation": {
+            "section": "Chapter 9",
+            "start_line": 2331,
+            "end_line": 2353
+          },
+          "reader_query": "What did the Wizard tell Jim about crossing the last stretch of the Valley of Voe?",
+          "reread": null
+        },
+        "verdict_in_both_runs": "incorrect"
+      },
+      {
+        "conversation": 2,
+        "turn": 2,
+        "prompt": "What did Jim say about his ability to dash?",
+        "expected": "He would try his best, but he was old and his dashing days were over.",
+        "reply_and_citation": {
+          "reply": "\"and run as fast as you can go",
+          "citation": {
+            "section": "Chapter 9",
+            "start_line": 2517,
+            "end_line": 2534
+          },
+          "reader_query": "What did Jim say about his ability to dash?",
+          "reread": null
+        },
+        "verdict_in_both_runs": "incorrect"
+      },
+      {
+        "conversation": 3,
+        "turn": 1,
+        "prompt": "What did Dorothy say about the fabric of her gown when the Braided Man tried to sell her rustles?",
+        "expected": "Her gown was not silk.",
+        "reply_and_citation": {
+          "reply": "My gown isn't silk",
+          "citation": {
+            "section": "Chapter 10",
+            "start_line": 2676,
+            "end_line": 2704
+          },
+          "reader_query": "What did Dorothy say about the fabric of her gown when the Braided Man tried to sell her rustles?",
+          "reread": null
+        },
+        "verdict_in_both_runs": "correct"
+      },
+      {
+        "conversation": 3,
+        "turn": 2,
+        "prompt": "What did the Braided Man tell Dorothy about it?",
+        "expected": "The rustles would escape when the box opened whether she wore a silk dress or not.",
+        "reply_and_citation": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "What did the Braided Man tell Dorothy about the fabric of her gown?",
+          "reread": null
+        },
+        "verdict_in_both_runs": "abstained"
+      },
+      {
+        "conversation": 4,
+        "turn": 1,
+        "prompt": "What did the Wizard say about paying for the flutters?",
+        "expected": "He had no money with him.",
+        "reply_and_citation": {
+          "reply": "I have no money",
+          "citation": {
+            "section": "Chapter 10",
+            "start_line": 2694,
+            "end_line": 2715
+          },
+          "reader_query": "What did the Wizard say about paying for the flutters?",
+          "reread": null
+        },
+        "verdict_in_both_runs": "correct"
+      },
+      {
+        "conversation": 4,
+        "turn": 2,
+        "prompt": "What did the Braided Man want instead of money?",
+        "expected": "A blue hair-ribbon.",
+        "reply_and_citation": {
+          "reply": "a blue hair-ribbon",
+          "citation": {
+            "section": "Chapter 10",
+            "start_line": 2707,
+            "end_line": 2725
+          },
+          "reader_query": "What did the Braided Man want instead of money?",
+          "reread": null
+        },
+        "verdict_in_both_runs": "correct"
+      },
+      {
+        "conversation": 5,
+        "turn": 1,
+        "prompt": "What did the Wizard say about the damage Jim did to the wooden Gargoyles?",
+        "expected": "He only knocked a few splinters from their noses and ears.",
+        "reply_and_citation": {
+          "reply": "to knock a few splinters from their noses and ears",
+          "citation": {
+            "section": "Chapter 11",
+            "start_line": 2972,
+            "end_line": 2990
+          },
+          "reader_query": "What did the Wizard say about the damage Jim did to the wooden Gargoyles?",
+          "reread": null
+        },
+        "verdict_in_both_runs": "correct"
+      },
+      {
+        "conversation": 5,
+        "turn": 2,
+        "prompt": "What did Dorothy say about retreating down the stairs?",
+        "expected": "She opposed going back because they would never get home that way and wanted to fight it out.",
+        "reply_and_citation": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "What did Dorothy say about retreating down the stairs?",
+          "reread": null
+        },
+        "verdict_in_both_runs": "abstained"
+      },
+      {
+        "conversation": 6,
+        "turn": 1,
+        "prompt": "What did the Wizard ask the others to do when they were about to be sealed in by the Mangaboos?",
+        "expected": "He suggested jumping out and fighting.",
+        "reply_and_citation": {
+          "reply": "I couldn't find an answer supported by the book.",
+          "citation": null,
+          "reader_query": "What did the Wizard ask the others to do when they were about to be sealed in by the Mangaboos?",
+          "reread": null
+        },
+        "verdict_in_both_runs": "abstained"
+      },
+      {
+        "conversation": 7,
+        "turn": 1,
+        "prompt": "What did the Wizard say about associating with strangers in the dragonettes’ cave?",
+        "expected": "They were a little particular about who they associated with.",
+        "reply_and_citation": {
+          "reply": "a little particular",
+          "citation": {
+            "section": "Chapter 13",
+            "start_line": 3596,
+            "end_line": 3615
+          },
+          "reader_query": "What did the Wizard say about associating with strangers in the dragonettes’ cave?",
+          "reread": null
+        },
+        "verdict_in_both_runs": "correct"
+      }
+    ]
+  },
+  "other_regression_fixtures": [
+    {
+      "fixture": "data/oz_book_lookup_test.jsonl",
+      "test_sha256": "fdb302e5e6c8fc12d6de0cde1f96d3489982657d0ddb97b23173a2b3d495b625",
+      "turns": 29,
+      "changed_replies_or_citations": 0
+    },
+    {
+      "fixture": "data/oz_book_lookup_quality_test.jsonl",
+      "test_sha256": "2fdc91b949111fc3485cd984027240a4b56325f08f5282301f55ee7158166cca",
+      "turns": 26,
+      "changed_replies_or_citations": 0
+    },
+    {
+      "fixture": "data/oz_chat_test.jsonl",
+      "test_sha256": "1c29194de5fcf79db46c2097ba1fd8e150c205cddd22e33a9b1b0d96052755ea",
+      "turns": 32,
+      "changed_replies_or_citations": 0
+    },
+    {
+      "fixture": "data/oz_book_lookup_dev.jsonl",
+      "test_sha256": "dad905b394e32445e8a3c744be8e00d61ad95692d63f5aa53a29d6ed27883608",
+      "turns": 20,
+      "changed_replies_or_citations": 0
+    },
+    {
+      "fixture": "data/oz_book_lookup_completion_check.jsonl",
+      "test_sha256": "4f4a837be34798205d7300011e2f2b95c85f3920bc1bc3d19cd72b6db35675ca",
+      "turns": 11,
+      "changed_replies_or_citations": 0
+    },
+    {
+      "fixture": "data/oz_book_lookup_confidence_check.jsonl",
+      "test_sha256": "b259a317a0fc8afea9d16096c78e04e7e3e3db90da9b06dfb7687ab58dc30f62",
+      "turns": 12,
+      "changed_replies_or_citations": 0
+    }
+  ]
+}

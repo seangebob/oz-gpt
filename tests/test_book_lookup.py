@@ -189,6 +189,104 @@ The Wizard was born in Omaha.
 
         self.assertEqual((reply.text, reply.source), ('sixteen', passage))
 
+    def test_speech_reread_keeps_both_quotes_from_the_same_speaker(self):
+        book = """CHAPTER 1.
+
+THE WORKSHOP
+
+"The clock has stopped," said Dana. "It needs a spring."
+
+"I can repair the clock," said Ezra.
+"""
+        index = BookIndex.from_text(book)
+        reader = Mock()
+        reader.read.side_effect = [
+            [AnswerSpan('I can repair the clock', 0.5)],
+            [AnswerSpan('It needs a spring', 6)],
+        ]
+        session = BookSession(index, reader, trace_passages=True)
+
+        reply = session.reply('What did Dana say about the clock?')
+
+        self.assertEqual(reply.text, '"The clock has stopped," said Dana. "It needs a spring."')
+        self.assertIn(reply.text, reply.source.text)
+        self.assertEqual(reply.passage_trace.reread.span.text, 'It needs a spring')
+
+    def test_speech_reread_cannot_use_a_different_speakers_topic(self):
+        book = """CHAPTER 1.
+
+THE WORKSHOP
+
+"The clock has stopped," said Ezra.
+
+"We will start soon," said Dana.
+"""
+        reader = Mock()
+        reader.read.return_value = [AnswerSpan('The clock has stopped', 0.5)]
+        session = BookSession(BookIndex.from_text(book), reader)
+
+        self.assertEqual(session.reply('What did Dana say about the clock?').text, NO_ANSWER)
+        reader.read.assert_called_once()
+
+    def test_dialogue_followup_reuses_the_explicit_topic(self):
+        self.assertEqual(
+            followup_question(
+                'What did Ezra tell Dana about it?',
+                'What did Dana say about the clock during the meeting?',
+                'The clock had stopped.',
+            ),
+            'What did Ezra tell Dana about the clock?',
+        )
+
+    def test_dialogue_followup_does_not_echo_the_other_speaker(self):
+        book = """CHAPTER 1.
+
+THE WORKSHOP
+
+"The clock stopped," said Dana.
+
+"We'll find a spring," said Ezra.
+"""
+        index = BookIndex.from_text(book)
+        session = BookSession(index, Mock(), trace_passages=True)
+        session.reader.read.return_value = [AnswerSpan('The clock stopped', 8)]
+        prior = session.reply('What did Dana say about the clock?')
+        reply = session.reply('What did Ezra tell Dana about it?')
+
+        self.assertEqual(prior.text, 'The clock stopped')
+        self.assertEqual(reply.text, NO_ANSWER)
+        self.assertEqual(reply.passage_trace.query, 'What did Ezra tell Dana about the clock?')
+
+    def test_request_reason_rejects_a_confident_answer_from_another_scene(self):
+        book = """CHAPTER 1.
+
+THE WORKSHOP
+
+Dana checked the tools.
+
+"Let's find a new spring!" she said.
+
+CHAPTER 2.
+
+THE COUNCIL
+
+Dana wanted to hear from the council.
+"""
+        index = BookIndex.from_text(book)
+        first, distant = index.passages
+        reader = Mock()
+        reader.read.return_value = [AnswerSpan('hear from the council', 12.0), AnswerSpan('new spring', 0.0)]
+        session = BookSession(index, reader, trace_passages=True)
+        session.previous_question = 'What did Dana ask everyone to do when they reached the Workshop?'
+        session.previous_answer = 'find a new spring'
+        session.previous_source = first
+        with patch.object(index, 'search', return_value=[(distant, 4.0), (first, 3.0)]):
+            reply = session.reply('Why did she want that?')
+
+        self.assertEqual(reply.text, NO_ANSWER)
+        self.assertIsNone(reply.source)
+        self.assertEqual(reply.passage_trace.candidates[0][0], distant)
+
     def test_reaction_reread_quotes_the_previous_reply_and_stays_in_the_scene(self):
         speech = 'The canal will flood the lower fields'
         reaction = 'They were scared and ran to the hill.'
