@@ -3,6 +3,7 @@ from unittest.mock import Mock
 
 import torch
 
+from model.book_lookup import AnswerSpan, BookSession, Passage
 from model.chat_data import END_OF_TURN, ChatTokenizer, format_prompt, format_turn
 from model.chat_evaluation import correctness, generate_predictions, reference_matches
 from model.chat_session import ChatSession, DEFAULT_MAX_TOKENS, REPLY_RESERVE
@@ -44,6 +45,66 @@ class ChatEvaluationTests(unittest.TestCase):
                 self.assertEqual([row['clean_stop'] for row in rows], [None, True])
                 self.assertEqual(rows[1]['history_used'], mode != 'none')
                 self.assertTrue(all(row['reference_match'] for row in rows))
+
+    def test_book_assistance_preserves_classifier_and_its_followup(self):
+        tokenizer = ChatTokenizer(chars)
+        book = Mock(spec=BookSession, previous_source=None)
+        model, classifier = Mock(), Mock()
+        classifier.predict.return_value = 'A horse.'
+
+        def generate(context, *_args, **_kwargs):
+            return torch.cat((context, torch.tensor([tokenizer.encode('A cab-horse.' + END_OF_TURN)])), dim=1)
+
+        model.generate.side_effect = generate
+        session = ChatSession(model, tokenizer, first_reply_classifier=classifier, book_session=book)
+
+        first = session.reply('Who is Jim?')
+        second = session.reply('What kind?')
+        third = session.reply('What happened next?')
+
+        self.assertEqual((first.reply_method, second.reply_method, third.reply_method),
+                         ('classifier', 'generator', 'generator'))
+        self.assertTrue(second.history_used)
+        book.reply.assert_not_called()
+        book.remember.assert_called_with('What happened next?', 'A cab-horse.')
+
+    def test_book_assistance_uses_cited_history_and_keeps_generator_fallback(self):
+        tokenizer = ChatTokenizer(chars)
+        passage = Passage('Chapter 1', 1, 4, 'Jim pulled a buggy. The buggy was red.')
+        index = Mock(search=Mock(return_value=[(passage, 2.0)]))
+
+        def read(question, passages):
+            text = {'What did Jim pull?': 'a buggy', 'What color was the item Jim pulled?': 'red'}.get(question, '')
+            return [AnswerSpan(text, 8) for _ in passages]
+
+        book = BookSession(index, Mock(read=Mock(side_effect=read)), trace_passages=True)
+        conversations = [(1, {'messages': [
+            {'role': 'user', 'content': 'What did Jim pull?'},
+            {'role': 'assistant', 'content': 'A buggy.'},
+            {'role': 'user', 'content': 'What color was it?'},
+            {'role': 'assistant', 'content': 'Red.'},
+            {'role': 'user', 'content': 'Where is Zeb?'},
+            {'role': 'assistant', 'content': 'At the ranch.'},
+        ]})]
+        model = Mock()
+
+        def generate(context, *_args, **_kwargs):
+            prompt = tokenizer.decode(context[0].tolist())
+            self.assertIn('red', prompt)
+            return torch.cat((context, torch.tensor([tokenizer.encode('At the ranch.' + END_OF_TURN)])), dim=1)
+
+        model.generate.side_effect = generate
+        rows = generate_predictions(model, tokenizer, conversations, 'generated', DEFAULT_MAX_TOKENS,
+                                    book_session=book)
+
+        self.assertEqual([row['reply_method'] for row in rows], ['book', 'book', 'generator'])
+        self.assertEqual([row['clean_stop'] for row in rows], [None, None, True])
+        self.assertTrue(rows[1]['history_used'])
+        self.assertEqual(rows[1]['source']['section'], 'Chapter 1')
+        self.assertEqual(rows[1]['passage_trace']['previous_answer'], 'a buggy')
+        self.assertIsNone(rows[2]['source'])
+        self.assertIsNone(rows[2]['passage_trace']['selected_rank'])
+        self.assertEqual(book.previous_answer, 'At the ranch.')
 
     def test_history_modes_use_the_right_reply_and_reset_between_conversations(self):
         tokenizer = ChatTokenizer(chars)

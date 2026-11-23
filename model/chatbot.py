@@ -22,11 +22,14 @@ modes.add_argument('--book', action='store_true', help='Look up answers in the b
 modes.add_argument('--checkpoint', type=Path, help='Use a different base checkpoint for text completion')
 parser.add_argument('--first-reply-classifier', nargs='?', const=FIRST_REPLY_CHECKPOINT, type=Path,
                     metavar='CHECKPOINT', help='Classify the first reply to known facts in --chat mode')
+parser.add_argument('--book-assist', action='store_true', help='Use cited answers from the Oz book in --chat mode')
 args = parser.parse_args()
 if args.chat and args.max_tokens < 1:
     parser.error('--max_tokens must be positive in chat mode.')
 if args.first_reply_classifier and not args.chat:
     parser.error('--first-reply-classifier requires --chat.')
+if args.book_assist and not args.chat:
+    parser.error('--book-assist requires --chat.')
 
 if args.book:
     print('Loading the Oz book and its answer reader...')
@@ -63,8 +66,15 @@ else:
 
     model.eval()
     if args.chat:
+        book_session = None
+        if args.book_assist:
+            print('Loading the Oz book and its answer reader...')
+            try:
+                book_session = BookSession.from_book()
+            except (OSError, ValueError, RuntimeError) as error:
+                parser.exit(1, f'Book lookup error: {error}\n')
         session = ChatSession(model, tokenizer, device=device, max_tokens=args.max_tokens,
-                              first_reply_classifier=classifier)
+                              first_reply_classifier=classifier, book_session=book_session)
     print("Model loaded successfully!\n")
 
 # Interactive chat loop
@@ -101,11 +111,13 @@ while True:
                 print(f"({error})")
                 continue
             print(f"\nAssistant: {reply.text}")
-            if args.book and reply.source:
+            if reply.source:
                 source = reply.source
                 print(f'Source: {source.section}, lines {source.start_line}–{source.end_line}')
             elif args.chat and reply.reply_method == 'classifier':
                 print('Reply method: trained classifier')
+            elif args.book_assist:
+                print('Reply method: trained generator')
             print()
             continue
 

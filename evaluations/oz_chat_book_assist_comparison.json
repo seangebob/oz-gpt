@@ -1,0 +1,1489 @@
+{
+  "baseline_code_commit": "4ec464486a67efa3ac7385436d69212538909a94",
+  "history": "generated",
+  "design": "Both runs use the same coverage checkpoint and first-reply classifier. The assisted run adds the existing book reader when a question passes the routing rules. The older 16-question unseen-fact set was already used in a standalone book lookup review. The separate 14-turn fixture was frozen before scoring and its book line ranges were checked against the annotated sources in the existing fixtures.",
+  "scoring": "For unchanged replies, reuse the previously reviewed chat judgments. Review changed replies against the original question and, for book replies, the cited passage. Count correct cited replies separately. For the new fixture, review both versions.",
+  "benchmarks": {
+    "memory": {
+      "fixture": "data/oz_chat_memory_test.jsonl",
+      "test_sha256": "2624fe8edbf3ae5c728ec16277f5eae2ecd1691b21ca8668708db9d755aaa061",
+      "conversations": 18,
+      "changed_replies": [
+        {
+          "conversation": 1,
+          "turn": 1,
+          "prompt": "At the Emerald City palace, what costume did Zeb try on?",
+          "expected": "A velvet costume.",
+          "before": {
+            "reply": "Silver.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "maroon velvet",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 15",
+              "start_line": 4081,
+              "end_line": 4097
+            }
+          },
+          "review_note": "The boy selected a maroon velvet costume."
+        },
+        {
+          "conversation": 1,
+          "turn": 2,
+          "prompt": "What color was it?",
+          "expected": "Maroon.",
+          "before": {
+            "reply": "Black.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "maroon velvet",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 15",
+              "start_line": 4081,
+              "end_line": 4097
+            }
+          },
+          "review_note": "Maroon is the color of the costume in the same passage."
+        },
+        {
+          "conversation": 12,
+          "turn": 1,
+          "prompt": "What riding seat was strapped to the horse that Jim met?",
+          "expected": "Ozma's saddle.",
+          "before": {
+            "reply": "Jim stood still.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "buggy",
+            "reply_method": "book",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": {
+              "section": "Chapter 1",
+              "start_line": 280,
+              "end_line": 302
+            }
+          },
+          "review_note": "The cited buggy scene does not describe Ozma’s saddle."
+        },
+        {
+          "conversation": 12,
+          "turn": 2,
+          "prompt": "What was it made of?",
+          "expected": "Red leather.",
+          "before": {
+            "reply": "Leather.",
+            "reply_method": "generator",
+            "correct": true,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "THE HUNGRY TIGER",
+            "reply_method": "book",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": {
+              "section": "Chapter 17",
+              "start_line": 4820,
+              "end_line": 4838
+            }
+          },
+          "review_note": "The passage is about the Hungry Tiger intervening after the race."
+        },
+        {
+          "conversation": 13,
+          "turn": 1,
+          "prompt": "What became of the Sorcerer's body after the Wizard's duel?",
+          "expected": "They buried Gwig.",
+          "before": {
+            "reply": "She got the Star of Royalty.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "cut the body of the Sorcerer exactly in two",
+            "reply_method": "book",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": {
+              "section": "Chapter 3",
+              "start_line": 1041,
+              "end_line": 1061
+            }
+          },
+          "review_note": "The reply describes the duel itself. The question asks what happened afterward."
+        },
+        {
+          "conversation": 13,
+          "turn": 2,
+          "prompt": "Where was that?",
+          "expected": "In the planting-ground.",
+          "before": {
+            "reply": "The Wizard.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "sliced turnip or potato",
+            "reply_method": "book",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": {
+              "section": "Chapter 3",
+              "start_line": 1053,
+              "end_line": 1075
+            }
+          },
+          "review_note": "The simile gives no burial location."
+        },
+        {
+          "conversation": 18,
+          "turn": 1,
+          "prompt": "What feature did Dorothy make out with the telescope?",
+          "expected": "An archway.",
+          "before": {
+            "reply": "A string of pearls.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "opening",
+            "reply_method": "book",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": {
+              "section": "Chapter 12",
+              "start_line": 3232,
+              "end_line": 3251
+            }
+          },
+          "review_note": "Opening is too broad to identify the archway."
+        },
+        {
+          "conversation": 18,
+          "turn": 2,
+          "prompt": "Where was that?",
+          "expected": "Inside a rock.",
+          "before": {
+            "reply": "In Ozma's room.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "inside that rock, which reaches up into the clouds, is an archway",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 12",
+              "start_line": 3243,
+              "end_line": 3264
+            }
+          },
+          "review_note": "The Wizard specifies that the archway is inside the rock."
+        }
+      ],
+      "before": {
+        "first_replies": 18,
+        "correct_first_replies": 12,
+        "followups": 18,
+        "correct_followups": 11,
+        "correct_with_book_citation": 0,
+        "reply_methods": {
+          "generator": 22,
+          "classifier": 14
+        }
+      },
+      "after": {
+        "first_replies": 18,
+        "correct_first_replies": 13,
+        "followups": 18,
+        "correct_followups": 12,
+        "correct_with_book_citation": 3,
+        "reply_methods": {
+          "book": 8,
+          "classifier": 14,
+          "generator": 14
+        }
+      }
+    },
+    "coverage": {
+      "fixture": "data/oz_chat_coverage_test.jsonl",
+      "test_sha256": "7a82ab6453a1154655931cd258a91af9710d402580bbe159359edb43f9eba838",
+      "conversations": 30,
+      "changed_replies": [
+        {
+          "conversation": 2,
+          "turn": 1,
+          "prompt": "How did the Wizard's catch vanish so quickly?",
+          "expected": "It was eaten.",
+          "before": {
+            "reply": "The jurors.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "the Wizard and Zeb both sailed over the dashboard and landed in the soft grass",
+            "reply_method": "book",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": {
+              "section": "Chapter 9",
+              "start_line": 2538,
+              "end_line": 2557
+            }
+          },
+          "review_note": "The extract describes the buggy pitching the passengers into the grass."
+        },
+        {
+          "conversation": 2,
+          "turn": 2,
+          "prompt": "Who did that?",
+          "expected": "Eureka.",
+          "before": {
+            "reply": "A kitten.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "the Wizard and Zeb",
+            "reply_method": "book",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": {
+              "section": "Chapter 9",
+              "start_line": 2538,
+              "end_line": 2557
+            }
+          },
+          "review_note": "The source still concerns the buggy accident."
+        },
+        {
+          "conversation": 5,
+          "turn": 1,
+          "prompt": "What happened when Ozma ordered that her prisoner be kept in confinement?",
+          "expected": "She was taken to prison.",
+          "before": {
+            "reply": "Jim stood still.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "Carry this cat away to prison, and keep her in safe confinement until she is tried by law for the crime of murder",
+            "reply_method": "book",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": {
+              "section": "Chapter 18",
+              "start_line": 4980,
+              "end_line": 5002
+            }
+          },
+          "review_note": "The citation gives the order, and the question asks what happened after it."
+        },
+        {
+          "conversation": 8,
+          "turn": 1,
+          "prompt": "What were the racers supposed to go round on the far side of the course?",
+          "expected": "Trees.",
+          "before": {
+            "reply": "The Woggle-Bug.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "three trees",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 17",
+              "start_line": 4797,
+              "end_line": 4818
+            }
+          },
+          "review_note": "Zeb tells the horses to circle three trees."
+        },
+        {
+          "conversation": 8,
+          "turn": 2,
+          "prompt": "How many were there?",
+          "expected": "Three.",
+          "before": {
+            "reply": "In the planting-ground.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "three",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 17",
+              "start_line": 4797,
+              "end_line": 4818
+            }
+          },
+          "review_note": "The same passage gives the number of trees."
+        },
+        {
+          "conversation": 18,
+          "turn": 1,
+          "prompt": "Which fruit was the subject of Dorothy's warning after the kitten ate?",
+          "expected": "Damas.",
+          "before": {
+            "reply": "Damas.",
+            "reply_method": "generator",
+            "correct": true,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "fish",
+            "reply_method": "book",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": {
+              "section": "Chapter 9",
+              "start_line": 2505,
+              "end_line": 2522
+            }
+          },
+          "review_note": "The passage is from another episode in Voe. The fruit was damas."
+        },
+        {
+          "conversation": 27,
+          "turn": 1,
+          "prompt": "What color were the outfits of the band whose buttons were diamonds?",
+          "expected": "White.",
+          "before": {
+            "reply": "White.",
+            "reply_method": "generator",
+            "correct": true,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "white",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 17",
+              "start_line": 4660,
+              "end_line": 4676
+            }
+          },
+          "review_note": "The uniforms with diamond buttons were white."
+        },
+        {
+          "conversation": 28,
+          "turn": 1,
+          "prompt": "What did the horse say when he got back to his former position in the air?",
+          "expected": "Well, that's better!",
+          "before": {
+            "reply": "The Wizard.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "\"Well, that's better!",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 2",
+              "start_line": 417,
+              "end_line": 439
+            }
+          },
+          "review_note": "The quotation is what the horse says on resuming his former position in the air."
+        }
+      ],
+      "before": {
+        "first_replies": 30,
+        "correct_first_replies": 21,
+        "followups": 20,
+        "correct_followups": 8,
+        "correct_with_book_citation": 0,
+        "reply_methods": {
+          "classifier": 22,
+          "generator": 28
+        }
+      },
+      "after": {
+        "first_replies": 30,
+        "correct_first_replies": 22,
+        "followups": 20,
+        "correct_followups": 9,
+        "correct_with_book_citation": 4,
+        "reply_methods": {
+          "classifier": 22,
+          "generator": 20,
+          "book": 8
+        }
+      }
+    },
+    "unseen": {
+      "fixture": "data/oz_chat_generalization_test.jsonl",
+      "test_sha256": "754bd9df3bd40ff8c7dd8456bebb81a9e16410f35e10e860ba36a45ae8d5f706",
+      "conversations": 16,
+      "changed_replies": [
+        {
+          "conversation": 2,
+          "turn": 1,
+          "prompt": "Where did the Mangaboo Prince wear the star when he first questioned Zeb?",
+          "expected": "In his hair, above his forehead.",
+          "before": {
+            "reply": "A button.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "brow",
+            "reply_method": "book",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": {
+              "section": "Chapter 5",
+              "start_line": 1381,
+              "end_line": 1402
+            }
+          },
+          "review_note": "The citation describes the Prince transferring the star to the Princess, in a later scene."
+        },
+        {
+          "conversation": 3,
+          "turn": 1,
+          "prompt": "What sound did Gwig produce when he first waved his hand at the contest?",
+          "expected": "Tinkling bells.",
+          "before": {
+            "reply": "Revolvers.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "tinkling of bells",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 3",
+              "start_line": 944,
+              "end_line": 972
+            }
+          },
+          "review_note": "The Sorcerer waves a hand and the bells tinkle."
+        },
+        {
+          "conversation": 4,
+          "turn": 1,
+          "prompt": "Why couldn't a Mangaboo lend the Wizard a hat for his trick?",
+          "expected": "The Mangaboos did not wear hats.",
+          "before": {
+            "reply": "A balloon carried him down.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "the Mangaboos did not wear hats",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 3",
+              "start_line": 960,
+              "end_line": 985
+            }
+          },
+          "review_note": "The cited text says the Mangaboos do not wear hats."
+        },
+        {
+          "conversation": 5,
+          "turn": 1,
+          "prompt": "Which two fruits did the visitors find to eat in the Mangaboo gardens?",
+          "expected": "Strawberries and melons.",
+          "before": {
+            "reply": "He gathered the piglets.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "strawberries",
+            "reply_method": "book",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": {
+              "section": "Chapter 4",
+              "start_line": 1309,
+              "end_line": 1330
+            }
+          },
+          "review_note": "The reply is missing the second fruit and cites an earlier exchange."
+        },
+        {
+          "conversation": 8,
+          "turn": 1,
+          "prompt": "What sound did Zeb imitate to make Jim gallop faster on the way to the mountain?",
+          "expected": "A bear's growl.",
+          "before": {
+            "reply": "Leather.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "growl",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 9",
+              "start_line": 2526,
+              "end_line": 2545
+            }
+          },
+          "review_note": "A growl is the requested sound. The passage explicitly compares it with a bear’s."
+        },
+        {
+          "conversation": 9,
+          "turn": 1,
+          "prompt": "How did Gargoyles communicate without making sounds?",
+          "expected": "Signals with their fingers or lips.",
+          "before": {
+            "reply": "White.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "quick signals made with their wooden fingers or lips",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 11",
+              "start_line": 2913,
+              "end_line": 2930
+            }
+          },
+          "review_note": "The citation identifies their signals and how they made them."
+        },
+        {
+          "conversation": 12,
+          "turn": 1,
+          "prompt": "What did Ozma say the word Oz means in her language?",
+          "expected": "Great and Good.",
+          "before": {
+            "reply": "Revolvers.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "the Great and Terrible",
+            "reply_method": "book",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": {
+              "section": "Chapter 3",
+              "start_line": 849,
+              "end_line": 871
+            }
+          },
+          "review_note": "The extract concerns the Wizard’s title and cites the wrong scene."
+        },
+        {
+          "conversation": 14,
+          "turn": 1,
+          "prompt": "What did the Woggle-Bug say H. M. stands for in his title?",
+          "expected": "Highly Magnified.",
+          "before": {
+            "reply": "A striped the gred the picked.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "Highly Magnified",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 15",
+              "start_line": 4293,
+              "end_line": 4315
+            }
+          },
+          "review_note": "The Woggle-Bug expands his own initials."
+        }
+      ],
+      "before": {
+        "first_replies": 16,
+        "correct_first_replies": 0,
+        "followups": 0,
+        "correct_followups": 0,
+        "correct_with_book_citation": 0,
+        "reply_methods": {
+          "generator": 11,
+          "classifier": 5
+        }
+      },
+      "after": {
+        "first_replies": 16,
+        "correct_first_replies": 5,
+        "followups": 0,
+        "correct_followups": 0,
+        "correct_with_book_citation": 5,
+        "reply_methods": {
+          "generator": 3,
+          "book": 8,
+          "classifier": 5
+        }
+      }
+    },
+    "original": {
+      "fixture": "data/oz_chat_test.jsonl",
+      "test_sha256": "1c29194de5fcf79db46c2097ba1fd8e150c205cddd22e33a9b1b0d96052755ea",
+      "conversations": 24,
+      "changed_replies": [
+        {
+          "conversation": 2,
+          "turn": 1,
+          "prompt": "How did Dorothy wake the boy in the buggy?",
+          "expected": "She poked him with her parasol.",
+          "before": {
+            "reply": "A suit-case.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "She set down the bird-cage and poked the boy with her parasol",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 1",
+              "start_line": 185,
+              "end_line": 203
+            }
+          },
+          "review_note": "Dorothy pokes the sleeping boy with her parasol."
+        },
+        {
+          "conversation": 3,
+          "turn": 1,
+          "prompt": "Who drew the royal chariot in the parade?",
+          "expected": "The Cowardly Lion and the Hungry Tiger.",
+          "before": {
+            "reply": "Officers of Oz.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "the Cowardly Lion and the Hungry Tiger",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 17",
+              "start_line": 4648,
+              "end_line": 4665
+            }
+          },
+          "review_note": "The relevant lines name both animals drawing the chariot."
+        },
+        {
+          "conversation": 5,
+          "turn": 1,
+          "prompt": "Who spoke for the jury at Eureka's trial?",
+          "expected": "The Hungry Tiger.",
+          "before": {
+            "reply": "Princess Ozma.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "the Hungry Tiger",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 19",
+              "start_line": 5224,
+              "end_line": 5242
+            }
+          },
+          "review_note": "The Hungry Tiger rises to speak on behalf of the jury."
+        },
+        {
+          "conversation": 6,
+          "turn": 1,
+          "prompt": "Who repaired the Sawhorse after Jim kicked it?",
+          "expected": "The Tin Woodman.",
+          "before": {
+            "reply": "Ozma's pris prison.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "Tin Woodman",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 17",
+              "start_line": 4841,
+              "end_line": 4859
+            }
+          },
+          "review_note": "The Tin Woodman makes the replacement parts."
+        },
+        {
+          "conversation": 8,
+          "turn": 1,
+          "prompt": "Which maid was sent to fetch Ozma's piglet?",
+          "expected": "Jellia Jamb.",
+          "before": {
+            "reply": "Piglets.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "Jellia",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 18",
+              "start_line": 4883,
+              "end_line": 4906
+            }
+          },
+          "review_note": "Ozma directly asks Jellia to fetch the piglet."
+        },
+        {
+          "conversation": 9,
+          "turn": 1,
+          "prompt": "Why was the train from San Francisco late?",
+          "expected": "Earthquakes made the engineer drive slowly.",
+          "before": {
+            "reply": "Ozma.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "because all through the night there were times when the solid earth shook and trembled under him",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 1",
+              "start_line": 169,
+              "end_line": 184
+            }
+          },
+          "review_note": "The cited sentence connects the earthquakes with the delays."
+        },
+        {
+          "conversation": 11,
+          "turn": 1,
+          "prompt": "Which animals could the people of Voe see in the brooks?",
+          "expected": "Fish.",
+          "before": {
+            "reply": "The Sawhorse.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "fishes",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 9",
+              "start_line": 2297,
+              "end_line": 2314
+            }
+          },
+          "review_note": "The invisible family can still see the fish in their brooks."
+        },
+        {
+          "conversation": 12,
+          "turn": 1,
+          "prompt": "What kind of ribbon did the Braided Man want?",
+          "expected": "A blue hair ribbon.",
+          "before": {
+            "reply": "A star.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "blue hair-ribbon",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 10",
+              "start_line": 2707,
+              "end_line": 2725
+            }
+          },
+          "review_note": "The Braided Man asks for a blue hair ribbon."
+        },
+        {
+          "conversation": 13,
+          "turn": 1,
+          "prompt": "What color were the dragonettes' eyes?",
+          "expected": "Yellow.",
+          "before": {
+            "reply": "Princess Ozma.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "yellow",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 13",
+              "start_line": 3574,
+              "end_line": 3591
+            }
+          },
+          "review_note": "The passage explicitly describes the dragonettes’ yellow eyes."
+        },
+        {
+          "conversation": 14,
+          "turn": 1,
+          "prompt": "Why were Dorothy's aunt and uncle in mourning?",
+          "expected": "They thought she had died in the earthquake.",
+          "before": {
+            "reply": "An orand the Wizard in Oz.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "they thought their little niece had been killed by the earthquake",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 20",
+              "start_line": 5338,
+              "end_line": 5358
+            }
+          },
+          "review_note": "Her relatives thought Dorothy died in the earthquake."
+        },
+        {
+          "conversation": 15,
+          "turn": 1,
+          "prompt": "What marked Ozma's own piglet?",
+          "expected": "An emerald collar.",
+          "before": {
+            "reply": "A ston.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "emerald collar",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 19",
+              "start_line": 5265,
+              "end_line": 5288
+            }
+          },
+          "review_note": "Eureka says Ozma’s own piglet wore an emerald collar."
+        },
+        {
+          "conversation": 16,
+          "turn": 1,
+          "prompt": "What title did Ozma give the Sawhorse after the race?",
+          "expected": "Prince of Horses.",
+          "before": {
+            "reply": "She was taken to prison.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "Prince of Horses",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 17",
+              "start_line": 4852,
+              "end_line": 4871
+            }
+          },
+          "review_note": "Ozma proclaims the Sawhorse Prince of Horses."
+        },
+        {
+          "conversation": 22,
+          "turn": 1,
+          "prompt": "Which pet went missing?",
+          "expected": "Ozma's piglet.",
+          "before": {
+            "reply": "The Mangaboos are vegetable people.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "Nick Chopper",
+            "reply_method": "book",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": {
+              "section": "Chapter 19",
+              "start_line": 5249,
+              "end_line": 5274
+            }
+          },
+          "review_note": "The reply mistakes a character in the trial for the missing animal."
+        },
+        {
+          "conversation": 22,
+          "turn": 2,
+          "prompt": "Where was it?",
+          "expected": "Inside a vase.",
+          "before": {
+            "reply": "The Prince walked away.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "a big vase that was standing on the floor",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 19",
+              "start_line": 5280,
+              "end_line": 5296
+            }
+          },
+          "review_note": "The vase is where the piglet fell and was found."
+        },
+        {
+          "conversation": 23,
+          "turn": 1,
+          "prompt": "Where does Dorothy return?",
+          "expected": "Kansas.",
+          "before": {
+            "reply": "Ank me about Dorothy and the Wizard in Oz.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "Under the bed in your own room",
+            "reply_method": "book",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": {
+              "section": "Chapter 18",
+              "start_line": 4928,
+              "end_line": 4956
+            }
+          },
+          "review_note": "The citation is an unrelated search in Ozma’s room."
+        },
+        {
+          "conversation": 23,
+          "turn": 2,
+          "prompt": "Who went too?",
+          "expected": "Eureka.",
+          "before": {
+            "reply": "Eureka agreed to avoid them.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "the boy",
+            "reply_method": "book",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": {
+              "section": "Chapter 6",
+              "start_line": 1642,
+              "end_line": 1662
+            }
+          },
+          "review_note": "The extract describes a boy in another scene."
+        }
+      ],
+      "before": {
+        "first_replies": 24,
+        "correct_first_replies": 0,
+        "followups": 8,
+        "correct_followups": 0,
+        "correct_with_book_citation": 0,
+        "reply_methods": {
+          "classifier": 7,
+          "generator": 25
+        }
+      },
+      "after": {
+        "first_replies": 24,
+        "correct_first_replies": 12,
+        "followups": 8,
+        "correct_followups": 1,
+        "correct_with_book_citation": 13,
+        "reply_methods": {
+          "classifier": 7,
+          "book": 16,
+          "generator": 9
+        }
+      }
+    },
+    "new": {
+      "fixture": "data/oz_chat_book_assist_test.jsonl",
+      "test_sha256": "f70ed25474943f335a8ebe4b6c2648a19a3650fc0842dd2c539593d264cc3e59",
+      "conversations": 10,
+      "reviewed_replies": [
+        {
+          "conversation": 1,
+          "turn": 1,
+          "prompt": "How long had Zeb waited at the station before Dorothy arrived?",
+          "expected": "Five hours.",
+          "before": {
+            "reply": "A suit-case.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "five hours",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 1",
+              "start_line": 247,
+              "end_line": 274
+            }
+          },
+          "review_note": "Zeb says he waited five hours."
+        },
+        {
+          "conversation": 1,
+          "turn": 2,
+          "prompt": "How did he say Californians felt about earthquakes?",
+          "expected": "They were used to them and were not very scared.",
+          "before": {
+            "reply": "He wanted to a room.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "They don't scare us much",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 1",
+              "start_line": 247,
+              "end_line": 274
+            }
+          },
+          "review_note": "The reply gives his stated view that the earthquakes do not scare Californians much."
+        },
+        {
+          "conversation": 2,
+          "turn": 1,
+          "prompt": "What did Eureka first ask Dorothy for after the buggy landed on a roof?",
+          "expected": "Her milk.",
+          "before": {
+            "reply": "Eureka is Dorothy's kitten.",
+            "reply_method": "classifier",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "Eureka is Dorothy's kitten.",
+            "reply_method": "classifier",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "review_note": "The two modes gave the same reply."
+        },
+        {
+          "conversation": 2,
+          "turn": 2,
+          "prompt": "Why did she ask for it?",
+          "expected": "She was very hungry.",
+          "before": {
+            "reply": "A kitten.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "A kitten.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "review_note": "The two modes gave the same reply."
+        },
+        {
+          "conversation": 3,
+          "turn": 1,
+          "prompt": "What did the messenger announce after the Sorcerer predicted no more rains?",
+          "expected": "More wonders in the air.",
+          "before": {
+            "reply": "Jim stood still.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "Jim stood still.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "review_note": "The two modes gave the same reply."
+        },
+        {
+          "conversation": 3,
+          "turn": 2,
+          "prompt": "Where did the Prince and his people go to see them?",
+          "expected": "Into the street.",
+          "before": {
+            "reply": "He was tied to a tree.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "He was tied to a tree.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "review_note": "The two modes gave the same reply."
+        },
+        {
+          "conversation": 4,
+          "turn": 1,
+          "prompt": "Who inspected the Wizard's hat before he did his trick for the Mangaboos?",
+          "expected": "The Sorcerer.",
+          "before": {
+            "reply": "Revolvers.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "citizens",
+            "reply_method": "book",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": {
+              "section": "Chapter 17",
+              "start_line": 4681,
+              "end_line": 4698
+            }
+          },
+          "review_note": "The later palace performance describes a different audience and hat trick."
+        },
+        {
+          "conversation": 5,
+          "turn": 1,
+          "prompt": "Why did the Prince plan to keep the Wizard after Gwig was cut in two?",
+          "expected": "He was skillful and useful.",
+          "before": {
+            "reply": "They buried Gwig.",
+            "reply_method": "classifier",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "They buried Gwig.",
+            "reply_method": "classifier",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "review_note": "The two modes gave the same reply."
+        },
+        {
+          "conversation": 6,
+          "turn": 1,
+          "prompt": "What did the Wizard plan to nap on in the House of the Sorcerer?",
+          "expected": "A hard glass bench.",
+          "before": {
+            "reply": "A bonfire was lit.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "glass benches",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 5",
+              "start_line": 1609,
+              "end_line": 1624
+            }
+          },
+          "review_note": "The Wizard plans to lie on a glass bench."
+        },
+        {
+          "conversation": 6,
+          "turn": 2,
+          "prompt": "Where did Dorothy choose to sleep?",
+          "expected": "In a little room at the end of the hall.",
+          "before": {
+            "reply": "He wanted to a room.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "a little room at the end of the hall",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 5",
+              "start_line": 1598,
+              "end_line": 1616
+            }
+          },
+          "review_note": "Dorothy chooses the little room at the end of the hall."
+        },
+        {
+          "conversation": 7,
+          "turn": 1,
+          "prompt": "What were the Mangaboos stacking in front of the Black Pit when the Wizard arrived?",
+          "expected": "Glass rocks.",
+          "before": {
+            "reply": "He bowed.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "glass rocks",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 7",
+              "start_line": 1893,
+              "end_line": 1911
+            }
+          },
+          "review_note": "The Mangaboos place glass rocks in front of the entrance."
+        },
+        {
+          "conversation": 8,
+          "turn": 1,
+          "prompt": "How did Dorothy say Jim could defend himself when the man in Voe asked?",
+          "expected": "He could kick and bite.",
+          "before": {
+            "reply": "In Ozma's private rooms.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "he can kick pretty hard with his heels, and bite a little",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 8",
+              "start_line": 2194,
+              "end_line": 2220
+            }
+          },
+          "review_note": "Dorothy describes the horse kicking and biting."
+        },
+        {
+          "conversation": 9,
+          "turn": 1,
+          "prompt": "What did the Woggle-Bug pull from his pocket before turning his back on the company?",
+          "expected": "A book.",
+          "before": {
+            "reply": "Trees.",
+            "reply_method": "classifier",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "Trees.",
+            "reply_method": "classifier",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "review_note": "The two modes gave the same reply."
+        },
+        {
+          "conversation": 10,
+          "turn": 1,
+          "prompt": "Why did Dorothy say she could not stay away from Kansas for long?",
+          "expected": "Uncle Henry and Aunt Em needed her.",
+          "before": {
+            "reply": "She saw the enchanted picture.",
+            "reply_method": "generator",
+            "correct": false,
+            "source_supports_reply": false,
+            "citation": null
+          },
+          "after": {
+            "reply": "Uncle Henry and Aunt Em need me to help them",
+            "reply_method": "book",
+            "correct": true,
+            "source_supports_reply": true,
+            "citation": {
+              "section": "Chapter 20",
+              "start_line": 5384,
+              "end_line": 5407
+            }
+          },
+          "review_note": "Dorothy says her aunt and uncle need her help."
+        }
+      ],
+      "before": {
+        "first_replies": 10,
+        "correct_first_replies": 0,
+        "followups": 4,
+        "correct_followups": 0,
+        "correct_with_book_citation": 0,
+        "reply_methods": {
+          "generator": 11,
+          "classifier": 3
+        }
+      },
+      "after": {
+        "first_replies": 10,
+        "correct_first_replies": 5,
+        "followups": 4,
+        "correct_followups": 2,
+        "correct_with_book_citation": 7,
+        "reply_methods": {
+          "book": 8,
+          "classifier": 3,
+          "generator": 3
+        }
+      }
+    }
+  },
+  "checkpoint_sha256": "7bf86a87e46073d61ba3d803af7bbc26bf295e22f0ab0ff7ddbdf9694caee17d",
+  "first_reply_classifier_sha256": "b8fcdab44f94b3458a08460f7a32d7af67fddccca5084395c8f7bceadbba9219",
+  "book_sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9",
+  "reader_model": "deepset/minilm-uncased-squad2",
+  "reader_revision": "934656cdda79824eabf503ed56e15c01ddbdbe3f"
+}

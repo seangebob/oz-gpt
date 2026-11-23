@@ -216,6 +216,25 @@ With the classifier enabled, the coverage checkpoint scored 12/18 on memory firs
 
 To fit a classifier from the current chat dataset, run `python -m model.first_reply --output model/model-first-replies-local.pth` and pass that path to `--first-reply-classifier`.
 
+### Use cited book answers in trained chat
+
+```bash
+python -m model.chatbot --chat model/model-chat-coverage-experiment.pth \
+  --first-reply-classifier --book-assist
+```
+
+Book assistance keeps the trained classifier’s first-reply priority and can answer other factual questions from the bundled book. Cited answers can carry their context into follow-ups. The generator handles prompts such as `What happened next?` and takes over when lookup abstains. The terminal shows a source for each book reply and labels classifier and generator replies. Book assistance uses the same local reader as `--book` and the same prompt limits as `--chat`.
+
+With the same chat weights and classifier, assistance raised the earlier unseen-fact score from 0/16 to 5/16 and a separate check from 0/14 to 7/14. On the memory and coverage benchmarks it gained one correct first reply and one correct follow-up each. It also replaced two previously correct trained replies with an unrelated extract. [Reviewed scores and citations](evaluations/oz_chat_book_assist_comparison.json)
+
+Run both configurations with identical settings and review the resulting replies and citations.
+
+```bash
+python -m model.chat_evaluation run --checkpoint model/model-chat-coverage-experiment.pth \
+  --first-reply-classifier --book-assist --trace-passages \
+  --test-data data/oz_chat_book_assist_test.jsonl --output oz-chat-book-assist.json
+```
+
 ### Look up answers in the Oz book
 
 Install the optional answer reader dependency and start book lookup mode.
@@ -355,7 +374,7 @@ Issue numbers refer to the project bug review. Complete each stage in this order
 
 ### Remaining repairs in order
 
-1. **#1 Improve factual accuracy in trained chat.** Compact history enabled context-dependent replies. The optional classifier improved first replies on both benchmarks by selecting answers learned during training. Generalization remains open at 0/16 on the latest fresh-fact test, and the generator alone still struggles on first replies. [First-reply and generalization results](evaluations/oz_chat_first_reply_generalization_comparison.json)
+1. **#1 Improve factual accuracy in trained chat.** The classifier improves first replies about facts taught in chat training. Optional book assistance now answers some facts absent from chat training, scoring 5/16 on the earlier test and 7/14 on a separate check. Improving the generator’s factual accuracy using its own weights remains open. [Trained-chat results](evaluations/oz_chat_first_reply_generalization_comparison.json) · [Book assistance results](evaluations/oz_chat_book_assist_comparison.json)
 2. **Improve book lookup on the remaining misses.** Verifying weak extracts and carrying the right subject into follow-ups raised the reviewed set from 29/40 to 33/40 correct answers with supporting citations. First replies scored 18/20, follow-ups scored 15/20, and abstentions fell from nine to six. A separate 12-turn check rose from 9/12 to 10/12. The seven remaining misses include weak dialogue extracts and a follow-up that shifts to the wrong scene. [Answer completeness comparison](evaluations/oz_book_answer_completion_comparison.json) · [Confidence and context review](evaluations/oz_book_confidence_context_comparison.json)
 
 ### Cleanup follow-ups

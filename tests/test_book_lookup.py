@@ -86,6 +86,20 @@ The Wizard was born in Omaha.
         reader.read.return_value = [AnswerSpan('Zeb', 0)]
         self.assertIsNone(session.reply('Who drives the buggy?').source)
 
+    def test_abstention_can_leave_book_history_for_a_chat_fallback(self):
+        reader = Mock(read=Mock(return_value=[AnswerSpan('cab-horse', 8)]))
+        session = BookSession(self.index, reader)
+        first = session.reply('Who is Jim?')
+        self.assertIsNotNone(first.source)
+        reader.read.return_value = [AnswerSpan('', 0)]
+
+        second = session.reply('Who drives the buggy?', remember_abstentions=False)
+
+        self.assertIsNone(second.source)
+        self.assertEqual(session.previous_source, first.source)
+        self.assertEqual(session.previous_question, 'Who is Jim?')
+        self.assertEqual(session.previous_answer, 'cab-horse')
+
     def test_answer_agreement_breaks_close_ties_and_keeps_the_best_citation(self):
         passages = [
             Passage('Chapter 1', 1, 2, 'An owl answered during rehearsal.'),

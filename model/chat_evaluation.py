@@ -22,8 +22,10 @@ HISTORY_MODES = ('generated', 'none', 'reference')
 REPORT_VERSION = 1
 
 
-def generate_predictions(model, tokenizer, conversations, history_mode, max_tokens, *, first_reply_classifier=None):
-    session = ChatSession(model, tokenizer, max_tokens=max_tokens, first_reply_classifier=first_reply_classifier)
+def generate_predictions(model, tokenizer, conversations, history_mode, max_tokens, *,
+                         first_reply_classifier=None, book_session=None):
+    session = ChatSession(model, tokenizer, max_tokens=max_tokens, first_reply_classifier=first_reply_classifier,
+                          book_session=book_session)
     return generate_session_predictions(session, conversations, history_mode)
 
 
@@ -91,12 +93,13 @@ def generate_session_predictions(session, conversations, history_mode):
                     'reference_match': matched,
                     'correct': True if matched else None,
                 }
-                if isinstance(reply, BookReply):
+                book_reply = isinstance(reply, BookReply)
+                if book_reply or getattr(session, 'book_session', None) is not None:
                     row['source'] = passage_record(reply.source) if reply.source else None
                     row['source_supports_reply'] = None if reply.source else False
                     if reply.passage_trace is not None:
                         row['passage_trace'] = passage_trace_record(reply)
-                else:
+                if not book_reply:
                     row.update(
                         reply_method=reply.reply_method,
                         history_compacted=reply.history_compacted,
@@ -174,10 +177,12 @@ def print_summary(path, report):
         first = [row for row in rows if row['turn'] == 1]
         followups = [row for row in rows if row['turn'] > 1]
         book_mode = run.get('mode') == 'book'
+        assisted = run.get('book_assist', False)
         if book_mode:
             print(f'\nBook lookup ({run["reader_model"]}) | history: {run["history"]}')
         else:
-            print(f'\n{run["checkpoint"]} ({run["checkpoint_sha256"][:12]}) | history: {run["history"]}')
+            mode_label = ' | book assistance' if assisted else ''
+            print(f'\n{run["checkpoint"]} ({run["checkpoint_sha256"][:12]}) | history: {run["history"]}{mode_label}')
             packing = run.get('history_packing', report.get('history_packing', 'complete_turns')).replace('_', ' ')
             print(f'  History packing:      {packing}')
         print(f'  Correct first replies: {correctness(first)}')
@@ -185,33 +190,37 @@ def print_summary(path, report):
         print(f'  Reference matches:     {sum(row["reference_match"] for row in first)}/{len(first)} first replies, '
               f'{sum(row["reference_match"] for row in followups)}/{len(followups)} follow-ups')
         print(f'  Follow-ups with history: {sum(row["history_used"] for row in followups)}/{len(followups)}')
-        if book_mode:
+        if book_mode or assisted:
             sourced = sum(row['source'] is not None for row in rows)
             print(f'  Correct first replies with support: {grounded_correctness(first)}')
             print(f'  Correct follow-ups with support:    {grounded_correctness(followups)}')
             print(f'  Replies with a source:  {sourced}/{len(rows)}')
-            print(f'  Abstentions:           {len(rows) - sourced}/{len(rows)}')
+            if book_mode:
+                print(f'  Abstentions:           {len(rows) - sourced}/{len(rows)}')
             found, missing, pending = passage_review_counts(rows)
             if found or missing or pending:
                 print(f'  Passage reviews:        {found} with evidence, {missing} without evidence, {pending} pending')
-        else:
+        if not book_mode:
             if followups and 'history_compacted' in followups[0]:
                 print(f'  Compacted history:     {sum(row["history_compacted"] for row in followups)}/{len(followups)} follow-ups')
             generated = [row for row in rows if row['clean_stop'] is not None]
             if run.get('first_reply_classifier'):
-                print(f'  Classifier first replies: {len(rows) - len(generated)}/{len(first)}')
+                chosen = sum(row.get('reply_method') == 'classifier' for row in first)
+                print(f'  Classifier first replies: {chosen}/{len(first)}')
             print(f'  Clean stops:           {sum(row["clean_stop"] for row in generated)}/{len(generated)}')
             print(f'  Reference reply loss:  {run["reference_reply_loss"]:.4f} (lower is better)')
 
 
 def run_evaluation(args):
-    if args.trace_passages and not args.book:
-        raise ValueError('--trace-passages requires --book.')
+    if args.trace_passages and not (args.book or args.book_assist):
+        raise ValueError('--trace-passages requires --book or --book-assist.')
     if args.max_tokens < 1:
         raise ValueError('--max-tokens must be positive.')
     if args.output.exists():
         raise FileExistsError(f'Report already exists: {args.output}')
     checkpoints = args.checkpoint or ([] if args.book else [CHAT_CHECKPOINT])
+    if args.book_assist and not checkpoints:
+        raise ValueError('--book-assist requires a chat checkpoint when used with --book.')
     classifier = None
     classifier_metadata = {}
     if args.first_reply_classifier:
@@ -243,6 +252,17 @@ def run_evaluation(args):
         'reply_reserve': REPLY_RESERVE,
         'runs': [],
     }
+    book_session = None
+    book_metadata = {}
+    if args.book or args.book_assist:
+        book_session = BookSession.from_book(trace_passages=args.trace_passages)
+        book_metadata = {
+            'book': BOOK_PATH.name,
+            'book_sha256': book_session.book_sha256,
+            'reader_model': READER_MODEL,
+            'reader_revision': READER_REVISION,
+        }
+    assist_modes = (None, book_session) if args.book_assist else (None,)
     for path in checkpoints:
         checkpoint_bytes = path.read_bytes()
         source = io.BytesIO(checkpoint_bytes)
@@ -255,27 +275,26 @@ def run_evaluation(args):
         examples = encode_conversations(conversations, tokenizer, args.test_data)
         loss = evaluate(model, examples, batch_size=8, device='cpu')
         for history in history_modes:
-            report['runs'].append({
-                'checkpoint': str(path),
-                'checkpoint_sha256': hashlib.sha256(checkpoint_bytes).hexdigest(),
-                'history': history,
-                'history_packing': tokenizer.history_packing,
-                'reference_reply_loss': round(loss, 6),
-                **classifier_metadata,
-                'predictions': generate_predictions(model, tokenizer, conversations, history, args.max_tokens,
-                                                    first_reply_classifier=classifier),
-            })
+            for assist in assist_modes:
+                metadata = {'book_assist': True, **book_metadata} if assist is not None else {}
+                report['runs'].append({
+                    'checkpoint': str(path),
+                    'checkpoint_sha256': hashlib.sha256(checkpoint_bytes).hexdigest(),
+                    'history': history,
+                    'history_packing': tokenizer.history_packing,
+                    'reference_reply_loss': round(loss, 6),
+                    **classifier_metadata,
+                    **metadata,
+                    'predictions': generate_predictions(model, tokenizer, conversations, history, args.max_tokens,
+                                                        first_reply_classifier=classifier, book_session=assist),
+                })
     if args.book:
-        session = BookSession.from_book(trace_passages=args.trace_passages)
         for history in history_modes:
             report['runs'].append({
                 'mode': 'book',
-                'book': BOOK_PATH.name,
-                'book_sha256': session.book_sha256,
-                'reader_model': READER_MODEL,
-                'reader_revision': READER_REVISION,
+                **book_metadata,
                 'history': history,
-                'predictions': generate_session_predictions(session, conversations, history),
+                'predictions': generate_session_predictions(book_session, conversations, history),
             })
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open('x', encoding='utf-8') as destination:
@@ -303,6 +322,7 @@ def main():
     run.add_argument('--first-reply-classifier', nargs='?', const=FIRST_REPLY_CHECKPOINT, type=Path,
                      metavar='CHECKPOINT', help='Use a trained classifier for high-scoring first replies')
     run.add_argument('--book', action='store_true', help='Evaluate book lookup. Combine with --checkpoint for a comparison.')
+    run.add_argument('--book-assist', action='store_true', help='Compare each chat checkpoint with and without book assistance.')
     run.add_argument('--trace-passages', action='store_true', help='Save ranked passages and reader spans for book lookup.')
     run.add_argument('--test-data', type=Path, default=DATA_DIR / 'oz_chat_test.jsonl', help='Held-out JSONL conversations.')
     run.add_argument('--history', action='append', choices=HISTORY_MODES, help='History mode. Repeat to compare modes (default: generated).')

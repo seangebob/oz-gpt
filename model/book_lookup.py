@@ -166,7 +166,7 @@ def _possessive(question, match):
     return following is not None and following[1].lower() not in AFTER_OBJECT
 
 
-def _uses_history(question):
+def uses_book_history(question):
     if SHORT_FOLLOW_UP.search(question) or ABOUT_SUBJECT.fullmatch(question) or DAMAGE_REFERENCE.fullmatch(question):
         return True
     pronouns = list(PRONOUN.finditer(question))
@@ -747,7 +747,7 @@ class BookSession:
         self._remember_resolved(self._followup(question) or question, answer)
 
     def _followup(self, question):
-        if self.previous_question and _uses_history(question):
+        if self.previous_question and uses_book_history(question):
             return followup_question(question, self.previous_question, self.previous_answer)
         return None
 
@@ -880,7 +880,7 @@ class BookSession:
             return None
         return PassageReread(question, passage, checked, excerpt=excerpt)
 
-    def reply(self, question, *, remember=True):
+    def reply(self, question, *, remember=True, remember_abstentions=True):
         question = question.strip()
         if not question:
             raise ValueError('Empty prompt — please enter text')
@@ -918,6 +918,6 @@ class BookSession:
         if self.trace_passages:
             trace = PassageTrace(reader_question, earlier_question, earlier_answer, tuple(candidates), tuple(spans),
                                  rejected_query=rejected_query, reread=reread)
-        if remember:
+        if remember and (source is not None or remember_abstentions):
             self._remember_resolved(reader_question, text if source else '', source)
         return BookReply(text, source, history_used, trace)
