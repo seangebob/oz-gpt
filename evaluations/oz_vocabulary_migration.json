@@ -1,0 +1,186 @@
+{
+  "source_commit": "d5fe59d135a4e8ab14db933a683602e720770fe4",
+  "method": "Run the original and reloaded copy in CPU evaluation mode on each fixed prompt. Compare logits and softmax probabilities over the 80 shared characters at every input position. Verify each character-indexed tensor row and every other tensor after reloading.",
+  "device": "cpu",
+  "torch_version": "2.13.0",
+  "cpu_threads": 2,
+  "character_counts": {
+    "before": 81,
+    "after": 80
+  },
+  "removed_character": {
+    "codepoint": "U+FEFF",
+    "legacy_id": 80
+  },
+  "remapped_tensors": [
+    "token_embedding_table.weight",
+    "lm_head.weight",
+    "lm_head.bias"
+  ],
+  "tolerances": {
+    "absolute": 1e-05,
+    "relative": 1e-05
+  },
+  "reproduction": "OMP_NUM_THREADS=2 python -m evaluations.check_vocab_migration --checkpoint <source> --output <new-copy>",
+  "summary": {
+    "checkpoint_copies": 4,
+    "checkpoint_prompt_pairs": 12,
+    "positions_checked": 525,
+    "shared_logits_compared": 42000,
+    "max_logit_difference": 0.0,
+    "max_shared_probability_difference": 0.0,
+    "max_legacy_bom_probability": 0.006195976864546537
+  },
+  "runs": [
+    {
+      "source": "model/model-01.pth",
+      "source_sha256": "5ddbd40db69d7842d009766903c5d38bdbd690838b39de40f923611e425440f4",
+      "copy_sha256": "832e674398ae378b01b1d29df511b5dab99cbf7a126249848f47ac501f0394ee",
+      "format": {
+        "base_format": 1
+      },
+      "prompts": [
+        {
+          "prompt": "Dorothy and the Wizard",
+          "positions_checked": 22,
+          "max_logit_difference": 0.0,
+          "max_shared_probability_difference": 0.0,
+          "max_legacy_bom_probability": 0.00045736003085039556
+        },
+        {
+          "prompt": "CHAPTER 12.\n\nThe Gargoyles",
+          "positions_checked": 26,
+          "max_logit_difference": 0.0,
+          "max_shared_probability_difference": 0.0,
+          "max_legacy_bom_probability": 0.006195976864546537
+        },
+        {
+          "prompt": "\"Where are we?\" asked Zeb, as the buggy rolled through the streets.",
+          "positions_checked": 67,
+          "max_logit_difference": 0.0,
+          "max_shared_probability_difference": 0.0,
+          "max_legacy_bom_probability": 0.0010434497380629182
+        }
+      ],
+      "copy": "model-01-80.pth",
+      "reloaded": true,
+      "tensor_rows_verified": true
+    },
+    {
+      "source": "model/model-base-retrained.pth",
+      "source_sha256": "a42c0f2c04e2d15967810e29bbd5be89a986449c0f415c94a6803d30377fed1c",
+      "copy_sha256": "9efdfec1dac5c4d8d701b93d07219fd330d064f9db8743285aa92b7917928cbe",
+      "format": {
+        "base_format": 1
+      },
+      "prompts": [
+        {
+          "prompt": "Dorothy and the Wizard",
+          "positions_checked": 22,
+          "max_logit_difference": 0.0,
+          "max_shared_probability_difference": 0.0,
+          "max_legacy_bom_probability": 2.3833949853724334e-06
+        },
+        {
+          "prompt": "CHAPTER 12.\n\nThe Gargoyles",
+          "positions_checked": 26,
+          "max_logit_difference": 0.0,
+          "max_shared_probability_difference": 0.0,
+          "max_legacy_bom_probability": 0.0008175830007530749
+        },
+        {
+          "prompt": "\"Where are we?\" asked Zeb, as the buggy rolled through the streets.",
+          "positions_checked": 67,
+          "max_logit_difference": 0.0,
+          "max_shared_probability_difference": 0.0,
+          "max_legacy_bom_probability": 4.416016963659786e-06
+        }
+      ],
+      "copy": "model-base-retrained-80.pth",
+      "reloaded": true,
+      "tensor_rows_verified": true
+    },
+    {
+      "source": "model/model-chat-retrained.pth",
+      "source_sha256": "d83e6d9d14105e0e9fcf3f2baf014cb218ac6438c03d2fd0adf4b6d20eeb0c27",
+      "copy_sha256": "00f59003b286c407cee437180681b34c7c7c946fd1fd5b78a18eccd1a35976f1",
+      "format": {
+        "chat_format": 1,
+        "model_config": {
+          "block_size": 128,
+          "n_embd": 384,
+          "dropout": 0.2,
+          "n_head": 4,
+          "n_layer": 2
+        }
+      },
+      "prompts": [
+        {
+          "prompt": "User: Who is Jim?\nAssistant: ",
+          "positions_checked": 29,
+          "max_logit_difference": 0.0,
+          "max_shared_probability_difference": 0.0,
+          "max_legacy_bom_probability": 0.0015581867191940546
+        },
+        {
+          "prompt": "User: What did the Wizard use?\nAssistant: ",
+          "positions_checked": 42,
+          "max_logit_difference": 0.0,
+          "max_shared_probability_difference": 0.0,
+          "max_legacy_bom_probability": 9.952417894965038e-05
+        },
+        {
+          "prompt": "User: Who is Jim?\nAssistant: The cab-horse.\n[END]\nUser: What did he pull?\nAssistant: ",
+          "positions_checked": 85,
+          "max_logit_difference": 0.0,
+          "max_shared_probability_difference": 0.0,
+          "max_legacy_bom_probability": 0.0015581867191940546
+        }
+      ],
+      "copy": "model-chat-retrained-80.pth",
+      "reloaded": true,
+      "tensor_rows_verified": true
+    },
+    {
+      "source": "model/model-chat-coverage-experiment.pth",
+      "source_sha256": "7bf86a87e46073d61ba3d803af7bbc26bf295e22f0ab0ff7ddbdf9694caee17d",
+      "copy_sha256": "54a519f5faf185a694d8a98d0b185aa2b2865d8366f064e53f2061d20a12844b",
+      "format": {
+        "chat_format": 2,
+        "model_config": {
+          "block_size": 128,
+          "n_embd": 384,
+          "dropout": 0.2,
+          "n_head": 4,
+          "n_layer": 2
+        }
+      },
+      "prompts": [
+        {
+          "prompt": "User: Who is Jim?\nAssistant: ",
+          "positions_checked": 29,
+          "max_logit_difference": 0.0,
+          "max_shared_probability_difference": 0.0,
+          "max_legacy_bom_probability": 9.208427945850417e-05
+        },
+        {
+          "prompt": "User: What did the Wizard use?\nAssistant: ",
+          "positions_checked": 42,
+          "max_logit_difference": 0.0,
+          "max_shared_probability_difference": 0.0,
+          "max_legacy_bom_probability": 9.320786193711683e-05
+        },
+        {
+          "prompt": "Q: Who is Jim?\nA: The cab-horse.\nUser: What did he pull?\nAssistant: ",
+          "positions_checked": 68,
+          "max_logit_difference": 0.0,
+          "max_shared_probability_difference": 0.0,
+          "max_legacy_bom_probability": 0.0004663001745939255
+        }
+      ],
+      "copy": "model-chat-coverage-experiment-80.pth",
+      "reloaded": true,
+      "tensor_rows_verified": true
+    }
+  ]
+}

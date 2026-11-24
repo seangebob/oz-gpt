@@ -7,9 +7,10 @@ from unittest.mock import Mock, patch
 
 import torch
 
+from evaluations.check_vocab_migration import remap_character_rows
 from model import data_extract, training
 from model.model import (
-    BASE_FORMAT_VERSION, CUSTOM_BASE_FORMAT, LEGACY_OZ_CHARACTERS, OZ_CHARACTERS, GPTLanguageModel,
+    BASE_FORMAT_VERSION, CUSTOM_BASE_FORMAT, LEGACY_OZ_CHARACTERS, OZ_CHARACTERS, CharacterTokenizer, GPTLanguageModel,
     load_base_model, load_completion_model, vocab_size,
 )
 
@@ -84,6 +85,24 @@ class BaseTrainingTests(unittest.TestCase):
         self.assertNotIn('\ufeff', tokenizer.ids)
         self.assertTrue(torch.equal(restored.token_embedding_table.weight, model.token_embedding_table.weight))
         self.assertTrue(torch.equal(restored.lm_head.weight, model.lm_head.weight))
+
+    def test_migration_remaps_vocabulary_rows_by_character(self):
+        source = CharacterTokenizer(('b', '\ufeff', 'a'))
+        weights = {
+            'token_embedding_table.weight': torch.tensor([[10], [20], [30]]),
+            'lm_head.weight': torch.tensor([[40], [50], [60]]),
+            'lm_head.bias': torch.tensor([70, 80, 90]),
+            'position_embedding_table.weight': torch.tensor([100]),
+        }
+
+        migrated, rows = remap_character_rows(weights, source, ('a', 'b'))
+
+        self.assertEqual(rows.tolist(), [2, 0])
+        self.assertEqual(migrated['token_embedding_table.weight'].tolist(), [[30], [10]])
+        self.assertEqual(migrated['lm_head.weight'].tolist(), [[60], [40]])
+        self.assertEqual(migrated['lm_head.bias'].tolist(), [90, 70])
+        self.assertEqual(weights['lm_head.bias'].tolist(), [70, 80, 90])
+        self.assertIs(migrated['position_embedding_table.weight'], weights['position_embedding_table.weight'])
 
 
 class CustomCorpusTests(unittest.TestCase):

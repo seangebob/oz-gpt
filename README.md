@@ -415,7 +415,7 @@ All three previously reviewed misses now have supporting answers. The 40-turn be
 
 1. **Inventory the checkpoints · complete.** The two bundled base checkpoints contain raw weights. The chat checkpoints store their character order. [Checkpoint vocabulary inventory](#checkpoint-vocabulary-inventory)
 2. **Define compatibility for existing checkpoints · complete.** Raw base weights use the frozen 81-character mapping. New base runs on the bundled book ignore its leading byte-order mark and save their ordered vocabulary. Chat training inherits the order of the checkpoint it starts from. [Checkpoint vocabulary inventory](#checkpoint-vocabulary-inventory)
-3. **Test a migration on a copy.** If remapping a checkpoint, map its character embedding and output rows by character. Check that shared characters produce equivalent scores on fixed prompts.
+3. **Test a migration on a copy · complete.** Remapped the input embeddings, output weights, and output bias by character in two base and two chat copies. All 42,000 shared-character logits matched exactly across 12 checkpoint and prompt pairs. [Migration check results](evaluations/oz_vocabulary_migration.json)
 4. **Verify the normal commands.** Test text completion, trained chat, and `--book`. Compare legacy checkpoint behavior and verify that citations still point to the correct lines.
 5. **Decide what needs retraining.** Use the compatibility and benchmark results to decide which checkpoints can be reused, remapped, or retrained.
 
@@ -433,6 +433,15 @@ The files below are in `model/`. The inventory includes eight tracked checkpoint
 All six inspected chat checkpoints store the same legacy order. The book’s leading byte-order mark (`U+FEFF`) occupies ID 80 in that order. Skipping the mark leaves IDs 0–79 intact. Raw base checkpoints keep all 81 IDs even if the book changes, and chat checkpoints keep the IDs saved with their weights. Standalone `--book` lookup decodes the text with `utf-8-sig`. [Base loaders](model/model.py) · [Chat loader](model/chat_data.py) · [Book lookup](model/book_lookup.py)
 
 New bundled-book base runs skip the leading mark and save the resulting 80-character order in `characters` alongside `model_state_dict` in a `base_format: 1` checkpoint. This is the same format used by `--corpus-dir`. Text completion uses the saved order. Oz chat training and evaluation accept either the legacy or the 80-character Oz order. [Base trainer](model/training.py) · [Chat trainer](model/chat_training.py) · [Evaluation command](model/chat_evaluation.py)
+
+##### Reproduce the migration check
+
+```bash
+OMP_NUM_THREADS=2 python -m evaluations.check_vocab_migration \
+  --checkpoint model/model-base-retrained.pth --output /tmp/model-base-retrained-80.pth
+```
+
+Pass a legacy Oz base or chat checkpoint and a new output path. The check compares raw scores and probabilities normalized over the 80 shared characters before saving the copy. Full-vocabulary probabilities can change because the original 81-way softmax assigns some probability to `U+FEFF`. The copies used in the experiment were reloaded and checked against the source tensors. [Per-prompt measurements](evaluations/oz_vocabulary_migration.json)
 
 ### Cleanup follow-ups
 
