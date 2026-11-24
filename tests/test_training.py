@@ -8,7 +8,10 @@ from unittest.mock import Mock, patch
 import torch
 
 from model import data_extract, training
-from model.model import CUSTOM_BASE_FORMAT, GPTLanguageModel, encode, load_base_model, load_completion_model, vocab_size
+from model.model import (
+    BASE_FORMAT_VERSION, CUSTOM_BASE_FORMAT, LEGACY_OZ_CHARACTERS, OZ_CHARACTERS, GPTLanguageModel,
+    load_base_model, load_completion_model, vocab_size,
+)
 
 
 class BaseTrainingTests(unittest.TestCase):
@@ -16,11 +19,12 @@ class BaseTrainingTests(unittest.TestCase):
     def test_corpus_split_and_batch_keep_targets_inside_the_split(self):
         with TemporaryDirectory() as directory:
             corpus = Path(directory) / 'corpus.txt'
-            corpus.write_text('a' * 27 + 'b' * 3, encoding='utf-8')
-            splits = training.load_splits(corpus)
+            corpus.write_text('a' * 27 + 'b' * 3, encoding='utf-8-sig')
+            splits, tokenizer = training.load_splits(corpus)
 
-        self.assertEqual(splits['train'].tolist(), encode('a' * 27))
-        self.assertEqual(splits['val'].tolist(), encode('b' * 3))
+        self.assertEqual(tokenizer.characters, ('a', 'b'))
+        self.assertEqual(splits['train'].tolist(), [0] * 27)
+        self.assertEqual(splits['val'].tolist(), [1] * 3)
         with patch('model.training.torch.randint', return_value=torch.tensor([0, 23, 24])) as randint:
             inputs, targets = training.get_batch(torch.arange(27), 3, 'cpu')
         randint.assert_called_once_with(25, (3,), generator=None)
@@ -58,10 +62,28 @@ class BaseTrainingTests(unittest.TestCase):
                 path = Path(directory) / 'checkpoint.pth'
                 model = GPTLanguageModel(vocab_size, heads=heads, layers=layers)
                 training.save_checkpoint(path, model.state_dict())
-                restored = load_base_model(path)
+                restored, tokenizer = load_completion_model(path, require_oz_vocabulary=True)
+                self.assertEqual(tokenizer.characters, LEGACY_OZ_CHARACTERS)
+                self.assertEqual(tokenizer.encode('\ufeff'), [80])
                 self.assertEqual(len(restored.blocks), layers)
                 self.assertEqual(len(restored.blocks[0].sa.heads), heads)
                 self.assertTrue(torch.equal(restored.lm_head.weight, model.lm_head.weight))
+
+    def test_bom_free_base_checkpoint_can_initialize_oz_chat(self):
+        model = GPTLanguageModel(len(OZ_CHARACTERS))
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / 'checkpoint.pth'
+            training.save_checkpoint(path, {
+                'base_format': BASE_FORMAT_VERSION,
+                'characters': list(OZ_CHARACTERS),
+                'model_state_dict': model.state_dict(),
+            })
+            restored, tokenizer = load_completion_model(path, require_oz_vocabulary=True)
+
+        self.assertEqual(tokenizer.characters, LEGACY_OZ_CHARACTERS[:-1])
+        self.assertNotIn('\ufeff', tokenizer.ids)
+        self.assertTrue(torch.equal(restored.token_embedding_table.weight, model.token_embedding_table.weight))
+        self.assertTrue(torch.equal(restored.lm_head.weight, model.lm_head.weight))
 
 
 class CustomCorpusTests(unittest.TestCase):

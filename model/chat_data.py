@@ -168,7 +168,10 @@ def collate_examples(examples):
 
 
 def load_chat_checkpoint(path):
-    state = torch.load(path, map_location='cpu', weights_only=True)
+    return unpack_chat_checkpoint(torch.load(path, map_location='cpu', weights_only=True))
+
+
+def unpack_chat_checkpoint(state):
     if not isinstance(state, dict) or state.get('chat_format') not in (CHAT_FORMAT_VERSION, COMPACT_CHAT_FORMAT_VERSION):
         raise ValueError('Expected a chat checkpoint created by model.chat_training.')
     weights = state.get('model_state_dict')

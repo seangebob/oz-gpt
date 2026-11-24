@@ -16,7 +16,7 @@ from model.chat_data import (
 )
 from model.chat_session import ChatSession
 from model.model import (
-    RETRAINED_BASE_PATH, block_size, chars, get_device, load_base_model, model_dimensions, model_from_state, n_embd,
+    RETRAINED_BASE_PATH, block_size, get_device, load_completion_model, model_dimensions, model_from_state, n_embd,
 )
 from model.training import save_checkpoint as save_new_checkpoint
 
@@ -178,8 +178,8 @@ def main():
                 tokenizer = ChatTokenizer(tokenizer.characters, compact_history=True)
             model = model_from_state(state, len(tokenizer.characters))
         else:
-            tokenizer = ChatTokenizer(chars, compact_history=args.compact_history)
-            model = load_base_model(start_checkpoint)
+            model, base_tokenizer = load_completion_model(start_checkpoint, require_oz_vocabulary=True)
+            tokenizer = ChatTokenizer(base_tokenizer.characters, compact_history=args.compact_history)
         train_examples = load_examples(args.train_data, tokenizer)
         masked_examples = (load_examples(args.train_data, tokenizer, mask_history_replies=True)
                            if args.history_answer_dropout else None)

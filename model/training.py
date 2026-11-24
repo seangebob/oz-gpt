@@ -9,8 +9,8 @@ import torch
 
 from model.data_extract import TRAIN_FILE, VAL_FILE, VOCAB_FILE
 from model.model import (
-    CUSTOM_BASE_FORMAT, DATA_PATH, MODEL_PATH, CharacterTokenizer, GPTLanguageModel, block_size, encode,
-    get_device, n_head, n_layer, vocab_size,
+    BASE_FORMAT_VERSION, DATA_PATH, MODEL_PATH, CharacterTokenizer, GPTLanguageModel, block_size,
+    get_device, n_head, n_layer,
 )
 
 
@@ -18,9 +18,11 @@ DEFAULT_OUTPUT = Path(MODEL_PATH).with_name('model-base-experiment.pth')
 
 
 def load_splits(path):
-    data = torch.tensor(encode(path.read_text(encoding='utf-8')), dtype=torch.long)
+    text = path.read_text(encoding='utf-8-sig')
+    tokenizer = CharacterTokenizer(sorted(set(text)))
+    data = torch.tensor(tokenizer.encode(text), dtype=torch.long)
     boundary = len(data) * 9 // 10
-    return _validate_splits({'train': data[:boundary], 'val': data[boundary:]}, path)
+    return _validate_splits({'train': data[:boundary], 'val': data[boundary:]}, path), tokenizer
 
 
 def load_extracted_splits(directory):
@@ -120,13 +122,11 @@ def main():
         parser.error(f'Output already exists at {args.output}. Choose a new path with --output.')
 
     try:
-        tokenizer = None
         if args.corpus_dir is None:
-            splits = load_splits(Path(DATA_PATH))
-            vocabulary_size = vocab_size
+            splits, tokenizer = load_splits(Path(DATA_PATH))
         else:
             splits, tokenizer = load_extracted_splits(args.corpus_dir)
-            vocabulary_size = len(tokenizer.characters)
+        vocabulary_size = len(tokenizer.characters)
         sampler = None
         if args.seed is not None:
             torch.manual_seed(args.seed)
@@ -138,9 +138,8 @@ def main():
     device = args.device
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
     print(f'Using device: {device}')
-    if tokenizer is not None:
-        print(f'Corpus: {args.corpus_dir} | train tokens: {len(splits["train"]):,} | '
-              f'validation tokens: {len(splits["val"]):,} | vocabulary size: {vocabulary_size:,}')
+    print(f'Corpus: {args.corpus_dir or DATA_PATH} | train tokens: {len(splits["train"]):,} | '
+          f'validation tokens: {len(splits["val"]):,} | vocabulary size: {vocabulary_size:,}')
     print(f'batch_size={args.batch_size}  max_iters={args.max_iters}  eval_every={args.eval_every}  '
           f'eval_batches={args.eval_batches}  lr={args.lr}  seed={args.seed}')
     print(f'heads={args.heads}  layers={args.layers}  parameters={sum(p.numel() for p in model.parameters()):,}')
@@ -158,13 +157,11 @@ def main():
 
     losses = estimate_loss(model, splits, args.batch_size, args.eval_batches, device)
     print(f"Final    | train loss {losses['train']:.4f} | val loss {losses['val']:.4f}")
-    state = model.state_dict()
-    if tokenizer is not None:
-        state = {
-            'base_format': CUSTOM_BASE_FORMAT,
-            'characters': list(tokenizer.characters),
-            'model_state_dict': state,
-        }
+    state = {
+        'base_format': BASE_FORMAT_VERSION,
+        'characters': list(tokenizer.characters),
+        'model_state_dict': model.state_dict(),
+    }
     try:
         save_checkpoint(args.output, state)
     except OSError as error:

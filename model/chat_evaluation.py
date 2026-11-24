@@ -9,13 +9,13 @@ import torch
 
 from model.book_lookup import BOOK_PATH, READER_MODEL, READER_REVISION, BookReply, BookSession
 from model.chat_data import (
-    CHAT_CHECKPOINT, ChatTokenizer, conversation_turns, encode_conversations, load_chat_checkpoint, read_conversations,
-    reference_matches,
+    CHAT_CHECKPOINT, ChatTokenizer, conversation_turns, encode_conversations, read_conversations, reference_matches,
+    unpack_chat_checkpoint,
 )
 from model.chat_session import ChatSession, DEFAULT_MAX_TOKENS, REPLY_RESERVE
 from model.chat_training import DATA_DIR, evaluate
 from model.first_reply import FIRST_REPLY_CHECKPOINT, load_first_reply_classifier
-from model.model import MODEL_PATH, RETRAINED_BASE_PATH, block_size, chars, model_from_state
+from model.model import block_size, model_from_state, unpack_base_checkpoint
 
 
 HISTORY_MODES = ('generated', 'none', 'reference')
@@ -265,12 +265,12 @@ def run_evaluation(args):
     assist_modes = (None, book_session) if args.book_assist else (None,)
     for path in checkpoints:
         checkpoint_bytes = path.read_bytes()
-        source = io.BytesIO(checkpoint_bytes)
-        if path.resolve() in {Path(MODEL_PATH).resolve(), Path(RETRAINED_BASE_PATH).resolve()}:
-            state = torch.load(source, map_location='cpu', weights_only=True)
-            tokenizer = ChatTokenizer(chars)
+        payload = torch.load(io.BytesIO(checkpoint_bytes), map_location='cpu', weights_only=True)
+        if isinstance(payload, dict) and 'chat_format' in payload:
+            state, tokenizer = unpack_chat_checkpoint(payload)
         else:
-            state, tokenizer = load_chat_checkpoint(source)
+            state, base_tokenizer = unpack_base_checkpoint(payload, require_oz_vocabulary=True)
+            tokenizer = ChatTokenizer(base_tokenizer.characters)
         model = model_from_state(state, len(tokenizer.characters))
         examples = encode_conversations(conversations, tokenizer, args.test_data)
         loss = evaluate(model, examples, batch_size=8, device='cpu')

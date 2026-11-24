@@ -29,7 +29,8 @@ def get_device(*, allow_mps=False):
 
 
 
-CUSTOM_BASE_FORMAT = 1
+BASE_FORMAT_VERSION = 1
+CUSTOM_BASE_FORMAT = BASE_FORMAT_VERSION
 
 
 class CharacterTokenizer:
@@ -56,11 +57,10 @@ class CharacterTokenizer:
         return ''.join(self.characters[index] for index in ids)
 
 
-# Vocabulary & encoding  (built from wizard_of_oz.txt)
-chars = ""
-with open(DATA_PATH, 'r', encoding='utf-8') as f:
-    text = f.read()
-    chars = sorted(list(set(text)))
+# Freeze the mapping used by raw Oz weights. A change to the book must not change these token IDs.
+OZ_CHARACTERS = tuple('\n !"&\'()*,-.0123456789:;?ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_abcdefghijklmnopqrstuvwxyz')
+LEGACY_OZ_CHARACTERS = OZ_CHARACTERS + ('\ufeff',)
+chars = list(LEGACY_OZ_CHARACTERS)
 
 vocab_size = len(chars)
 
@@ -228,22 +228,26 @@ def model_from_state(state, vocabulary_size):
     return model
 
 
-def _load_base_checkpoint(checkpoint):
-    state = torch.load(checkpoint, map_location='cpu', weights_only=True)
+def unpack_base_checkpoint(state, *, require_oz_vocabulary=False):
     if isinstance(state, dict) and 'base_format' in state:
-        if state['base_format'] != CUSTOM_BASE_FORMAT:
-            raise ValueError('Unsupported custom-corpus checkpoint format.')
-        return state.get('model_state_dict'), CharacterTokenizer(state.get('characters'))
-    return state, CharacterTokenizer(chars)
+        if state['base_format'] != BASE_FORMAT_VERSION:
+            raise ValueError('Unsupported base checkpoint format.')
+        weights = state.get('model_state_dict')
+        tokenizer = CharacterTokenizer(state.get('characters'))
+    else:
+        weights = state
+        tokenizer = CharacterTokenizer(LEGACY_OZ_CHARACTERS)
+    if require_oz_vocabulary and tokenizer.characters not in (LEGACY_OZ_CHARACTERS, OZ_CHARACTERS):
+        raise ValueError('Oz chat requires a base checkpoint with the bundled Oz vocabulary.')
+    return weights, tokenizer
 
 
-def load_completion_model(checkpoint):
-    state, tokenizer = _load_base_checkpoint(checkpoint)
-    return model_from_state(state, len(tokenizer.characters)), tokenizer
+def load_completion_model(checkpoint, *, require_oz_vocabulary=False):
+    state = torch.load(checkpoint, map_location='cpu', weights_only=True)
+    weights, tokenizer = unpack_base_checkpoint(state, require_oz_vocabulary=require_oz_vocabulary)
+    return model_from_state(weights, len(tokenizer.characters)), tokenizer
 
 
 def load_base_model(checkpoint):
-    state, tokenizer = _load_base_checkpoint(checkpoint)
-    if tokenizer.characters != tuple(chars):
-        raise ValueError('Oz chat training requires a base checkpoint with the bundled Oz vocabulary.')
-    return model_from_state(state, vocab_size)
+    model, _ = load_completion_model(checkpoint, require_oz_vocabulary=True)
+    return model

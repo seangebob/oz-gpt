@@ -65,7 +65,7 @@ pip install torch
 python -m model.training -batch_size 32
 ```
 
-This trains a new model on the first 90% of `wizard_of_oz.txt` and uses the final 10% for validation. Each sequence starts at an independently sampled position in its split. The command saves a new checkpoint at `model/model-base-experiment.pth`. Use a new `--output` path for each experiment. The trainer protects the bundled checkpoint and refuses to replace existing output files.
+This trains a new model on the first 90% of `wizard_of_oz.txt` and uses the final 10% for validation. The trainer strips the leading UTF-8 byte-order mark as it reads the book. Each sequence starts at an independently sampled position in its split. The command saves the new weights and their ordered character list at `model/model-base-experiment.pth`. Use a new `--output` path for each experiment. The trainer protects the bundled checkpoint and refuses to replace existing output files.
 
 **Training arguments**
 
@@ -147,7 +147,7 @@ To fine-tune your own copy, run `python -m model.chat_training` and open it with
 
 The trainer formats each turn with `User:` and `Assistant:` labels and appends `[END]` to the reply. It uses the same history packing and shortening as live chat. When a training reply is longer than the usual live reserve, it reserves enough room for the whole target. Only the current assistant reply and its end marker contribute to the loss. Keep each formatted turn short enough for the model's 128-character context and use characters from the base vocabulary.
 
-Training starts from `model/model-base-retrained.pth`. Use `--base-checkpoint` to start from different base weights. Training saves the weights with the lowest validation reply loss, model settings, and ordered character vocabulary to a new file. The default training output is `model/model-chat-experiment.pth`. Pass `--train-data` and `--val-data` to use your own files, `--steps` to change the default 1,600 training steps, or `--output` to choose a new path. By default, the trainer balances examples by distinct reply. Use `--sampling uniform` to compare uniform sampling. The trainer selects CUDA, Apple MPS, or CPU automatically, and `--device` can override that choice.
+Training starts from `model/model-base-retrained.pth`. Use `--base-checkpoint` to start from different Oz base weights. The chat run inherits the base checkpoint’s character order. Training saves the weights with the lowest validation reply loss, model settings, and ordered character vocabulary to a new file. The default training output is `model/model-chat-experiment.pth`. Pass `--train-data` and `--val-data` to use your own files, `--steps` to change the default 1,600 training steps, or `--output` to choose a new path. By default, the trainer balances examples by distinct reply. Use `--sampling uniform` to compare uniform sampling. The trainer selects CUDA, Apple MPS, or CPU automatically, and `--device` can override that choice.
 
 Use `--compact-history` to train with short `Q:` and `A:` labels on earlier turns. The current turn keeps the `User:` and `Assistant:` labels. If space is tight, the trainer and chat session shorten the previous question and reply at word boundaries. The checkpoint selects its history format automatically when you load it. During training, `--history-answer-dropout 0.5` hides the earlier assistant replies on half the sampled examples so the model can practice using the previous question on its own.
 
@@ -413,8 +413,8 @@ All three previously reviewed misses now have supporting answers. The 40-turn be
 
 #### 3. Plan and verify the vocabulary migration
 
-1. **Inventory the checkpoints · complete.** The two bundled base checkpoints derive their character order from the book. The chat checkpoints store their order. [Checkpoint vocabulary inventory](#checkpoint-vocabulary-inventory)
-2. **Define compatibility for existing checkpoints.** Keep the legacy character order available for old weights. Define how new runs record the vocabulary after removing the book’s byte-order mark.
+1. **Inventory the checkpoints · complete.** The two bundled base checkpoints contain raw weights. The chat checkpoints store their character order. [Checkpoint vocabulary inventory](#checkpoint-vocabulary-inventory)
+2. **Define compatibility for existing checkpoints · complete.** Raw base weights use the frozen 81-character mapping. New base runs on the bundled book ignore its leading byte-order mark and save their ordered vocabulary. Chat training inherits the order of the checkpoint it starts from. [Checkpoint vocabulary inventory](#checkpoint-vocabulary-inventory)
 3. **Test a migration on a copy.** If remapping a checkpoint, map its character embedding and output rows by character. Check that shared characters produce equivalent scores on fixed prompts.
 4. **Verify the normal commands.** Test text completion, trained chat, and `--book`. Compare legacy checkpoint behavior and verify that citations still point to the correct lines.
 5. **Decide what needs retraining.** Use the compatibility and benchmark results to decide which checkpoints can be reused, remapped, or retrained.
@@ -425,14 +425,14 @@ The files below are in `model/`. The inventory includes eight tracked checkpoint
 
 | Checkpoints | Character order |
 | --- | --- |
-| `model-01.pth`, `model-base-retrained.pth` | Raw weights. The loader reads `wizard_of_oz.txt` as UTF-8 and sorts its distinct characters. Both files have 81 embedding and output rows. |
+| `model-01.pth`, `model-base-retrained.pth` | Raw weights with 81 embedding and output rows. The loader uses the frozen order from the original book. |
 | `model-chat-retrained.pth`, `model-chat-facts-experiment.pth`, local `model-chat.pth` | Chat format 1. Each stores an ordered `characters` list of 81 entries. |
 | `model-chat-coverage-experiment.pth`, `model-chat-memory-experiment.pth`, `model-chat-paraphrase-experiment.pth` | Chat format 2 with compact history. Each stores an ordered `characters` list of 81 entries. |
 | `model-first-replies.pth` | Classifier format 1. It stores ordered feature terms and answer labels and uses no generator character IDs. |
 
-All six inspected chat checkpoints store the same order as the current bundled book vocabulary. Its leading byte-order mark (`U+FEFF`) is the last entry at ID 80. Removing the mark leaves IDs 0–79 in the same order and shrinks the derived vocabulary to 80 entries. The raw base weights would then fail to load because their embedding and output shapes still expect 81 rows. The chat loader reads the saved order, including ID 80. Standalone `--book` lookup already decodes the text with `utf-8-sig`. [Base loaders](model/model.py) · [Chat loader](model/chat_data.py) · [Book lookup](model/book_lookup.py)
+All six inspected chat checkpoints store the same legacy order. The book’s leading byte-order mark (`U+FEFF`) occupies ID 80 in that order. Skipping the mark leaves IDs 0–79 intact. Raw base checkpoints keep all 81 IDs even if the book changes, and chat checkpoints keep the IDs saved with their weights. Standalone `--book` lookup decodes the text with `utf-8-sig`. [Base loaders](model/model.py) · [Chat loader](model/chat_data.py) · [Book lookup](model/book_lookup.py)
 
-New bundled-book base runs still save raw weights. The `--corpus-dir` trainer saves an ordered `characters` list in a `base_format: 1` checkpoint, which the completion loader uses directly. The base loader for Oz chat training currently requires the ordered vocabulary to match the bundled book, and training from an existing chat checkpoint keeps its saved order. [Base trainer](model/training.py) · [Chat trainer](model/chat_training.py)
+New bundled-book base runs skip the leading mark and save the resulting 80-character order in `characters` alongside `model_state_dict` in a `base_format: 1` checkpoint. This is the same format used by `--corpus-dir`. Text completion uses the saved order. Oz chat training and evaluation accept either the legacy or the 80-character Oz order. [Base trainer](model/training.py) · [Chat trainer](model/chat_training.py) · [Evaluation command](model/chat_evaluation.py)
 
 ### Cleanup follow-ups
 
