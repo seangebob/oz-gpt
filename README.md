@@ -413,11 +413,26 @@ All three previously reviewed misses now have supporting answers. The 40-turn be
 
 #### 3. Plan and verify the vocabulary migration
 
-1. **Inventory the checkpoints.** Identify which checkpoints store their character order and which rely on the vocabulary derived from the bundled book.
+1. **Inventory the checkpoints · complete.** The two bundled base checkpoints derive their character order from the book. The chat checkpoints store their order. [Checkpoint vocabulary inventory](#checkpoint-vocabulary-inventory)
 2. **Define compatibility for existing checkpoints.** Keep the legacy character order available for old weights. Define how new runs record the vocabulary after removing the book’s byte-order mark.
 3. **Test a migration on a copy.** If remapping a checkpoint, map its character embedding and output rows by character. Check that shared characters produce equivalent scores on fixed prompts.
 4. **Verify the normal commands.** Test text completion, trained chat, and `--book`. Compare legacy checkpoint behavior and verify that citations still point to the correct lines.
 5. **Decide what needs retraining.** Use the compatibility and benchmark results to decide which checkpoints can be reused, remapped, or retrained.
+
+##### Checkpoint vocabulary inventory
+
+The files below are in `model/`. The inventory includes eight tracked checkpoints and the ignored local `model-chat.pth` when present.
+
+| Checkpoints | Character order |
+| --- | --- |
+| `model-01.pth`, `model-base-retrained.pth` | Raw weights. The loader reads `wizard_of_oz.txt` as UTF-8 and sorts its distinct characters. Both files have 81 embedding and output rows. |
+| `model-chat-retrained.pth`, `model-chat-facts-experiment.pth`, local `model-chat.pth` | Chat format 1. Each stores an ordered `characters` list of 81 entries. |
+| `model-chat-coverage-experiment.pth`, `model-chat-memory-experiment.pth`, `model-chat-paraphrase-experiment.pth` | Chat format 2 with compact history. Each stores an ordered `characters` list of 81 entries. |
+| `model-first-replies.pth` | Classifier format 1. It stores ordered feature terms and answer labels and uses no generator character IDs. |
+
+All six inspected chat checkpoints store the same order as the current bundled book vocabulary. Its leading byte-order mark (`U+FEFF`) is the last entry at ID 80. Removing the mark leaves IDs 0–79 in the same order and shrinks the derived vocabulary to 80 entries. The raw base weights would then fail to load because their embedding and output shapes still expect 81 rows. The chat loader reads the saved order, including ID 80. Standalone `--book` lookup already decodes the text with `utf-8-sig`. [Base loaders](model/model.py) · [Chat loader](model/chat_data.py) · [Book lookup](model/book_lookup.py)
+
+New bundled-book base runs still save raw weights. The `--corpus-dir` trainer saves an ordered `characters` list in a `base_format: 1` checkpoint, which the completion loader uses directly. The base loader for Oz chat training currently requires the ordered vocabulary to match the bundled book, and training from an existing chat checkpoint keeps its saved order. [Base trainer](model/training.py) · [Chat trainer](model/chat_training.py)
 
 ### Cleanup follow-ups
 
