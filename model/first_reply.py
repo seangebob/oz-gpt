@@ -7,13 +7,15 @@ import re
 import torch
 from torch.nn.functional import normalize, one_hot
 
+from model.book_lookup import search_terms
 from model.chat_data import END_MARKER, conversation_turns, read_conversations
 from model.chat_training import DATA_DIR
 from model.training import save_checkpoint
 
 
-FIRST_REPLY_CHECKPOINT = Path(__file__).with_name('model-first-replies.pth')
-FORMAT_VERSION = 1
+FIRST_REPLY_CHECKPOINT = Path(__file__).with_name('model-first-replies-v2.pth')
+FORMAT_VERSION = 2
+SUPPORTED_FORMATS = (1, FORMAT_VERSION)
 FEATURE_WEIGHTS = (0.45, 0.15, 0.40)
 RIDGE = 1.0
 MIN_SCORE = 0.24
@@ -40,7 +42,7 @@ def features_for_channel(examples, index, idf):
 
 class FirstReplyClassifier:
     def __init__(self, state):
-        if not isinstance(state, dict) or state.get('first_reply_format') != FORMAT_VERSION:
+        if not isinstance(state, dict) or state.get('first_reply_format') not in SUPPORTED_FORMATS:
             raise ValueError('Expected a checkpoint created by model.first_reply.')
         answers, channels = state.get('answers'), state.get('channels')
         if (not isinstance(answers, list) or len(answers) < 2
@@ -65,6 +67,30 @@ class FirstReplyClassifier:
                 raise ValueError('Invalid classifier feature weights.')
             self.channels.append(({term: i for i, term in enumerate(terms)}, idf, coefficients))
 
+        # Format 1 checkpoints do not record which question words taught each answer.
+        self.answer_terms = None
+        if state['first_reply_format'] >= 2:
+            answer_terms = state.get('answer_terms')
+            if (not isinstance(answer_terms, list) or len(answer_terms) != len(answers)
+                    or any(not isinstance(terms, list) or any(not isinstance(term, str) for term in terms)
+                           for terms in answer_terms)):
+                raise ValueError('Invalid classifier answer terms.')
+            self.answer_terms = tuple(frozenset(terms) for terms in answer_terms)
+
+    def _question_supports(self, question, answer):
+        if self.answer_terms is None:
+            return True
+        words = set(search_terms(question))
+        learned = self.answer_terms[answer]
+        # One familiar name should not make an answer fit a question about something else.
+        if len(words) >= 2:
+            return len(words & learned) >= 2
+        if not words:
+            return len(re.findall(r'[a-z0-9]+', question.casefold())) > 1
+        word = next(iter(words))
+        possessive = re.search(rf"\b{re.escape(word)}\w*['’]s\b", self.answers[answer].casefold())
+        return word in learned and possessive is None
+
     @torch.inference_mode()
     def predict(self, question):
         scores = torch.zeros(len(self.answers))
@@ -74,8 +100,9 @@ class FirstReplyClassifier:
                 values = idf[positions]
                 scores += normalize(values, dim=0) @ coefficients[positions]
         values, ranks = scores.topk(2)
-        if values[0] >= MIN_SCORE and values[0] - values[1] >= MIN_MARGIN:
-            return self.answers[ranks[0]]
+        answer = ranks[0].item()
+        if values[0] >= MIN_SCORE and values[0] - values[1] >= MIN_MARGIN and self._question_supports(question, answer):
+            return self.answers[answer]
         return None
 
 
@@ -98,9 +125,13 @@ def fit_first_replies(examples):
         groups.append((weight, terms, idf, matrix))
 
     dual_weights = torch.linalg.solve(kernel, labels)
+    answer_terms = [set() for _ in classes]
+    for question, reply in examples:
+        answer_terms[answer_ids[reply]].update(search_terms(question))
     return {
         'first_reply_format': FORMAT_VERSION,
         'answers': list(classes),
+        'answer_terms': [sorted(terms) for terms in answer_terms],
         'channels': [
             {'terms': terms, 'idf': idf.float(), 'coefficients': (weight * matrix.T @ dual_weights).float()}
             for weight, terms, idf, matrix in groups

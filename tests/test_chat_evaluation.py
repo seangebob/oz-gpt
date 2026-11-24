@@ -21,6 +21,36 @@ class ChatEvaluationTests(unittest.TestCase):
         self.assertEqual(classifier.predict('What do pandas eat?'), 'Bamboo.')
         self.assertIsNone(classifier.predict('12345'))
 
+    def near_miss_classifiers(self):
+        state = fit_first_replies([
+            ('Who is Jim?', 'Jim is the cab-horse.'), ('What animal is Jim?', 'Jim is the cab-horse.'),
+            ('Tell me about Jim.', 'Jim is the cab-horse.'), ('Who is Eureka?', "Eureka is Dorothy's kitten."),
+            ("Who is Dorothy's kitten?", "Eureka is Dorothy's kitten."), ('What color was the lamp?', 'Blue.'),
+            ('What color is the lantern?', 'Blue.'), ('Why did the lamp go out?', 'The oil ran out.'),
+        ])
+        legacy = {key: value for key, value in state.items() if key != 'answer_terms'}
+        return FirstReplyClassifier(state), FirstReplyClassifier({**legacy, 'first_reply_format': 1})
+
+    def test_classifier_abstains_when_only_one_key_word_fits_the_answer(self):
+        classifier, legacy = self.near_miss_classifiers()
+        for question, answer in (('What size is Jim?', 'Jim is the cab-horse.'),
+                                 ('Who is Dorothy?', "Eureka is Dorothy's kitten.")):
+            with self.subTest(question=question):
+                self.assertEqual(legacy.predict(question), answer)
+                self.assertIsNone(classifier.predict(question))
+
+    def test_classifier_keeps_learned_questions_and_short_names(self):
+        classifier, _ = self.near_miss_classifiers()
+        self.assertEqual(classifier.predict('Who is Jim?'), 'Jim is the cab-horse.')
+        self.assertEqual(classifier.predict('What animal is Jim?'), 'Jim is the cab-horse.')
+        self.assertEqual(classifier.predict('Who is Eureka?'), "Eureka is Dorothy's kitten.")
+        self.assertIsNone(classifier.predict('Why?'))
+
+    def test_classifier_rejects_invalid_answer_terms(self):
+        state = fit_first_replies([('Who is Jim?', 'A horse.'), ('Who is Eureka?', 'A kitten.')])
+        with self.assertRaisesRegex(ValueError, 'answer terms'):
+            FirstReplyClassifier({**state, 'answer_terms': [['jim']]})
+
     def test_classifier_answers_only_the_first_turn_in_each_history_mode(self):
         tokenizer = ChatTokenizer(chars)
         conversations = [(1, {'messages': [
