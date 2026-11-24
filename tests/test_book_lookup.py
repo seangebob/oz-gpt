@@ -87,8 +87,63 @@ The Wizard was born in Omaha.
         reader.read.return_value = [AnswerSpan('Zeb', 0)]
         self.assertIsNone(session.reply('Who drives the buggy?').source)
 
+    def identity_answer(self, question, text, extract, margin=8):
+        passage = Passage('Chapter 1', 1, 2, text)
+        index = Mock(search=Mock(return_value=[(passage, 2.0)]))
+        reader = Mock(read=Mock(return_value=[AnswerSpan(extract, margin, start=text.index(extract))]))
+        return BookSession(index, reader).reply(question).text
+
+    def test_who_is_answers_must_describe_the_subject(self):
+        cases = [
+            ('Who is Eureka?', 'Eureka is the sweet pet of a little girl.', 'the sweet pet of a little girl'),
+            ('Who is the Hungry Tiger?', 'And this is the Hungry Tiger, the terror of the jungle.',
+             'the terror of the jungle'),
+            ('Who is the Tin Woodman?', 'I went to live with Nick Chopper, the Tin Woodman.', 'Nick Chopper'),
+            ('Who is Tik-tok?', 'Behind him came the famous machine-man called Tik-tok.', 'famous machine-man'),
+            ('Who is the Machine Man?', 'The Scarecrow, the Wizard, Tik-tok the Machine Man.', 'Tik-tok'),
+            ('Who is the Public Accuser?', 'And the Woggle-Bug shall be the Public Accuser.', 'the Woggle-Bug'),
+            ('Who is the Princess?', 'You must go to Princess Ozma at once.', 'Ozma'),
+            ('Who is Ozma?', '"Who is Ozma?" "The girl that rules Oz," was the reply.', 'The girl that rules Oz'),
+            ('Who is Billina?', '"Is Billina a girl?" "No; she\'s a yellow hen."', 'a yellow hen'),
+        ]
+        for question, text, extract in cases:
+            with self.subTest(question=question):
+                self.assertEqual(self.identity_answer(question, text, extract), extract)
+
+    def test_who_is_keeps_only_the_description_inside_a_longer_extract(self):
+        cases = [
+            ('Who is Jim?', 'JIM, THE CAB-HORSE Jim the Cab-horse found a large room.',
+             'THE CAB-HORSE Jim the Cab-horse', 'the Cab-horse'),
+            ('Who is the Cowardly Lion?', '"This is my friend the Cowardly Lion, who is the King of the Forest."',
+             'This is my friend the Cowardly Lion, who is the King of the Forest', 'the King of the Forest'),
+            ('Who is Ozma?', 'They joined Princess Ozma at lunch.', 'Princess Ozma', 'Princess Ozma'),
+        ]
+        for question, text, extract, expected in cases:
+            with self.subTest(question=question):
+                self.assertEqual(self.identity_answer(question, text, extract), expected)
+
+    def test_who_is_abstains_on_other_names_and_unrelated_phrases(self):
+        cases = [
+            ('Who is the Scarecrow?', 'The Wizard was also welcomed by the Scarecrow.', 'Wizard'),
+            ('Who is the Sawhorse?', 'Before they reached the trees the Sawhorse was far ahead.', 'far ahead'),
+            ('Who is Dorothy?', 'When I opened it Dorothy\'s white kitten crept out.', 'white kitten'),
+            ('Who is Zeb?', 'Finally Zeb offered to wrestle with a little Munchkin.', 'Munchkin'),
+            ('Who is Zeb?', 'Dorothy, Zeb, the Wizard and Jim went on.', 'the Wizard'),
+            ('Who is the Tin Woodman?', 'Sending for the Tin Woodman the Wizard took him aside.', 'the Wizard'),
+            ('Who is the Wizard?', 'Sending for the Tin Woodman the Wizard took him aside.', 'the Tin Woodman'),
+            ('Who is the Scarecrow?', 'Then came the Scarecrow mounted on the Sawhorse.', 'mounted on the Sawhorse'),
+            ('Who is Ozma?', '"Is Ozma here?" asked Zeb. "No; he\'s a soldier."', 'a soldier'),
+            ('Who is the Wizard?', 'I am not a real wizard, but a humbug wizard.', 'humbug wizard'),
+        ]
+        for question, text, extract in cases:
+            with self.subTest(question=question, extract=extract):
+                self.assertEqual(self.identity_answer(question, text, extract), NO_ANSWER)
+        # Other questions keep accepting an extract without a description link.
+        self.assertEqual(self.identity_answer('Who did Zeb wrestle?', cases[3][1], 'Munchkin'), 'Munchkin')
+
     def test_abstention_can_leave_book_history_for_a_chat_fallback(self):
-        reader = Mock(read=Mock(return_value=[AnswerSpan('cab-horse', 8)]))
+        jim = self.index.search('Who is Jim?')[0][0]
+        reader = Mock(read=Mock(return_value=[AnswerSpan('cab-horse', 8, start=jim.text.index('cab-horse'))]))
         session = BookSession(self.index, reader)
         first = session.reply('Who is Jim?')
         self.assertIsNotNone(first.source)
