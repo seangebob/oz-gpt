@@ -80,6 +80,7 @@ class ChatSession:
     def reset(self):
         self.history.clear()
         self._first_reply = True
+        self._follows_unanswered = False
         if self.book_session is not None:
             self.book_session.reset()
 
@@ -87,6 +88,12 @@ class ChatSession:
         self._remember_generation(user_text, reply)
         if self.book_session is not None:
             self.book_session.remember(user_text, reply)
+
+    def _remember_unanswered(self, user_text):
+        # Keep the newest subject for follow-ups without storing an unverified answer.
+        self.history.clear()
+        self.book_session.remember(user_text, '')
+        self._follows_unanswered = True
 
     def _remember_generation(self, user_text, reply):
         self.history.append((user_text.strip(), reply.strip()))
@@ -145,6 +152,9 @@ class ChatSession:
         token_ids = self.tokenizer.encode(formatted)
         remaining = block_size + 1 - len(token_ids)
         limit = min(self.max_tokens, remaining)
+        follows_unanswered = self._follows_unanswered
+        if remember:
+            self._follows_unanswered = False
         classified = None
         if self.first_reply_classifier is not None and self._first_reply and not self.history:
             answer = self.first_reply_classifier.predict(user_text)
@@ -156,7 +166,7 @@ class ChatSession:
         if (self.book_session is not None and (user_text.endswith('?') or QUESTION_START.match(user_text))
                 and not UNANCHORED_EVENT.fullmatch(user_text)
                 and (classified is None or len(question_terms) >= 2)
-                and (self._first_reply or self.book_session.previous_source is not None
+                and (self._first_reply or follows_unanswered or self.book_session.previous_source is not None
                      or not uses_book_history(user_text))):
             book_reply = self.book_session.reply(user_text, remember=False, include_trace=True)
             routed = self._route_book_reply(user_text, book_reply, classified, question_terms)
@@ -174,6 +184,8 @@ class ChatSession:
                                  reply_method='book', source=routed.source, passage_trace=trace)
             if book_reply.source is not None and classified is None:
                 self._first_reply = False
+                if remember:
+                    self._remember_unanswered(user_text)
                 trace = book_reply.passage_trace if self.book_session.trace_passages else None
                 return ChatReply(NO_ANSWER, False, book_reply.history_used, False,
                                  reply_method='abstain', passage_trace=trace)
@@ -195,8 +207,11 @@ class ChatSession:
         output = self.tokenizer.decode(generated[0, len(token_ids):].tolist())
         ended = output.endswith(END_OF_TURN)
         text = output.removesuffix(END_OF_TURN).strip()
-        if remember and ended and text and END_MARKER not in text:
-            self.remember(user_text, text)
+        if remember:
+            if ended and text and END_MARKER not in text:
+                self.remember(user_text, text)
+            elif self.book_session is not None:
+                self._remember_unanswered(user_text)
         return ChatReply(
             text=text, ended_with_marker=ended, history_used=formatted != prompt,
             history_compacted=compacted, passage_trace=trace,
