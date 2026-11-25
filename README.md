@@ -417,7 +417,7 @@ All three previously reviewed misses now have supporting answers. The 40-turn be
 2. **Define compatibility for existing checkpoints · complete.** Raw base weights use the frozen 81-character mapping. New base runs on the bundled book ignore its leading byte-order mark and save their ordered vocabulary. Chat training inherits the order of the checkpoint it starts from. [Checkpoint vocabulary inventory](#checkpoint-vocabulary-inventory)
 3. **Test a migration on a copy · complete.** Remapped the input embeddings, output weights, and output bias by character in two base and two chat copies. All 42,000 shared-character logits matched exactly across 12 checkpoint and prompt pairs. [Migration check results](evaluations/oz_vocabulary_migration.json)
 4. **Verify the normal commands · complete.** All 88 legacy outputs matched before and after the compatibility change and with the book’s byte-order mark removed in a test checkout. All 46 citations still point to supporting lines. The migrated copies matched the tested greedy chat replies and produced different sampled completions with the same seed. [CLI and citation checks](evaluations/oz_vocabulary_cli_checks.json)
-5. **Decide what needs retraining.** Use the compatibility and benchmark results to decide which checkpoints can be reused, remapped, or retrained.
+5. **Decide what needs retraining · complete.** Reuse the released checkpoints for vocabulary compatibility. Use remapped copies when a workflow requires the 80-character order. A new chat training run is justified for answering unseen facts from evidence. [Checkpoint decisions](#checkpoint-decisions)
 
 ##### Checkpoint vocabulary inventory
 
@@ -442,6 +442,21 @@ OMP_NUM_THREADS=2 python -m evaluations.check_vocab_migration \
 ```
 
 Pass a legacy Oz base or chat checkpoint and a new output path. The check compares raw scores and probabilities normalized over the 80 shared characters before saving the copy. Full-vocabulary probabilities can change because the original 81-way softmax assigns some probability to `U+FEFF`. The copies used in the experiment were reloaded and checked against the source tensors. [Per-prompt measurements](evaluations/oz_vocabulary_migration.json)
+
+##### Checkpoint decisions
+
+| Checkpoint or component | Decision |
+| --- | --- |
+| `model-01.pth` | Reuse for default text completion and legacy comparisons. Its tested 80-character copy is suitable when the smaller vocabulary is required and sampled text can vary. |
+| `model-base-retrained.pth` | Reuse as the preferred base for Oz fine-tuning. It had a validation loss of 1.622 versus 2.495 for `model-01.pth` on the same split. Use its verified 80-character copy to start a run with the smaller vocabulary. |
+| `model-chat-retrained.pth` | Reuse for the default plain chat command and historical comparisons. The 80-character copy matched all six tested greedy replies. |
+| `model-chat-coverage-experiment.pth` | Reuse with `--first-reply-classifier --book-assist` for factual questions. Its 80-character copy matched the tested greedy and cited replies. Recheck the target benchmarks before promoting a copy. |
+| `model-chat-facts-experiment.pth`, `model-chat-memory-experiment.pth`, `model-chat-paraphrase-experiment.pth`, and ignored local `model-chat.pth` | Keep as historical baselines. Each already stores its order. Verify a separate remap if an experiment requires 80 characters. |
+| `model-first-replies.pth` and the `--book` reader | Reuse. The classifier uses stored feature terms, and the reader uses its own tokenizer. Refit the classifier when its training examples or answer labels change. |
+
+The vocabulary change requires no fresh training. All 88 legacy CLI outputs matched, including with the byte-order mark removed from a test copy of the book. The four remapped copies preserved all 42,000 tested shared-character logits, and the two remapped base checkpoints produced different sampled completions under the same seed. Keep the legacy base checkpoints for reproducible sampled output. [Base comparison](evaluations/oz_base_retraining_comparison.json) · [Migration results](evaluations/oz_vocabulary_migration.json) · [CLI checks](evaluations/oz_vocabulary_cli_checks.json)
+
+**Train a new chat candidate to improve the generator on unseen facts.** In the recorded final comparison, the generator scored 0/67 on the unseen-fact turns and live book assistance scored 45/67. Both evidence-trained candidates answered 0/16 questions with supporting excerpts. They matched 20/118 and 15/118 known-fact references, compared with 25/118 for the coverage generator. Use a separate candidate with more varied evidence examples. Before promotion, verify gains on held-out supported answers and fresh follow-ups, and check known facts and abstention on insufficient evidence against the existing baselines. [Final chat comparison](evaluations/oz_chat_final_comparison.json)
 
 ### Cleanup follow-ups
 
