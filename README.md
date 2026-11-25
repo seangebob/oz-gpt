@@ -216,7 +216,7 @@ Use `--reply-start-weight 4` with `model.chat_training` to reproduce the control
 
 ### Use the trained first-reply classifier
 
-The classifier learns from the first replies in the chat training examples. It selects an answer when its score clears a threshold and the question fits that answer's training questions. A question with two or more key words must share at least two with them, so one familiar name cannot select an unrelated fact. With the command below, the coverage checkpoint generates replies on lower scores and on later turns. The terminal labels classifier replies. Type `/reset` to start a fresh conversation on another topic.
+The classifier learns from the first replies in the chat training examples. It selects an answer when its score clears a threshold and the question fits that answer's training questions. A question with two or more key words must share at least two with them, so one familiar name cannot select an unrelated fact. A question with one key word must also open with a question word that the answer was taught with, or with none, so "Who is Jim?" and "Jim?" select the Jim answer but "Where is Jim?" goes to book lookup or the generator. With the command below, the coverage checkpoint generates replies on lower scores and on later turns. The terminal labels classifier replies. Type `/reset` to start a fresh conversation on another topic.
 
 ```bash
 python -m model.chatbot --chat model/model-chat-coverage-experiment.pth --first-reply-classifier
@@ -428,7 +428,7 @@ The files below are in `model/`. The inventory includes eight tracked checkpoint
 | `model-01.pth`, `model-base-retrained.pth` | Raw weights with 81 embedding and output rows. The loader uses the frozen order from the original book. |
 | `model-chat-retrained.pth`, `model-chat-facts-experiment.pth`, local `model-chat.pth` | Chat format 1. Each stores an ordered `characters` list of 81 entries. |
 | `model-chat-coverage-experiment.pth`, `model-chat-memory-experiment.pth`, `model-chat-paraphrase-experiment.pth` | Chat format 2 with compact history. Each stores an ordered `characters` list of 81 entries. |
-| `model-first-replies-v2.pth` | Default classifier, format 2. It has the same weights as format 1 and adds the key words learned for each answer. It uses no generator character IDs. |
+| `model-first-replies-v2.pth` | Default classifier, format 2. It has the same weights as format 1 and adds the key words and question words learned for each answer. It uses no generator character IDs. |
 | `model-first-replies.pth` | Classifier format 1, kept for reproducing earlier reports. It stores ordered feature terms and answer labels and uses no generator character IDs. |
 
 All six inspected chat checkpoints store the same legacy order. The book’s leading byte-order mark (`U+FEFF`) occupies ID 80 in that order. Skipping the mark leaves IDs 0–79 intact. Raw base checkpoints keep all 81 IDs even if the book changes, and chat checkpoints keep the IDs saved with their weights. Standalone `--book` lookup decodes the text with `utf-8-sig`. [Base loaders](model/model.py) · [Chat loader](model/chat_data.py) · [Book lookup](model/book_lookup.py)

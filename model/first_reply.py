@@ -20,6 +20,16 @@ FEATURE_WEIGHTS = (0.45, 0.15, 0.40)
 RIDGE = 1.0
 MIN_SCORE = 0.24
 MIN_MARGIN = 0.06
+QUESTION_WORDS = frozenset(
+    'who whom whose what which when where why how is are was were am do does did can could would will should '
+    'shall may might must has have had'.split()
+)
+
+
+def question_word(question):
+    """Return the question word that opens the question, or '' for a bare name, greeting or request."""
+    first = re.match(r'[^a-z0-9]*([a-z]+)', question.casefold())
+    return first[1] if first and first[1] in QUESTION_WORDS else ''
 
 
 def question_features(text):
@@ -68,7 +78,7 @@ class FirstReplyClassifier:
             self.channels.append(({term: i for i, term in enumerate(terms)}, idf, coefficients))
 
         # Format 1 checkpoints do not record which question words taught each answer.
-        self.answer_terms = None
+        self.answer_terms = self.answer_question_words = None
         if state['first_reply_format'] >= 2:
             answer_terms = state.get('answer_terms')
             if (not isinstance(answer_terms, list) or len(answer_terms) != len(answers)
@@ -76,6 +86,12 @@ class FirstReplyClassifier:
                            for terms in answer_terms)):
                 raise ValueError('Invalid classifier answer terms.')
             self.answer_terms = tuple(frozenset(terms) for terms in answer_terms)
+            answer_question_words = state.get('answer_question_words')
+            if (not isinstance(answer_question_words, list) or len(answer_question_words) != len(answers)
+                    or any(not isinstance(words, list) or any(word not in QUESTION_WORDS for word in words)
+                           for words in answer_question_words)):
+                raise ValueError('Invalid classifier answer question words.')
+            self.answer_question_words = tuple(frozenset(words) for words in answer_question_words)
 
     def _question_supports(self, question, answer):
         if self.answer_terms is None:
@@ -89,7 +105,9 @@ class FirstReplyClassifier:
             return len(re.findall(r'[a-z0-9]+', question.casefold())) > 1
         word = next(iter(words))
         possessive = re.search(rf"\b{re.escape(word)}\w*['’]s\b", self.answers[answer].casefold())
-        return word in learned and possessive is None
+        # A single key word must also be asked the way this answer was taught: "Who is Jim?" but not "Where is Jim?"
+        asked = question_word(question)
+        return word in learned and possessive is None and (not asked or asked in self.answer_question_words[answer])
 
     @torch.inference_mode()
     def predict(self, question):
@@ -126,12 +144,17 @@ def fit_first_replies(examples):
 
     dual_weights = torch.linalg.solve(kernel, labels)
     answer_terms = [set() for _ in classes]
+    answer_question_words = [set() for _ in classes]
     for question, reply in examples:
-        answer_terms[answer_ids[reply]].update(search_terms(question))
+        terms = set(search_terms(question))
+        answer_terms[answer_ids[reply]].update(terms)
+        if len(terms) == 1 and question_word(question):
+            answer_question_words[answer_ids[reply]].add(question_word(question))
     return {
         'first_reply_format': FORMAT_VERSION,
         'answers': list(classes),
         'answer_terms': [sorted(terms) for terms in answer_terms],
+        'answer_question_words': [sorted(words) for words in answer_question_words],
         'channels': [
             {'terms': terms, 'idf': idf.float(), 'coefficients': (weight * matrix.T @ dual_weights).float()}
             for weight, terms, idf, matrix in groups

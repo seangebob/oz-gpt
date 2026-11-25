@@ -28,13 +28,16 @@ class ChatEvaluationTests(unittest.TestCase):
             ("Who is Dorothy's kitten?", "Eureka is Dorothy's kitten."), ('What color was the lamp?', 'Blue.'),
             ('What color is the lantern?', 'Blue.'), ('Why did the lamp go out?', 'The oil ran out.'),
         ])
-        legacy = {key: value for key, value in state.items() if key != 'answer_terms'}
+        legacy = {key: value for key, value in state.items() if key not in {'answer_terms', 'answer_question_words'}}
         return FirstReplyClassifier(state), FirstReplyClassifier({**legacy, 'first_reply_format': 1})
 
     def test_classifier_abstains_when_only_one_key_word_fits_the_answer(self):
         classifier, legacy = self.near_miss_classifiers()
         for question, answer in (('What size is Jim?', 'Jim is the cab-horse.'),
-                                 ('Who is Dorothy?', "Eureka is Dorothy's kitten.")):
+                                 ('Who is Dorothy?', "Eureka is Dorothy's kitten."),
+                                 ('Where is Jim?', 'Jim is the cab-horse.'),
+                                 ('Why is Jim?', 'Jim is the cab-horse.'),
+                                 ("Where's Eureka?", "Eureka is Dorothy's kitten.")):
             with self.subTest(question=question):
                 self.assertEqual(legacy.predict(question), answer)
                 self.assertIsNone(classifier.predict(question))
@@ -44,12 +47,20 @@ class ChatEvaluationTests(unittest.TestCase):
         self.assertEqual(classifier.predict('Who is Jim?'), 'Jim is the cab-horse.')
         self.assertEqual(classifier.predict('What animal is Jim?'), 'Jim is the cab-horse.')
         self.assertEqual(classifier.predict('Who is Eureka?'), "Eureka is Dorothy's kitten.")
+        # A single name is answered when asked the way the answer was taught, or on its own.
+        for question in ('Who was Jim?', "Who's Jim?", 'Jim?', 'jim'):
+            with self.subTest(question=question):
+                self.assertEqual(classifier.predict(question), 'Jim is the cab-horse.')
         self.assertIsNone(classifier.predict('Why?'))
 
-    def test_classifier_rejects_invalid_answer_terms(self):
+    def test_classifier_rejects_invalid_answer_terms_and_question_words(self):
         state = fit_first_replies([('Who is Jim?', 'A horse.'), ('Who is Eureka?', 'A kitten.')])
         with self.assertRaisesRegex(ValueError, 'answer terms'):
             FirstReplyClassifier({**state, 'answer_terms': [['jim']]})
+        self.assertEqual(state['answer_question_words'], [['who'], ['who']])
+        for words in ([['who']], [['who'], ['jim']], [['who'], 'who']):
+            with self.subTest(words=words), self.assertRaisesRegex(ValueError, 'answer question words'):
+                FirstReplyClassifier({**state, 'answer_question_words': words})
 
     def test_classifier_answers_only_the_first_turn_in_each_history_mode(self):
         tokenizer = ChatTokenizer(chars)
