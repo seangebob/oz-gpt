@@ -7,17 +7,39 @@ import re
 import torch
 from torch.nn.functional import normalize, one_hot
 
+from model.book_lookup import search_terms
 from model.chat_data import END_MARKER, conversation_turns, read_conversations
 from model.chat_training import DATA_DIR
 from model.training import save_checkpoint
 
 
-FIRST_REPLY_CHECKPOINT = Path(__file__).with_name('model-first-replies.pth')
-FORMAT_VERSION = 1
+FIRST_REPLY_CHECKPOINT = Path(__file__).with_name('model-first-replies-v2.pth')
+FORMAT_VERSION = 2
+SUPPORTED_FORMATS = (1, FORMAT_VERSION)
 FEATURE_WEIGHTS = (0.45, 0.15, 0.40)
 RIDGE = 1.0
 MIN_SCORE = 0.24
 MIN_MARGIN = 0.06
+WH_WORDS = frozenset('who whom whose what which when where why how'.split())
+QUESTION_WORDS = WH_WORDS | frozenset(
+    'is are was were am do does did can could would will should shall may might must has have had'.split()
+)
+
+
+def question_word(question):
+    """Return the word that makes this a question, or '' for a bare name, greeting or request."""
+    words = re.findall(r'[a-z]+', question.casefold())
+    # A conversational opening does not hide the question: "And where is Jim?", "Okay, so where is Jim?"
+    asked = next((word for word in words if word in WH_WORDS), None)
+    if asked:
+        return asked
+    for word in words:
+        if word in QUESTION_WORDS:
+            return word
+        if any(search_terms(word)):
+            # A key word came first, so a later "is" belongs to a statement such as "Jim is here".
+            return ''
+    return ''
 
 
 def question_features(text):
@@ -40,7 +62,7 @@ def features_for_channel(examples, index, idf):
 
 class FirstReplyClassifier:
     def __init__(self, state):
-        if not isinstance(state, dict) or state.get('first_reply_format') != FORMAT_VERSION:
+        if not isinstance(state, dict) or state.get('first_reply_format') not in SUPPORTED_FORMATS:
             raise ValueError('Expected a checkpoint created by model.first_reply.')
         answers, channels = state.get('answers'), state.get('channels')
         if (not isinstance(answers, list) or len(answers) < 2
@@ -65,6 +87,38 @@ class FirstReplyClassifier:
                 raise ValueError('Invalid classifier feature weights.')
             self.channels.append(({term: i for i, term in enumerate(terms)}, idf, coefficients))
 
+        # Format 1 checkpoints do not record which question words taught each answer.
+        self.answer_terms = self.answer_question_words = None
+        if state['first_reply_format'] >= 2:
+            answer_terms = state.get('answer_terms')
+            if (not isinstance(answer_terms, list) or len(answer_terms) != len(answers)
+                    or any(not isinstance(terms, list) or any(not isinstance(term, str) for term in terms)
+                           for terms in answer_terms)):
+                raise ValueError('Invalid classifier answer terms.')
+            self.answer_terms = tuple(frozenset(terms) for terms in answer_terms)
+            answer_question_words = state.get('answer_question_words')
+            if (not isinstance(answer_question_words, list) or len(answer_question_words) != len(answers)
+                    or any(not isinstance(words, list) or any(word not in QUESTION_WORDS for word in words)
+                           for words in answer_question_words)):
+                raise ValueError('Invalid classifier answer question words.')
+            self.answer_question_words = tuple(frozenset(words) for words in answer_question_words)
+
+    def _question_supports(self, question, answer):
+        if self.answer_terms is None:
+            return True
+        words = set(search_terms(question))
+        learned = self.answer_terms[answer]
+        # One familiar name should not make an answer fit a question about something else.
+        if len(words) >= 2:
+            return len(words & learned) >= 2
+        if not words:
+            return len(re.findall(r'[a-z0-9]+', question.casefold())) > 1
+        word = next(iter(words))
+        possessive = re.search(rf"\b{re.escape(word)}\w*['’]s\b", self.answers[answer].casefold())
+        # A single key word must also be asked the way this answer was taught: "Who is Jim?" but not "Where is Jim?"
+        asked = question_word(question)
+        return word in learned and possessive is None and (not asked or asked in self.answer_question_words[answer])
+
     @torch.inference_mode()
     def predict(self, question):
         scores = torch.zeros(len(self.answers))
@@ -74,8 +128,9 @@ class FirstReplyClassifier:
                 values = idf[positions]
                 scores += normalize(values, dim=0) @ coefficients[positions]
         values, ranks = scores.topk(2)
-        if values[0] >= MIN_SCORE and values[0] - values[1] >= MIN_MARGIN:
-            return self.answers[ranks[0]]
+        answer = ranks[0].item()
+        if values[0] >= MIN_SCORE and values[0] - values[1] >= MIN_MARGIN and self._question_supports(question, answer):
+            return self.answers[answer]
         return None
 
 
@@ -98,9 +153,18 @@ def fit_first_replies(examples):
         groups.append((weight, terms, idf, matrix))
 
     dual_weights = torch.linalg.solve(kernel, labels)
+    answer_terms = [set() for _ in classes]
+    answer_question_words = [set() for _ in classes]
+    for question, reply in examples:
+        terms = set(search_terms(question))
+        answer_terms[answer_ids[reply]].update(terms)
+        if len(terms) == 1 and question_word(question):
+            answer_question_words[answer_ids[reply]].add(question_word(question))
     return {
         'first_reply_format': FORMAT_VERSION,
         'answers': list(classes),
+        'answer_terms': [sorted(terms) for terms in answer_terms],
+        'answer_question_words': [sorted(words) for words in answer_question_words],
         'channels': [
             {'terms': terms, 'idf': idf.float(), 'coefficients': (weight * matrix.T @ dual_weights).float()}
             for weight, terms, idf, matrix in groups
