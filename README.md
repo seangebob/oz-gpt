@@ -416,7 +416,7 @@ All three previously reviewed misses now have supporting answers. The 40-turn be
 1. **Inventory the checkpoints · complete.** The two bundled base checkpoints contain raw weights. The chat checkpoints store their character order. [Checkpoint vocabulary inventory](#checkpoint-vocabulary-inventory)
 2. **Define compatibility for existing checkpoints · complete.** Raw base weights use the frozen 81-character mapping. New base runs on the bundled book ignore its leading byte-order mark and save their ordered vocabulary. Chat training inherits the order of the checkpoint it starts from. [Checkpoint vocabulary inventory](#checkpoint-vocabulary-inventory)
 3. **Test a migration on a copy · complete.** Remapped the input embeddings, output weights, and output bias by character in two base and two chat copies. All 42,000 shared-character logits matched exactly across 12 checkpoint and prompt pairs. [Migration check results](evaluations/oz_vocabulary_migration.json)
-4. **Verify the normal commands.** Test text completion, trained chat, and `--book`. Compare legacy checkpoint behavior and verify that citations still point to the correct lines.
+4. **Verify the normal commands · complete.** All 88 legacy outputs matched before and after the compatibility change and with the book’s byte-order mark removed in a test checkout. All 46 citations still point to supporting lines. The migrated copies matched the tested greedy chat replies and produced different sampled completions with the same seed. [CLI and citation checks](evaluations/oz_vocabulary_cli_checks.json)
 5. **Decide what needs retraining.** Use the compatibility and benchmark results to decide which checkpoints can be reused, remapped, or retrained.
 
 ##### Checkpoint vocabulary inventory

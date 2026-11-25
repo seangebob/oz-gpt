@@ -1,0 +1,1083 @@
+{
+  "baseline_commit": "400b74686745cb245b798c6b0a458d118f8dfb14",
+  "tested_commit": "52da1c1708145c5e13af09f8f8d9b66e836ad0a4",
+  "method": "Send fixed input to the interactive CLI and compare output before vocabulary compatibility, after compatibility, and after removing the first three bytes in an isolated copy of the book. Seed text completion once per CLI run. Use the normal greedy decoder for trained chat. Run all four migrated copies with the BOM-free book.",
+  "settings": {
+    "torch_version": "2.13.0",
+    "cpu_threads": 2,
+    "completion_seed": 17,
+    "completion_max_tokens": 12,
+    "chat_max_tokens": 48,
+    "reader_model": "deepset/minilm-uncased-squad2",
+    "reader_revision": "934656cdda79824eabf503ed56e15c01ddbdbe3f"
+  },
+  "reproduction": {
+    "completion": "OMP_NUM_THREADS=2 python -c 'import runpy, torch; torch.manual_seed(17); runpy.run_module(\"model.chatbot\", run_name=\"__main__\")' --max_tokens 12 [--checkpoint <checkpoint>]",
+    "trained_chat": "OMP_NUM_THREADS=2 python -m model.chatbot --chat [<checkpoint>] --max_tokens 48",
+    "standalone_book": "OMP_NUM_THREADS=2 python -m model.chatbot --book",
+    "book_assisted_chat": "OMP_NUM_THREADS=2 python -m model.chatbot --chat model/model-chat-coverage-experiment.pth --first-reply-classifier --book-assist --max_tokens 48",
+    "input": "For completion and trained chat, use the listed inputs in order. For book modes, send user questions from the listed fixture conversations with /reset between conversations. End each session with quit.",
+    "migrated_copies": "evaluations/oz_vocabulary_migration.json"
+  },
+  "book_line_check": {
+    "path": "model/wizard_of_oz.txt",
+    "original_sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9",
+    "bom_free_sha256": "d34e0deef56a40f9db1e64acaede4d8cab21bd267235c186c50b7ab0d687e8de",
+    "line_count": 5423,
+    "identical_decoded_lines": true
+  },
+  "legacy_cli_comparison": {
+    "completion": {
+      "inputs": [
+        "Dorothy and the Wizard",
+        "The little piglet",
+        "CHAPTER 12."
+      ],
+      "checkpoints": {
+        "model/model-01.pth": {
+          "device": "cpu",
+          "matching_responses": 3,
+          "sha256": "5ddbd40db69d7842d009766903c5d38bdbd690838b39de40f923611e425440f4"
+        },
+        "model/model-base-retrained.pth": {
+          "device": "cpu",
+          "matching_responses": 3,
+          "sha256": "a42c0f2c04e2d15967810e29bbd5be89a986449c0f415c94a6803d30377fed1c"
+        }
+      },
+      "total_matching_responses": 6
+    },
+    "trained_chat": {
+      "inputs": [
+        "Who is Jim?",
+        "What kind?",
+        "/reset",
+        "What did the Wizard change into before meeting the princess?",
+        "What color was it?",
+        "/reset",
+        "What pattern did the colored rays cast on Jim the horse?",
+        "What color was it?"
+      ],
+      "checkpoints": {
+        "model/model-chat-coverage-experiment.pth": {
+          "device": "mps",
+          "matching_responses": 6,
+          "sha256": "7bf86a87e46073d61ba3d803af7bbc26bf295e22f0ab0ff7ddbdf9694caee17d"
+        },
+        "model/model-chat-facts-experiment.pth": {
+          "device": "mps",
+          "matching_responses": 6,
+          "sha256": "e5ab66bac2e2f12e761a48d5d94123a2ba868f4d1ae6f368ffb6b929b0622622"
+        },
+        "model/model-chat-memory-experiment.pth": {
+          "device": "mps",
+          "matching_responses": 6,
+          "sha256": "fe54c85bd3c2093a352ed8196458860b378a9bd71a76e920379383d77788bea4"
+        },
+        "model/model-chat-paraphrase-experiment.pth": {
+          "device": "mps",
+          "matching_responses": 6,
+          "sha256": "93c84e538c97d65115b14ef02c0a18f290826b9576de8620f03697a36df9aa49"
+        },
+        "model/model-chat-retrained.pth": {
+          "device": "mps",
+          "matching_responses": 6,
+          "sha256": "d83e6d9d14105e0e9fcf3f2baf014cb218ac6438c03d2fd0adf4b6d20eeb0c27"
+        },
+        "model/model-chat.pth": {
+          "device": "mps",
+          "matching_responses": 6,
+          "local_ignored": true
+        }
+      },
+      "total_matching_responses": 36
+    },
+    "total_matching_responses": 88
+  },
+  "migrated_cli_comparison": {
+    "completion": {
+      "model/model-01.pth": {
+        "copy": "model-01-80.pth",
+        "copy_sha256": "832e674398ae378b01b1d29df511b5dab99cbf7a126249848f47ac501f0394ee",
+        "device": "cpu",
+        "matching_responses": 0,
+        "total_responses": 3,
+        "responses": [
+          {
+            "prompt": "Dorothy and the Wizard",
+            "legacy": " the we oumu",
+            "migrated": "is\n6lly by, "
+          },
+          {
+            "prompt": "The little piglet",
+            "legacy": "he.\n\n\n\" t in",
+            "migrated": "he w fr n'f\n"
+          },
+          {
+            "prompt": "CHAPTER 12.",
+            "legacy": " wa the ul e",
+            "migrated": "\n\nHK GI'ler."
+          }
+        ]
+      },
+      "model/model-base-retrained.pth": {
+        "copy": "model-base-retrained-80.pth",
+        "copy_sha256": "9efdfec1dac5c4d8d701b93d07219fd330d064f9db8743285aa92b7917928cbe",
+        "device": "cpu",
+        "matching_responses": 0,
+        "total_responses": 3,
+        "responses": [
+          {
+            "prompt": "Dorothy and the Wizard",
+            "legacy": " the growed ",
+            "migrated": "\nto good 'Gy"
+          },
+          {
+            "prompt": "The little piglet",
+            "legacy": "s followed m",
+            "migrated": "s and straly"
+          },
+          {
+            "prompt": "CHAPTER 12.",
+            "legacy": "\n\nUNT OF DEY",
+            "migrated": "\n\nTHE THE TH"
+          }
+        ]
+      }
+    },
+    "trained_chat": {
+      "model/model-chat-retrained.pth": {
+        "copy": "model-chat-retrained-80.pth",
+        "copy_sha256": "00f59003b286c407cee437180681b34c7c7c946fd1fd5b78a18eccd1a35976f1",
+        "device": "mps",
+        "matching_responses": 6,
+        "total_responses": 6,
+        "responses": [
+          {
+            "prompt": "Who is Jim?",
+            "legacy": "Jim is the cab-horse.",
+            "migrated": "Jim is the cab-horse."
+          },
+          {
+            "prompt": "What kind?",
+            "legacy": "A horse.",
+            "migrated": "A horse."
+          },
+          {
+            "prompt": "What did the Wizard change into before meeting the princess?",
+            "legacy": "The Valle.",
+            "migrated": "The Valle."
+          },
+          {
+            "prompt": "What color was it?",
+            "legacy": "L. Frank Baum wrote it.",
+            "migrated": "L. Frank Baum wrote it."
+          },
+          {
+            "prompt": "What pattern did the colored rays cast on Jim the horse?",
+            "legacy": "A horse.",
+            "migrated": "A horse."
+          },
+          {
+            "prompt": "What color was it?",
+            "legacy": "L. Frank Baum wrote it.",
+            "migrated": "L. Frank Baum wrote it."
+          }
+        ]
+      },
+      "model/model-chat-coverage-experiment.pth": {
+        "copy": "model-chat-coverage-experiment-80.pth",
+        "copy_sha256": "54a519f5faf185a694d8a98d0b185aa2b2865d8366f064e53f2061d20a12844b",
+        "device": "mps",
+        "matching_responses": 6,
+        "total_responses": 6,
+        "responses": [
+          {
+            "prompt": "Who is Jim?",
+            "legacy": "Jim is the cab-horse.",
+            "migrated": "Jim is the cab-horse."
+          },
+          {
+            "prompt": "What kind?",
+            "legacy": "A horse.",
+            "migrated": "A horse."
+          },
+          {
+            "prompt": "What did the Wizard change into before meeting the princess?",
+            "legacy": "Revolvers.",
+            "migrated": "Revolvers."
+          },
+          {
+            "prompt": "What color was it?",
+            "legacy": "Black.",
+            "migrated": "Black."
+          },
+          {
+            "prompt": "What pattern did the colored rays cast on Jim the horse?",
+            "legacy": "Trees.",
+            "migrated": "Trees."
+          },
+          {
+            "prompt": "What color was it?",
+            "legacy": "Blue and orange.",
+            "migrated": "Blue and orange."
+          }
+        ]
+      }
+    }
+  },
+  "citations": {
+    "fixture": "data/oz_book_lookup_generalization_test.jsonl",
+    "fixture_sha256": "9fff016f4c4d293ca411ca9afeabb3f1613daf39f7efb46b24c7dc601a2f25c8",
+    "standalone_book": {
+      "device": "cpu",
+      "matching_citations": 40,
+      "supporting_citations": 40,
+      "prior_review": "evaluations/oz_book_remaining_followups_comparison.json",
+      "rows": [
+        {
+          "conversation": 1,
+          "turn": 1,
+          "prompt": "In the preface, what job does Baum say he'd rather tell stories than take?",
+          "expected": "President of the United States.",
+          "reference_lines": [
+            81,
+            85
+          ],
+          "reply": "the President",
+          "citation": {
+            "section": "Preface",
+            "start_line": 80,
+            "end_line": 97
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 2,
+          "turn": 1,
+          "prompt": "What did Dorothy and Zeb do with their hands when the buggy passed the bright colored suns?",
+          "expected": "They covered their faces to protect their eyes.",
+          "reference_lines": [
+            447,
+            450
+          ],
+          "reply": "covered their faces",
+          "citation": {
+            "section": "Chapter 2",
+            "start_line": 444,
+            "end_line": 465
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 2,
+          "turn": 2,
+          "prompt": "What let them open their eyes again?",
+          "expected": "The top of the buggy blocked many of the bright rays.",
+          "reference_lines": [
+            450,
+            452
+          ],
+          "reply": "the top of the buggy shut out many of the piercing rays",
+          "citation": {
+            "section": "Chapter 2",
+            "start_line": 444,
+            "end_line": 465
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 3,
+          "turn": 1,
+          "prompt": "What did the Sorcerer call the second rain when the Mangaboo Prince challenged him?",
+          "expected": "A Rain of People-and-Horse-and-Buggy.",
+          "reference_lines": [
+            791,
+            798
+          ],
+          "reply": "a Rain of People-and-Horse-and-Buggy",
+          "citation": {
+            "section": "Chapter 3",
+            "start_line": 796,
+            "end_line": 824
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 3,
+          "turn": 2,
+          "prompt": "What else did he say fell along with them?",
+          "expected": "Some stones.",
+          "reference_lines": [
+            796,
+            798
+          ],
+          "reply": "some stones",
+          "citation": {
+            "section": "Chapter 3",
+            "start_line": 796,
+            "end_line": 824
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 4,
+          "turn": 1,
+          "prompt": "What circus did the Wizard say he belonged to when talking to the Sorcerer?",
+          "expected": "Bailum & Barney's Great Consolidated Shows.",
+          "reference_lines": [
+            929,
+            937
+          ],
+          "reply": "Bailum & Barney's Great Consolidated Shows",
+          "citation": {
+            "section": "Chapter 3",
+            "start_line": 931,
+            "end_line": 954
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 4,
+          "turn": 2,
+          "prompt": "What did he do to draw crowds to it?",
+          "expected": "He went up in a balloon.",
+          "reference_lines": [
+            935,
+            942
+          ],
+          "reply": "I go up in a balloon",
+          "citation": {
+            "section": "Chapter 3",
+            "start_line": 931,
+            "end_line": 954
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 4,
+          "turn": 3,
+          "prompt": "How many rings did the show have?",
+          "expected": "Three rings.",
+          "reference_lines": [
+            935,
+            937
+          ],
+          "reply": "three",
+          "citation": {
+            "section": "Chapter 3",
+            "start_line": 931,
+            "end_line": 954
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 5,
+          "turn": 1,
+          "prompt": "How long did it take the glass houses in the Mangaboo city to grow so large?",
+          "expected": "A good many years.",
+          "reference_lines": [
+            1124,
+            1127
+          ],
+          "reply": "a good many years",
+          "citation": {
+            "section": "Chapter 4",
+            "start_line": 1113,
+            "end_line": 1135
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 5,
+          "turn": 2,
+          "prompt": "How do they mend when the roofs crack?",
+          "expected": "They grow together again over time.",
+          "reference_lines": [
+            1127,
+            1133
+          ],
+          "reply": "No; but they will grow together again, in time, and we must wait until they do.",
+          "citation": {
+            "section": "Chapter 4",
+            "start_line": 1113,
+            "end_line": 1135
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 5,
+          "turn": 3,
+          "prompt": "What caused that damage in the first place?",
+          "expected": "A Rain of Stones.",
+          "reference_lines": [
+            1126,
+            1133
+          ],
+          "reply": "a Rain of Stones",
+          "citation": {
+            "section": "Chapter 4",
+            "start_line": 1113,
+            "end_line": 1135
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 6,
+          "turn": 1,
+          "prompt": "Why did the Wizard think it was so easy to walk in the air above the Mangaboo gardens?",
+          "expected": "They were close to the center of the earth, where the pull of gravity was slight.",
+          "reference_lines": [
+            1404,
+            1415
+          ],
+          "reply": "we are close to the center of the earth",
+          "citation": {
+            "section": "Chapter 5",
+            "start_line": 1404,
+            "end_line": 1426
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 7,
+          "turn": 1,
+          "prompt": "How did the piglets look while watching Eureka eat a fish?",
+          "expected": "They looked frightened.",
+          "reference_lines": [
+            1530,
+            1547
+          ],
+          "reply": "frightened eyes",
+          "citation": {
+            "section": "Chapter 5",
+            "start_line": 1530,
+            "end_line": 1556
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 7,
+          "turn": 2,
+          "prompt": "What did Dorothy promise them?",
+          "expected": "She would not let the kitten hurt them.",
+          "reference_lines": [
+            1545,
+            1553
+          ],
+          "reply": "I'll not let the kitten hurt you.",
+          "citation": {
+            "section": "Chapter 5",
+            "start_line": 1530,
+            "end_line": 1556
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 8,
+          "turn": 1,
+          "prompt": "Where did the Royal Princess threaten to throw the human visitors while in the House of the Sorcerer?",
+          "expected": "The Garden of the Twining Vines.",
+          "reference_lines": [
+            1668,
+            1688
+          ],
+          "reply": "the Garden of the Twining Vines",
+          "citation": {
+            "section": "Chapter 6",
+            "start_line": 1686,
+            "end_line": 1701
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 8,
+          "turn": 2,
+          "prompt": "Where did she plan to send the animals instead?",
+          "expected": "The Black Pit in the mountains.",
+          "reference_lines": [
+            1686,
+            1690
+          ],
+          "reply": "the Black Pit",
+          "citation": {
+            "section": "Chapter 6",
+            "start_line": 1686,
+            "end_line": 1701
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 9,
+          "turn": 1,
+          "prompt": "Which creatures in the brooks could the invisible family in Voe still see?",
+          "expected": "Fish.",
+          "reference_lines": [
+            2295,
+            2300
+          ],
+          "reply": "fishes",
+          "citation": {
+            "section": "Chapter 9",
+            "start_line": 2297,
+            "end_line": 2314
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 9,
+          "turn": 2,
+          "prompt": "What did the mother say they sometimes did with them?",
+          "expected": "They caught them to eat.",
+          "reference_lines": [
+            2295,
+            2300
+          ],
+          "reply": "catch them to eat",
+          "citation": {
+            "section": "Chapter 9",
+            "start_line": 2283,
+            "end_line": 2302
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 10,
+          "turn": 1,
+          "prompt": "What was the name of the champion from Voe who once fought the Gargoyles?",
+          "expected": "Overman-Anu.",
+          "reference_lines": [
+            2362,
+            2373
+          ],
+          "reply": "Overman-Anu",
+          "citation": {
+            "section": "Chapter 9",
+            "start_line": 2369,
+            "end_line": 2390
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 10,
+          "turn": 2,
+          "prompt": "How many days did he fight them before he got away?",
+          "expected": "Nine days.",
+          "reference_lines": [
+            2369,
+            2373
+          ],
+          "reply": "nine",
+          "citation": {
+            "section": "Chapter 9",
+            "start_line": 2358,
+            "end_line": 2378
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 11,
+          "turn": 1,
+          "prompt": "Why did Zeb walk behind the buggy when Jim started up the stairs inside Pyramid Mountain?",
+          "expected": "To make sure nothing happened to the harness.",
+          "reference_lines": [
+            2596,
+            2601
+          ],
+          "reply": "nothing happened to the harness",
+          "citation": {
+            "section": "Chapter 10",
+            "start_line": 2599,
+            "end_line": 2616
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 12,
+          "turn": 1,
+          "prompt": "What did Jim ask the others to do when he first looked into the Country of the Gargoyles?",
+          "expected": "Go back down the stairs.",
+          "reference_lines": [
+            2852,
+            2857
+          ],
+          "reply": "go down again",
+          "citation": {
+            "section": "Chapter 11",
+            "start_line": 2843,
+            "end_line": 2867
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 12,
+          "turn": 2,
+          "prompt": "Why did he want that?",
+          "expected": "He thought the place was dangerous and unfit for living creatures. Everything looked dead.",
+          "reference_lines": [
+            2859,
+            2869
+          ],
+          "reply": "It's dangerous. I've taken a look at this place, and it's no fit country for real creatures to go to. Everything's dead, up there--no flesh or blood or growing thing anywhere.",
+          "citation": {
+            "section": "Chapter 11",
+            "start_line": 2857,
+            "end_line": 2880
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": false,
+          "review": "Jim's warning and explanation occur in separate sentences within the cited range. The reply combines the two."
+        },
+        {
+          "conversation": 13,
+          "turn": 1,
+          "prompt": "Who picked up the Gargoyle with a crown carved into its head?",
+          "expected": "Zeb.",
+          "reference_lines": [
+            3016,
+            3018
+          ],
+          "reply": "Zeb",
+          "citation": {
+            "section": "Chapter 11",
+            "start_line": 2997,
+            "end_line": 3018
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 13,
+          "turn": 2,
+          "prompt": "Where did he put it after tying it up?",
+          "expected": "In the buggy.",
+          "reference_lines": [
+            3021,
+            3025
+          ],
+          "reply": "buggy",
+          "citation": {
+            "section": "Chapter 11",
+            "start_line": 3009,
+            "end_line": 3025
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 13,
+          "turn": 3,
+          "prompt": "Which parts of the captive had the strap pinned down?",
+          "expected": "Its wings and arms.",
+          "reference_lines": [
+            3021,
+            3025
+          ],
+          "reply": "wings and arms",
+          "citation": {
+            "section": "Chapter 11",
+            "start_line": 3018,
+            "end_line": 3027
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 14,
+          "turn": 1,
+          "prompt": "What did Zeb say they would steer with when Jim flew away from the Gargoyles?",
+          "expected": "The wings on the buggy.",
+          "reference_lines": [
+            3342,
+            3355
+          ],
+          "reply": "wings on the buggy",
+          "citation": {
+            "section": "Chapter 12",
+            "start_line": 3330,
+            "end_line": 3352
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 14,
+          "turn": 2,
+          "prompt": "What did Dorothy see coming after them when she looked back?",
+          "expected": "A great cloud of pursuing Gargoyles.",
+          "reference_lines": [
+            3360,
+            3366
+          ],
+          "reply": "Gargoyles",
+          "citation": {
+            "section": "Chapter 12",
+            "start_line": 3355,
+            "end_line": 3368
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 15,
+          "turn": 1,
+          "prompt": "Which two animals did the dragonette say they usually ate because people were scarce?",
+          "expected": "Elephants or buffaloes.",
+          "reference_lines": [
+            3514,
+            3518
+          ],
+          "reply": "elephants or buffaloes",
+          "citation": {
+            "section": "Chapter 13",
+            "start_line": 3510,
+            "end_line": 3536
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 15,
+          "turn": 2,
+          "prompt": "How old did it say it and its siblings had just turned?",
+          "expected": "Sixty-six years old.",
+          "reference_lines": [
+            3520,
+            3529
+          ],
+          "reply": "sixty-six",
+          "citation": {
+            "section": "Chapter 13",
+            "start_line": 3510,
+            "end_line": 3536
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 16,
+          "turn": 1,
+          "prompt": "Why was Ozma especially happy to have Dorothy beside her after the festivities?",
+          "expected": "Few girls her age could keep her company, so she often felt lonely.",
+          "reference_lines": [
+            4888,
+            4895
+          ],
+          "reply": "girls of her own age with whom it was proper for the Princess to associate were very few",
+          "citation": {
+            "section": "Chapter 18",
+            "start_line": 4883,
+            "end_line": 4906
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 17,
+          "turn": 1,
+          "prompt": "What was in the center of the royal flag carried in the Oz parade?",
+          "expected": "A large emerald-green star.",
+          "reference_lines": [
+            4643,
+            4649
+          ],
+          "reply": "a large emerald-green star",
+          "citation": {
+            "section": "Chapter 17",
+            "start_line": 4640,
+            "end_line": 4655
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 17,
+          "turn": 2,
+          "prompt": "What did it represent?",
+          "expected": "The Emerald City.",
+          "reference_lines": [
+            4646,
+            4649
+          ],
+          "reply": "the Emerald City",
+          "citation": {
+            "section": "Chapter 17",
+            "start_line": 4640,
+            "end_line": 4655
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 17,
+          "turn": 3,
+          "prompt": "What did the four colors around it stand for?",
+          "expected": "The four countries of Oz.",
+          "reference_lines": [
+            4644,
+            4649
+          ],
+          "reply": "the four countries of Oz",
+          "citation": {
+            "section": "Chapter 17",
+            "start_line": 4640,
+            "end_line": 4655
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 18,
+          "turn": 1,
+          "prompt": "Which parts of the Sawhorse did Jim break when he kicked it after the race?",
+          "expected": "One leg and the left ear.",
+          "reference_lines": [
+            4827,
+            4832
+          ],
+          "reply": "one of its legs and its left ear",
+          "citation": {
+            "section": "Chapter 17",
+            "start_line": 4831,
+            "end_line": 4847
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 18,
+          "turn": 2,
+          "prompt": "Who made replacements for them?",
+          "expected": "The Tin Woodman.",
+          "reference_lines": [
+            4856,
+            4859
+          ],
+          "reply": "Tin Woodman",
+          "citation": {
+            "section": "Chapter 17",
+            "start_line": 4841,
+            "end_line": 4859
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 19,
+          "turn": 1,
+          "prompt": "What did the Scarecrow say about the mind's eye during the Woggle-Bug's speech?",
+          "expected": "The mind had no eye and was blind.",
+          "reference_lines": [
+            5137,
+            5146
+          ],
+          "reply": "\"The mind has no eye,\" declared the Scarecrow. \"It's blind.\"",
+          "citation": {
+            "section": "Chapter 19",
+            "start_line": 5128,
+            "end_line": 5153
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 19,
+          "turn": 2,
+          "prompt": "What did Ozma tell the Woggle-Bug about it?",
+          "expected": "If he had one, it was invisible.",
+          "reference_lines": [
+            5145,
+            5149
+          ],
+          "reply": "If you have, it is invisible",
+          "citation": {
+            "section": "Chapter 19",
+            "start_line": 5128,
+            "end_line": 5153
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 20,
+          "turn": 1,
+          "prompt": "Where did Zeb say he and Jim belonged when he thanked Ozma at the end of the visit?",
+          "expected": "At the ranch.",
+          "reference_lines": [
+            5404,
+            5410
+          ],
+          "reply": "at the ranch",
+          "citation": {
+            "section": "Chapter 20",
+            "start_line": 5397,
+            "end_line": 5418
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 20,
+          "turn": 2,
+          "prompt": "Who came out to meet them when they got there?",
+          "expected": "Uncle Hugson.",
+          "reference_lines": [
+            5412,
+            5419
+          ],
+          "reply": "Uncle Hugson",
+          "citation": {
+            "section": "Chapter 20",
+            "start_line": 5397,
+            "end_line": 5418
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        }
+      ]
+    },
+    "book_assisted_chat": {
+      "device": "mps",
+      "fixture_conversations": [
+        1,
+        5,
+        14
+      ],
+      "matching_citations": 6,
+      "supporting_citations": 6,
+      "rows": [
+        {
+          "conversation": 1,
+          "turn": 1,
+          "prompt": "In the preface, what job does Baum say he'd rather tell stories than take?",
+          "expected": "President of the United States.",
+          "reference_lines": [
+            81,
+            85
+          ],
+          "reply": "the President",
+          "citation": {
+            "section": "Preface",
+            "start_line": 80,
+            "end_line": 97
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 5,
+          "turn": 1,
+          "prompt": "How long did it take the glass houses in the Mangaboo city to grow so large?",
+          "expected": "A good many years.",
+          "reference_lines": [
+            1124,
+            1127
+          ],
+          "reply": "a good many years",
+          "citation": {
+            "section": "Chapter 4",
+            "start_line": 1113,
+            "end_line": 1135
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 5,
+          "turn": 2,
+          "prompt": "How do they mend when the roofs crack?",
+          "expected": "They grow together again over time.",
+          "reference_lines": [
+            1127,
+            1133
+          ],
+          "reply": "No; but they will grow together again, in time, and we must wait until they do.",
+          "citation": {
+            "section": "Chapter 4",
+            "start_line": 1113,
+            "end_line": 1135
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 5,
+          "turn": 3,
+          "prompt": "What caused that damage in the first place?",
+          "expected": "A Rain of Stones.",
+          "reference_lines": [
+            1126,
+            1133
+          ],
+          "reply": "a Rain of Stones",
+          "citation": {
+            "section": "Chapter 4",
+            "start_line": 1113,
+            "end_line": 1135
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 14,
+          "turn": 1,
+          "prompt": "What did Zeb say they would steer with when Jim flew away from the Gargoyles?",
+          "expected": "The wings on the buggy.",
+          "reference_lines": [
+            3342,
+            3355
+          ],
+          "reply": "wings on the buggy",
+          "citation": {
+            "section": "Chapter 12",
+            "start_line": 3330,
+            "end_line": 3352
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        },
+        {
+          "conversation": 14,
+          "turn": 2,
+          "prompt": "What did Dorothy see coming after them when she looked back?",
+          "expected": "A great cloud of pursuing Gargoyles.",
+          "reference_lines": [
+            3360,
+            3366
+          ],
+          "reply": "Gargoyles",
+          "citation": {
+            "section": "Chapter 12",
+            "start_line": 3355,
+            "end_line": 3368
+          },
+          "overlaps_reference_lines": true,
+          "contains_reply_text": true
+        }
+      ]
+    }
+  },
+  "conclusion": "Legacy command output and line references were identical across all three book and code states. The migrated models matched all tested greedy chat replies and cited answers. Both migrated completion checkpoints loaded and generated continuations, with different samples from the legacy runs under the same seed and prompt."
+}
