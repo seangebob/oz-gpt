@@ -37,7 +37,10 @@ class ChatEvaluationTests(unittest.TestCase):
                                  ('Who is Dorothy?', "Eureka is Dorothy's kitten."),
                                  ('Where is Jim?', 'Jim is the cab-horse.'),
                                  ('Why is Jim?', 'Jim is the cab-horse.'),
-                                 ("Where's Eureka?", "Eureka is Dorothy's kitten.")):
+                                 ("Where's Eureka?", "Eureka is Dorothy's kitten."),
+                                 ('And where is Jim?', 'Jim is the cab-horse.'),
+                                 ('Jim, where is he?', 'Jim is the cab-horse.'),
+                                 ('And is it Jim?', 'Jim is the cab-horse.')):
             with self.subTest(question=question):
                 self.assertEqual(legacy.predict(question), answer)
                 self.assertIsNone(classifier.predict(question))
@@ -48,7 +51,7 @@ class ChatEvaluationTests(unittest.TestCase):
         self.assertEqual(classifier.predict('What animal is Jim?'), 'Jim is the cab-horse.')
         self.assertEqual(classifier.predict('Who is Eureka?'), "Eureka is Dorothy's kitten.")
         # A single name is answered when asked the way the answer was taught, or on its own.
-        for question in ('Who was Jim?', "Who's Jim?", 'Jim?', 'jim'):
+        for question in ('Who was Jim?', "Who's Jim?", 'Jim?', 'jim', 'And who is Jim?', 'And Jim?'):
             with self.subTest(question=question):
                 self.assertEqual(classifier.predict(question), 'Jim is the cab-horse.')
         self.assertIsNone(classifier.predict('Why?'))

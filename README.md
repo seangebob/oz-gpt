@@ -216,7 +216,7 @@ Use `--reply-start-weight 4` with `model.chat_training` to reproduce the control
 
 ### Use the trained first-reply classifier
 
-The classifier learns from the first replies in the chat training examples. It selects an answer when its score clears a threshold and the question fits that answer's training questions. A question with two or more key words must share at least two with them, so one familiar name cannot select an unrelated fact. A question with one key word must also open with a question word that the answer was taught with, or with none, so "Who is Jim?" and "Jim?" select the Jim answer but "Where is Jim?" goes to book lookup or the generator. With the command below, the coverage checkpoint generates replies on lower scores and on later turns. The terminal labels classifier replies. Type `/reset` to start a fresh conversation on another topic.
+The classifier learns from the first replies in the chat training examples. It selects an answer when its score clears a threshold and the question fits that answer's training questions. A question with two or more key words must share at least two with them, so one familiar name cannot select an unrelated fact. A question with one key word must also ask with a question word that the answer was taught with, or with none, so "Who is Jim?" and "Jim?" select the Jim answer but "Where is Jim?" and "And where is Jim?" go to book lookup or the generator. With the command below, the coverage checkpoint generates replies on lower scores and on later turns. The terminal labels classifier replies. Type `/reset` to start a fresh conversation on another topic.
 
 ```bash
 python -m model.chatbot --chat model/model-chat-coverage-experiment.pth --first-reply-classifier

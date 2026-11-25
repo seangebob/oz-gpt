@@ -20,16 +20,26 @@ FEATURE_WEIGHTS = (0.45, 0.15, 0.40)
 RIDGE = 1.0
 MIN_SCORE = 0.24
 MIN_MARGIN = 0.06
-QUESTION_WORDS = frozenset(
-    'who whom whose what which when where why how is are was were am do does did can could would will should '
-    'shall may might must has have had'.split()
+WH_WORDS = frozenset('who whom whose what which when where why how'.split())
+QUESTION_WORDS = WH_WORDS | frozenset(
+    'is are was were am do does did can could would will should shall may might must has have had'.split()
 )
 
 
 def question_word(question):
-    """Return the question word that opens the question, or '' for a bare name, greeting or request."""
-    first = re.match(r'[^a-z0-9]*([a-z]+)', question.casefold())
-    return first[1] if first and first[1] in QUESTION_WORDS else ''
+    """Return the word that makes this a question, or '' for a bare name, greeting or request."""
+    words = re.findall(r'[a-z]+', question.casefold())
+    # A conversational opening does not hide the question: "And where is Jim?", "Okay, so where is Jim?"
+    asked = next((word for word in words if word in WH_WORDS), None)
+    if asked:
+        return asked
+    for word in words:
+        if word in QUESTION_WORDS:
+            return word
+        if any(search_terms(word)):
+            # A key word came first, so a later "is" belongs to a statement such as "Jim is here".
+            return ''
+    return ''
 
 
 def question_features(text):
