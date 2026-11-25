@@ -881,6 +881,12 @@ def _instrument_answer(question, passage, span):
     return passage.text[span.start:detail.end()] if detail else span.text
 
 
+def _stored_question(question):
+    # Avoid accumulating repeated context annotations across turns.
+    resolved, annotation, _ = question.partition(' (context: ')
+    return resolved + '?' if annotation else question
+
+
 class BookSession:
     def __init__(self, index, reader, *, trace_passages=False):
         self.index = index
@@ -904,15 +910,17 @@ class BookSession:
     def remember(self, question, answer, *, source=None):
         self._remember_resolved(self._followup(question) or question, answer, source)
 
+    def resolve(self, question):
+        """Return the question as remember() would store it."""
+        return _stored_question(self._followup(question) or question)
+
     def _followup(self, question):
         if self.previous_question and uses_book_history(question):
             return followup_question(question, self.previous_question, self.previous_answer)
         return None
 
     def _remember_resolved(self, question, answer, source=None):
-        # Avoid accumulating repeated context annotations across turns.
-        resolved, annotation, _ = question.partition(' (context: ')
-        self.previous_question = resolved + '?' if annotation else question
+        self.previous_question = _stored_question(question)
         self.previous_answer = answer
         self.previous_source = source
 
