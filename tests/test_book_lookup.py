@@ -810,6 +810,35 @@ Dana wanted to hear from the council.
             'What did Dorothy see coming after the piglets when she looked back?',
         )
 
+    def test_question_naming_something_outside_the_book_abstains_without_reading(self):
+        reader = Mock(read=Mock(return_value=[AnswerSpan('Zeb', 9)]))
+        session = BookSession(self.index, reader)
+        for question in ('Who wrote Hamlet?', 'Did Zeb ever visit Paris?', 'What did Eureka think of Mona Lisa?'):
+            with self.subTest(question=question):
+                self.assertTrue(session.outside_names(question))
+                self.assertEqual(session.reply(question, remember=False).text, NO_ANSWER)
+        reader.read.assert_not_called()
+        # Names the book mentions, forms that share their stem, and a capitalized first word are not outside it.
+        for question in ('Who drives the buggy for Jim?', 'What did the Eurekans do?', 'Shakespeare wrote what?'):
+            with self.subTest(question=question):
+                self.assertEqual(session.outside_names(question), [])
+
+    def addressed_answer(self, question, text, extract):
+        passage = Passage('Chapter 1', 1, 2, text)
+        index = Mock(search=Mock(return_value=[(passage, 2.0)]))
+        reader = Mock(read=Mock(return_value=[AnswerSpan(extract, 8, start=text.index(extract))]))
+        return BookSession(index, reader).reply(question).text
+
+    def test_question_to_the_assistant_does_not_take_a_characters_words(self):
+        speech = '"My own name is Ozma," said the girl. The shed was bare save for an old wooden bench.'
+        self.assertEqual(self.addressed_answer('What is your name?', speech, 'Ozma'), NO_ANSWER)
+        self.assertEqual(self.addressed_answer('What do you like to eat?', 'like some oats," declared the horse.',
+                                               'oats'), NO_ANSWER)
+        # A general "you" can still be answered from the narration, and a request is not about the assistant.
+        self.assertEqual(self.addressed_answer('What could you sit on in the shed?', speech, 'bench'), 'bench')
+        self.assertEqual(self.addressed_answer('Can you tell me the name of the girl?', speech, 'Ozma'), 'Ozma')
+        self.assertEqual(self.addressed_answer('What is the name of the girl?', speech, 'Ozma'), 'Ozma')
+
 
 if __name__ == '__main__':
     unittest.main()

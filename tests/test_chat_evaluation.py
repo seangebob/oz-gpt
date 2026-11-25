@@ -93,6 +93,7 @@ class ChatEvaluationTests(unittest.TestCase):
     def test_book_assistance_preserves_classifier_and_its_followup(self):
         tokenizer = ChatTokenizer(chars)
         book = Mock(spec=BookSession, previous_source=None)
+        book.outside_names.return_value = []
         model, classifier = Mock(), Mock()
         classifier.predict.return_value = 'A horse.'
 
@@ -284,14 +285,36 @@ class ChatEvaluationTests(unittest.TestCase):
         chat, book, _ = self.memory_chat(model)
         chat.reply('Where was the Wizard born?')
 
-        reply = chat.reply('Who is Harry?')
+        reply = chat.reply('Who is Ozma?')
 
         self.assertFalse(reply.ended_with_marker)
         self.assertEqual((book.previous_question, book.previous_answer, book.previous_source),
-                         ('Who is Harry?', '', None))
+                         ('Who is Ozma?', '', None))
         self.assertFalse(chat.history)
-        chat.reply('What did he do?')
-        self.assertEqual(book.previous_question, 'What did Harry do?')
+        chat.reply('What did she do?')
+        self.assertEqual(book.previous_question, 'What did Ozma do?')
+
+    def test_question_about_a_name_outside_the_book_abstains_without_changing_memory(self):
+        chat, book, passages = self.memory_chat()
+        self.assertEqual(chat.reply('Where was the Wizard born?').text, 'Omaha')
+
+        for question in ('Who wrote Hamlet?', 'How tall is Mount Everest?', 'Tell me about Shakespeare.'):
+            with self.subTest(question=question):
+                reply = chat.reply(question)
+
+                self.assertEqual((reply.text, reply.reply_method, reply.source), (NO_ANSWER, 'abstain', None))
+                chat.model.generate.assert_not_called()
+                self.assertEqual((book.previous_question, book.previous_source),
+                                 ('Where was the Wizard born?', passages[0]))
+                self.assertEqual(len(chat.history), 1)
+
+    def test_trained_first_reply_still_answers_a_question_with_an_outside_name(self):
+        chat, _, _ = self.memory_chat()
+        chat.first_reply_classifier = Mock(predict=Mock(return_value='I can help with questions about Oz.'))
+
+        reply = chat.reply('What is the capital of France?')
+
+        self.assertEqual((reply.text, reply.reply_method), ('I can help with questions about Oz.', 'classifier'))
 
     def generator(self, *replies):
         tokenizer = ChatTokenizer(chars)
