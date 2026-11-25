@@ -249,6 +249,53 @@ class ChatEvaluationTests(unittest.TestCase):
         chat.reply('What did he do?')
         self.assertEqual(book.previous_question, 'What did Harry do?')
 
+    def generator(self, *replies):
+        tokenizer = ChatTokenizer(chars)
+        replies = iter(replies)
+        return Mock(generate=Mock(side_effect=lambda context, _limit, **_options: torch.cat(
+            (context, torch.tensor([tokenizer.encode(next(replies))])), dim=1,
+        )))
+
+    def test_acknowledgment_keeps_the_book_subject_for_the_next_followup(self):
+        passages = [
+            Passage('Chapter 3', 796, 824, 'The Sorcerer called it a Rain of People. Some stones fell with them.'),
+            Passage('Chapter 5', 1365, 1387, 'The Prince said that his people fell from the sky.'),
+        ]
+        answers = {
+            'What did the Sorcerer call the second rain?': 'a Rain of People',
+            'What else did the Sorcerer say fell along with them?': 'Some stones',
+            'What else did he say fell along with them?': 'his people',
+        }
+
+        def read(question, candidates):
+            answer = answers.get(question, '\0')
+            return [AnswerSpan(answer, 9, start=passage.text.index(answer)) if answer in passage.text
+                    else AnswerSpan('', -1) for passage in candidates]
+
+        for acknowledgment_reply in ('In Ozma', "You're welcome." + END_OF_TURN):
+            with self.subTest(acknowledgment_reply=acknowledgment_reply):
+                book = BookSession(BookIndex(passages), Mock(read=Mock(side_effect=read)))
+                chat = ChatSession(self.generator(acknowledgment_reply), ChatTokenizer(chars), book_session=book)
+                self.assertEqual(chat.reply('What did the Sorcerer call the second rain?').text, 'a Rain of People')
+
+                self.assertEqual(chat.reply('Thanks.').reply_method, 'generator')
+
+                self.assertEqual((book.previous_question, book.previous_source),
+                                 ('What did the Sorcerer call the second rain?', passages[0]))
+                followup = chat.reply('What else did he say fell along with them?')
+                self.assertEqual((followup.text, followup.source), ('Some stones', passages[0]))
+
+    def test_acknowledgment_keeps_an_unanswered_subject(self):
+        chat, book, passages = self.memory_chat(self.generator('Unfinished'))
+        chat.reply('Where was the Wizard born?')
+        self.assertEqual(chat.reply('Where did Zeb hide?').reply_method, 'abstain')
+
+        chat.reply('Thanks')
+
+        self.assertEqual(book.previous_question, 'Where did Zeb hide?')
+        followup = chat.reply('What did he do next?')
+        self.assertEqual((followup.text, followup.source), ('ran', passages[2]))
+
     def test_unfinished_reply_keeps_history_without_book_assistance(self):
         tokenizer = ChatTokenizer(chars)
         replies = iter(('A horse.' + END_OF_TURN, 'Unfinished'))

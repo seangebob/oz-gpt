@@ -19,6 +19,12 @@ UNANCHORED_EVENT = re.compile(
     r'(?:what (?:happened|came) (?:next|afterwards?)|why did (?:that|this|it) (?:happen|occur))\W*',
     re.IGNORECASE,
 )
+# Thanks, greetings and goodbyes introduce no book subject, so a follow-up still refers to the earlier one.
+SMALL_TALK_TERMS = frozenset(search_terms(
+    'thanks appreciate helps helpful lot many much so very really ok okay alright cool great nice wow good awesome '
+    'interesting see sure yes yeah yep no nope got hmm oh ah hi hello hey greetings friend bot meet bye goodbye '
+    'later soon till next time talk go now take care catch morning afternoon evening night'
+))
 SIZE_QUESTION = re.compile(r'^how (?:big|small|large|tall|high|wide)\b', re.IGNORECASE)
 BARE_COUNT = re.compile(
     r"(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|dozen)[.!]?",
@@ -26,6 +32,11 @@ BARE_COUNT = re.compile(
 )
 SCENE_CLAUSE = re.compile(r'\b(?:when|while|after|before|during)\b', re.IGNORECASE)
 PROPER_WORD = re.compile(r"\b[A-Z][a-z]+(?:-[A-Z][a-z]+)*\b")
+
+
+def _small_talk(text):
+    return (not text.endswith('?') and not QUESTION_START.match(text)
+            and set(search_terms(text)) <= SMALL_TALK_TERMS)
 
 
 def _scene_terms(question):
@@ -86,7 +97,7 @@ class ChatSession:
 
     def remember(self, user_text, reply):
         self._remember_generation(user_text, reply)
-        if self.book_session is not None:
+        if self.book_session is not None and not _small_talk(user_text):
             self.book_session.remember(user_text, reply)
 
     def _remember_unanswered(self, user_text):
@@ -152,8 +163,9 @@ class ChatSession:
         token_ids = self.tokenizer.encode(formatted)
         remaining = block_size + 1 - len(token_ids)
         limit = min(self.max_tokens, remaining)
+        small_talk = _small_talk(user_text)
         follows_unanswered = self._follows_unanswered
-        if remember:
+        if remember and not small_talk:
             self._follows_unanswered = False
         classified = None
         if self.first_reply_classifier is not None and self._first_reply and not self.history:
@@ -210,7 +222,7 @@ class ChatSession:
         if remember:
             if ended and text and END_MARKER not in text:
                 self.remember(user_text, text)
-            elif self.book_session is not None:
+            elif self.book_session is not None and not small_talk:
                 self._remember_unanswered(user_text)
         return ChatReply(
             text=text, ended_with_marker=ended, history_used=formatted != prompt,
