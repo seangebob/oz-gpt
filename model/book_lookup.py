@@ -904,15 +904,23 @@ class BookSession:
     def remember(self, question, answer, *, source=None):
         self._remember_resolved(self._followup(question) or question, answer, source)
 
+    def resolve(self, question):
+        """Return the question as remember() would store it."""
+        return self._stored_question(self._followup(question) or question)
+
     def _followup(self, question):
         if self.previous_question and uses_book_history(question):
             return followup_question(question, self.previous_question, self.previous_answer)
         return None
 
-    def _remember_resolved(self, question, answer, source=None):
+    @staticmethod
+    def _stored_question(question):
         # Avoid accumulating repeated context annotations across turns.
         resolved, annotation, _ = question.partition(' (context: ')
-        self.previous_question = resolved + '?' if annotation else question
+        return resolved + '?' if annotation else question
+
+    def _remember_resolved(self, question, answer, source=None):
+        self.previous_question = self._stored_question(question)
         self.previous_answer = answer
         self.previous_source = source
 

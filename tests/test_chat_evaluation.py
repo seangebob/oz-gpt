@@ -185,6 +185,133 @@ class ChatEvaluationTests(unittest.TestCase):
 
         self.assertEqual((result.text, result.reply_method, result.source), ('snakes', 'book', cited))
 
+    def memory_chat(self, model=None):
+        passages = [
+            Passage('Chapter 1', 1, 2, 'The Wizard was born in Omaha.'),
+            Passage('Chapter 2', 3, 4, 'Zeb stood beside Ozma.'),
+            Passage('Chapter 3', 5, 6, 'Zeb ran to the barn.'),
+        ]
+        answers = {
+            'Where was the Wizard born?': 'Omaha',
+            'Where did Zeb hide?': 'Ozma',
+            'What did Zeb do next?': 'ran',
+        }
+
+        def read(question, candidates):
+            answer = answers.get(question, '\0')
+            return [AnswerSpan(answer, 9, start=passage.text.index(answer)) if answer in passage.text
+                    else AnswerSpan('', -1) for passage in candidates]
+
+        book = BookSession(BookIndex(passages), Mock(read=Mock(side_effect=read)), trace_passages=True)
+        return ChatSession(model or Mock(), ChatTokenizer(chars), book_session=book), book, passages
+
+    def test_followup_after_abstention_uses_the_abstained_subject(self):
+        chat, book, passages = self.memory_chat()
+        self.assertEqual(chat.reply('Where was the Wizard born?').text, 'Omaha')
+
+        abstained = chat.reply('Where did Zeb hide?')
+
+        self.assertEqual((abstained.text, abstained.reply_method), (NO_ANSWER, 'abstain'))
+        self.assertEqual((book.previous_question, book.previous_answer, book.previous_source),
+                         ('Where did Zeb hide?', '', None))
+        self.assertFalse(chat.history)
+
+        followup = chat.reply('What did he do next?')
+
+        self.assertEqual(followup.passage_trace.query, 'What did Zeb do next?')
+        self.assertEqual((followup.text, followup.source), ('ran', passages[2]))
+        chat.model.generate.assert_not_called()
+
+    def test_abstention_is_not_remembered_when_history_is_disabled(self):
+        chat, book, passages = self.memory_chat()
+        chat.reply('Where was the Wizard born?')
+
+        self.assertEqual(chat.reply('Where did Zeb hide?', remember=False).reply_method, 'abstain')
+
+        self.assertEqual((book.previous_question, book.previous_source), ('Where was the Wizard born?', passages[0]))
+        self.assertEqual(len(chat.history), 1)
+
+    def test_unfinished_generator_reply_updates_the_book_subject(self):
+        tokenizer = ChatTokenizer(chars)
+        model = Mock()
+        model.generate.side_effect = lambda context, _limit, **_options: torch.cat(
+            (context, torch.tensor([tokenizer.encode('Unfinished')])), dim=1,
+        )
+        chat, book, _ = self.memory_chat(model)
+        chat.reply('Where was the Wizard born?')
+
+        reply = chat.reply('Who is Harry?')
+
+        self.assertFalse(reply.ended_with_marker)
+        self.assertEqual((book.previous_question, book.previous_answer, book.previous_source),
+                         ('Who is Harry?', '', None))
+        self.assertFalse(chat.history)
+        chat.reply('What did he do?')
+        self.assertEqual(book.previous_question, 'What did Harry do?')
+
+    def generator(self, *replies):
+        tokenizer = ChatTokenizer(chars)
+        replies = iter(replies)
+        return Mock(generate=Mock(side_effect=lambda context, _limit, **_options: torch.cat(
+            (context, torch.tensor([tokenizer.encode(next(replies))])), dim=1,
+        )))
+
+    def test_unfinished_reply_without_a_named_question_keeps_the_book_subject(self):
+        passages = [
+            Passage('Chapter 3', 796, 824, 'The Sorcerer called it a Rain of People. Some stones fell with them.'),
+            Passage('Chapter 5', 1365, 1387, 'The Prince said that his people fell from the sky.'),
+        ]
+        answers = {
+            'What did the Sorcerer call the second rain?': 'a Rain of People',
+            'What else did the Sorcerer say fell along with them?': 'Some stones',
+            'What else did he say fell along with them?': 'his people',
+        }
+
+        def read(question, candidates):
+            answer = answers.get(question, '\0')
+            return [AnswerSpan(answer, 9, start=passage.text.index(answer)) if answer in passage.text
+                    else AnswerSpan('', -1) for passage in candidates]
+
+        middle_turns = ('Thanks.', 'Thanks, that makes sense.', 'I had forgotten that part!', 'Really?',
+                        'Is that so?', 'How strange!', 'Why would anyone do that?')
+        for middle_turn in middle_turns:
+            with self.subTest(middle_turn=middle_turn):
+                book = BookSession(BookIndex(passages), Mock(read=Mock(side_effect=read)))
+                chat = ChatSession(self.generator('In Ozma'), ChatTokenizer(chars), book_session=book)
+                self.assertEqual(chat.reply('What did the Sorcerer call the second rain?').text, 'a Rain of People')
+
+                self.assertFalse(chat.reply(middle_turn).ended_with_marker)
+
+                self.assertEqual((book.previous_question, book.previous_source),
+                                 ('What did the Sorcerer call the second rain?', passages[0]))
+                followup = chat.reply('What else did he say fell along with them?')
+                self.assertEqual((followup.text, followup.source), ('Some stones', passages[0]))
+
+    def test_unfinished_reply_without_a_named_question_keeps_an_unanswered_subject(self):
+        chat, book, passages = self.memory_chat(self.generator('Unfinished'))
+        chat.reply('Where was the Wizard born?')
+        self.assertEqual(chat.reply('Where did Zeb hide?').reply_method, 'abstain')
+
+        chat.reply('Thanks')
+
+        self.assertEqual(book.previous_question, 'Where did Zeb hide?')
+        followup = chat.reply('What did he do next?')
+        self.assertEqual((followup.text, followup.source), ('ran', passages[2]))
+
+    def test_unfinished_reply_keeps_history_without_book_assistance(self):
+        tokenizer = ChatTokenizer(chars)
+        replies = iter(('A horse.' + END_OF_TURN, 'Unfinished'))
+        model = Mock()
+        model.generate.side_effect = lambda context, _limit, **_options: torch.cat(
+            (context, torch.tensor([tokenizer.encode(next(replies))])), dim=1,
+        )
+        chat = ChatSession(model, tokenizer)
+        chat.reply('Who is Jim?')
+
+        chat.reply('What kind?')
+
+        self.assertEqual(list(chat.history), [('Who is Jim?', 'A horse.')])
+
     def test_bare_count_answer_to_a_size_question_abstains_without_remembering_it(self):
         index = BookIndex.from_text('CHAPTER 1.\n\nThree automatons stood in the hall.')
         reader = Mock(read=Mock(return_value=[AnswerSpan('Three', 10)]))
