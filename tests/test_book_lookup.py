@@ -105,6 +105,10 @@ The Wizard was born in Omaha.
             ('Who is the Princess?', 'You must go to Princess Ozma at once.', 'Ozma'),
             ('Who is Ozma?', '"Who is Ozma?" "The girl that rules Oz," was the reply.', 'The girl that rules Oz'),
             ('Who is Billina?', '"Is Billina a girl?" "No; she\'s a yellow hen."', 'a yellow hen'),
+            ('Who is the Captain-General?', '"Never!" added a tall soldier in a Captain-General\'s uniform.',
+             'a tall soldier'),
+            ('Who’s Eureka?', 'Eureka is the sweet pet of a little girl.', 'the sweet pet of a little girl'),
+            ("Who's Eureka?", 'Eureka is the sweet pet of a little girl.', 'the sweet pet of a little girl'),
         ]
         for question, text, extract in cases:
             with self.subTest(question=question):
@@ -134,6 +138,10 @@ The Wizard was born in Omaha.
             ('Who is the Scarecrow?', 'Then came the Scarecrow mounted on the Sawhorse.', 'mounted on the Sawhorse'),
             ('Who is Ozma?', '"Is Ozma here?" asked Zeb. "No; he\'s a soldier."', 'a soldier'),
             ('Who is the Wizard?', 'I am not a real wizard, but a humbug wizard.', 'humbug wizard'),
+            # The Wizard owns the balloon; the girl is not dressed as him.
+            ('Who is the Wizard?', 'Then a girl in the Wizard\'s balloon waved.', 'a girl'),
+            ('Who’s Dorothy?', 'When I opened it Dorothy\'s white kitten crept out.', 'white kitten'),
+            ("Who's Dorothy?", 'When I opened it Dorothy\'s white kitten crept out.', 'white kitten'),
         ]
         for question, text, extract in cases:
             with self.subTest(question=question, extract=extract):

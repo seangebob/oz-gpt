@@ -51,7 +51,7 @@ FEMALE_NAME = re.compile(rf'(?:{FEMALE_NAMES})', re.IGNORECASE)
 MALE_NAME = re.compile(rf'(?:{MALE_NAMES})', re.IGNORECASE)
 NAME = rf"(?:(?i:the) )?(?:(?i:{BOOK_NAMES})\b|[A-Z][\w'-]+(?: [A-Z][\w'-]+){{0,3}})"
 NAMED_SUBJECT = re.compile(rf'(?i:who|what) (?i:is|was) ({NAME})')
-IDENTITY_QUESTION = re.compile(rf'(?i:who (?:is|was)) ({NAME})\W*')
+IDENTITY_QUESTION = re.compile(rf"(?i:who(?: is| was|['’]s)) ({NAME})\W*")
 DETERMINER = r'(?i:a|an|the|my|his|her|our|their|your)\s+'
 COPULA = r'(?i:is|was|shall be|will be)'
 # A description after the name: "Eureka is the sweet pet", "the Hungry Tiger, the terror", "Jim the Cab-horse".
@@ -898,11 +898,22 @@ def _instrument_answer(question, passage, span):
     return passage.text[span.start:detail.end()] if detail else span.text
 
 
+def _subject_words(subject):
+    return r'\s+'.join(map(re.escape, _person_key(subject).split()))
+
+
 def _subject_mentions(subject, text):
-    words = r'\s+'.join(map(re.escape, _person_key(subject).split()))
-    pattern = re.compile(rf"(?<![\w'-])(?:(?i:the)\s+)?(?P<core>(?i:{words}))(?![\w-]|['’]s\b)")
+    pattern = re.compile(rf"(?<![\w'-])(?:(?i:the)\s+)?(?P<core>(?i:{_subject_words(subject)}))(?![\w-]|['’]s\b)")
     # Capitalization separates the name "the Wizard" from an ordinary "a real wizard".
     return [match for match in pattern.finditer(text) if match['core'][0].isupper()]
+
+
+def _dressed_as(subject, text, end):
+    # "a tall soldier in a Captain-General's uniform" wears the kind of uniform the subject wears.
+    # The article matters: "a girl in the Wizard's balloon" names an owner, not what she is.
+    worn = re.compile(rf"\s+(?i:in)\s+(?i:a|an)\s+(?P<core>(?i:{_subject_words(subject)}))['’]s\s+[a-z]")
+    match = worn.match(text, end)
+    return match is not None and match['core'][0].isupper()
 
 
 def _other_name(text, subject_key):
@@ -968,6 +979,8 @@ def _identity_span(subject, passage, span):
         if link['epithet'] and (not ARTICLE.match(mention[0]) or ARTICLE.match(span.text)
                                 or not span.text[0].isupper()):
             continue
+        return span
+    if ARTICLE.match(span.text) and not other_name and _dressed_as(subject, text, end):
         return span
 
     # A reply to someone else asking the same question: "Who is Ozma?" "The girl that rules..."
