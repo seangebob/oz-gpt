@@ -181,6 +181,10 @@ DEFINITE_NOUN = re.compile(r'\b(?i:the) ([\w-]+)')
 # A name inside the question, not its first word: "Who wrote Hamlet?", "How tall is Mount Everest?"
 INNER_NAME = re.compile(r"(?<=[\s(\"'“‘-])[A-Z][a-z][\w'’-]*")
 TEXT_WORD = re.compile(r"[A-Za-z]+")
+# A capitalized word can still be a verb: right after an opening "Who", as in "Who Restored the Sawhorse's leg?",
+# or with a verb ending, as in "Was the leg Restored?". "Is Hamlet a prince?" names Hamlet as its subject.
+OPENING_WHO = re.compile(r"^\W*who\s+$", re.IGNORECASE)
+VERB_ENDING = re.compile(r"[A-Za-z]{3,}(?:ed|ing)", re.IGNORECASE)
 SENTENCE_OPENING = re.compile(r"""(?:^|[.!?:;"“”'‘’(\[_-])\s*$""")
 WORD_ENDINGS = ('ing', 'ed', 'es', 's', 'd')
 # Questions to the assistant itself, as opposed to requests such as "Can you tell me..." or "Do you know..."
@@ -960,8 +964,9 @@ class BookSession:
 
     def outside_names(self, question):
         """Return the names in the question that the book never mentions."""
-        return [name for name in INNER_NAME.findall(question)
-                if (terms := list(search_terms(name))) and not all(map(self.index.mentions, terms))]
+        return [name[0] for name in INNER_NAME.finditer(question)
+                if not OPENING_WHO.match(question, 0, name.start()) and not VERB_ENDING.fullmatch(name[0])
+                and (terms := list(search_terms(name[0]))) and not all(map(self.index.mentions, terms))]
 
     def _about_assistant(self, question):
         # "What is your name?" says nothing about the story besides "you". A question that names something in the

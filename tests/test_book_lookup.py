@@ -814,7 +814,7 @@ Dana wanted to hear from the council.
         reader = Mock(read=Mock(return_value=[AnswerSpan('Zeb', 9)]))
         session = BookSession(self.index, reader)
         for question in ('Who wrote Hamlet?', 'Did Zeb ever visit Paris?', 'What did Eureka think of Mona Lisa?',
-                         'Is Hamlet a prince?'):
+                         'Is Hamlet a prince?', 'Did Hamlet visit Zeb?', 'Who Wrote Hamlet?'):
             with self.subTest(question=question):
                 self.assertTrue(session.outside_names(question))
                 self.assertEqual(session.reply(question, remember=False).text, NO_ANSWER)
@@ -822,7 +822,10 @@ Dana wanted to hear from the council.
         # Names the book mentions, forms that share their stem, and a capitalized first word are not outside it.
         # So are other forms of a book word, even when capitalized: "Driving" for "drives".
         for question in ('Who drives the buggy for Jim?', 'What did the Eurekans do?', 'Shakespeare wrote what?',
-                         'Is Zeb Driving now?', 'Who Drives the buggy?'):
+                         'Is Zeb Driving now?', 'Who Drives the buggy?',
+                         # A capitalized verb the book never uses, after "Who" or with a verb ending.
+                         'Who Restored the buggy?', 'Who Repaired the buggy?', 'Was the buggy Restored?',
+                         'Is Zeb Repairing it?'):
             with self.subTest(question=question):
                 self.assertEqual(session.outside_names(question), [])
 
