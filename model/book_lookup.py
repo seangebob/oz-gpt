@@ -31,6 +31,8 @@ ANSWER_SCORE_TOLERANCE = 0.02
 DIRECTION_SCORE_TOLERANCE = 0.25
 MIN_RETRY_TERMS = 2
 CHAPTER_HEADING_WEIGHT = 0.28
+KNOWN_PREFIX_LENGTH = 6
+MAX_ASSISTANT_QUESTION_TERMS = 2
 
 CHAPTER_HEADING = re.compile(r'CHAPTER (\d+)\.', re.IGNORECASE)
 SENTENCE_END = re.compile(r"""[.!?]["'’”_\])]*$""")
@@ -193,6 +195,23 @@ PLURAL_PHRASE = (
 PLURAL_GROUP = re.compile(PLURAL_PHRASE)
 PLURAL_AT_END = re.compile(rf'(?:{PLURAL_PHRASE})$')
 DEFINITE_NOUN = re.compile(r'\b(?i:the) ([\w-]+)')
+# A name inside the question, not its first word: "Who wrote Hamlet?", "How tall is Mount Everest?"
+INNER_NAME = re.compile(r"(?<=[\s(\"'“‘-])[A-Z][a-z][\w'’-]*")
+TEXT_WORD = re.compile(r"[A-Za-z]+")
+# A capitalized word can still be a verb: right after an opening "Who", as in "Who Restored the Sawhorse's leg?",
+# or with a verb ending, as in "Was the leg Restored?". "Is Hamlet a prince?" names Hamlet as its subject.
+OPENING_WHO = re.compile(r"^\W*who\s+$", re.IGNORECASE)
+VERB_ENDING = re.compile(r"[A-Za-z]{3,}(?:ed|ing)", re.IGNORECASE)
+SENTENCE_OPENING = re.compile(r"""(?:^|[.!?:;"“”'‘’(\[_-])\s*$""")
+WORD_ENDINGS = ('ing', 'ed', 'es', 's', 'd')
+# Questions to the assistant itself, as opposed to requests such as "Can you tell me..." or "Do you know..."
+ADDRESSEE = re.compile(r"\b(?:you|your|yours|yourself)\b", re.IGNORECASE)
+REQUEST_FRAME = re.compile(
+    r"\b(?:(?:can|could|would|will)\s+you\s+(?:please\s+)?(?:tell|show|give|remind|explain|describe|name|list)"
+    r"|do\s+you\s+(?:know|remember|recall))\b",
+    re.IGNORECASE,
+)
+QUOTE_MARK = re.compile(r'["“”]')
 STOP_WORDS = set(
     'a an and are as at be been but by can could did do does for from had has have he her him his '
     'how i in is it its me of on or she should that the their them then there these they this those '
@@ -646,6 +665,27 @@ class BookIndex:
             word: log1p((total - count + 0.5) / (count + 0.5))
             for word, count in document_counts.items()
         }
+        self.known_prefixes = {word[:KNOWN_PREFIX_LENGTH] for word in self.weights}
+        capitalized, lowercase = set(), set()
+        for passage in self.passages:
+            for word in TEXT_WORD.finditer(passage.text):
+                if word[0].islower():
+                    lowercase.add(word[0])
+                elif word[0][1:].islower() and not SENTENCE_OPENING.search(passage.text, 0, word.start()):
+                    capitalized.add(word[0].lower())
+        # Words the book capitalizes inside sentences and never writes in lowercase, such as Voe and Ozma.
+        self.proper_names = capitalized - lowercase
+
+    def mentions(self, term):
+        # Allow other forms of a book word: "fixed" for "fix", "Californians" for "California".
+        forms = {term} | {term[:-len(ending)] for ending in WORD_ENDINGS
+                          if term.endswith(ending) and len(term) - len(ending) >= 3}
+        forms |= {form + 'e' for form in forms}
+        return any(form in self.weights or (
+            len(form) >= KNOWN_PREFIX_LENGTH and form[:KNOWN_PREFIX_LENGTH] in self.known_prefixes) for form in forms)
+
+    def names(self, word):
+        return word.lower() in self.proper_names
 
     @classmethod
     def from_text(cls, text):
@@ -888,6 +928,27 @@ def _overlapping_passages(first, second):
             and second.start_line <= first.end_line)
 
 
+def _opens_quote(text, index):
+    mark = text[index]
+    if mark != '"':
+        return mark == '“'
+    before = text[index - 1] if index else ' '
+    after = text[index + 1] if index + 1 < len(text) else ' '
+    return (before.isspace() or before in '([—-') and not after.isspace()
+
+
+def _in_speech(text, start):
+    """Return whether the text at start is inside a character's quoted words."""
+    before = None
+    for before in QUOTE_MARK.finditer(text, 0, start):
+        pass
+    if before is not None:
+        return _opens_quote(text, before.start())
+    # The passage can begin partway through a speech, so a closing mark is the only clue.
+    after = QUOTE_MARK.search(text, start)
+    return after is not None and not _opens_quote(text, after.start())
+
+
 def _instrument_answer(question, passage, span):
     if not ASK_INSTRUMENT.fullmatch(question) or not re.fullmatch(r"(?:(?i:a|an|the) )?[a-z][\w'-]*", span.text):
         return span.text
@@ -1029,6 +1090,22 @@ class BookSession:
         self.previous_question = ''
         self.previous_answer = ''
         self.previous_source = None
+
+    def outside_names(self, question):
+        """Return the names in the question that the book never mentions."""
+        return [name[0] for name in INNER_NAME.finditer(question)
+                if not OPENING_WHO.match(question, 0, name.start()) and not VERB_ENDING.fullmatch(name[0])
+                and (terms := list(search_terms(name[0]))) and not all(map(self.index.mentions, terms))]
+
+    def _about_assistant(self, question):
+        # "What is your name?" says nothing about the story besides "you". A question that names something in the
+        # book or says more, as in "What fruit would you have to eat to become invisible in Voe?", uses a general "you".
+        if not ADDRESSEE.search(REQUEST_FRAME.sub(' ', question)):
+            return False
+        # Capitals alone are not enough, since "What Is Your Name?" capitalizes every word.
+        named = BOOK_NAME.search(question) or any(
+            self.index.names(word) for name in INNER_NAME.findall(question) for word in TEXT_WORD.findall(name))
+        return not named and len(set(search_terms(question))) <= MAX_ASSISTANT_QUESTION_TERMS
 
     def remember(self, question, answer, *, source=None):
         self._remember_resolved(self._followup(question) or question, answer, source)
@@ -1373,9 +1450,12 @@ class BookSession:
         earlier_question = self.previous_question if history_used else ''
         earlier_answer = self.previous_answer if history_used else ''
         reader_question = rewritten or question
-        text, source, candidates, spans = self._read_question(reader_question, earlier_question)
+        # The reader can always find some passage, so a question about something the book never names abstains.
+        outside = bool(self.outside_names(reader_question))
+        text, source, candidates, spans = (
+            (NO_ANSWER, None, [], []) if outside else self._read_question(reader_question, earlier_question))
         rejected_query = None
-        if (source is None and rewritten and earlier_answer and PERSONAL_REFERENCE.search(question)
+        if (source is None and rewritten and earlier_answer and not outside and PERSONAL_REFERENCE.search(question)
                 and len(set(search_terms(question))) >= MIN_RETRY_TERMS
                 and rewritten != followup_question(question, earlier_question, '')):
             # Keep the earlier question as a search cue, without binding the pronoun to the extracted name.
@@ -1418,6 +1498,11 @@ class BookSession:
                 sentence, _ = _answer_sentence(source, reread.span)
                 if sentence and len(sentence.split()) <= 32:
                     text = sentence
+        if source is not None and self._about_assistant(question):
+            # In the book, "you" inside quotation marks is one character speaking to another, not to the reader.
+            start = source.text.find(text)
+            if start < 0 or _in_speech(source.text, start):
+                text, source = NO_ANSWER, None
         trace = None
         if self.trace_passages or include_trace:
             trace = PassageTrace(reader_question, earlier_question, earlier_answer, tuple(candidates), tuple(spans),

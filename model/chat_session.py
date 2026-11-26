@@ -169,6 +169,13 @@ class ChatSession:
             if answer and len(answer) + len(self.stop_ids) <= limit and set(answer) <= self.tokenizer.ids.keys():
                 classified = answer
 
+        asks = user_text.endswith('?') or QUESTION_START.match(user_text)
+        if (classified is None and self.book_session is not None and asks
+                and self.book_session.outside_names(user_text)):
+            # The generator would invent an Oz answer for a name the book never mentions, as in "Who wrote Hamlet?"
+            # The turn leaves the conversation and its book subject unchanged.
+            return ChatReply(NO_ANSWER, False, False, False, reply_method='abstain')
+
         book_reply = None
         question_terms = set(search_terms(user_text)) if classified and self.book_session is not None else set()
         if (self.book_session is not None and (user_text.endswith('?') or QUESTION_START.match(user_text))
