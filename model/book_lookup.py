@@ -180,8 +180,8 @@ PLURAL_AT_END = re.compile(rf'(?:{PLURAL_PHRASE})$')
 DEFINITE_NOUN = re.compile(r'\b(?i:the) ([\w-]+)')
 # A name inside the question, not its first word: "Who wrote Hamlet?", "How tall is Mount Everest?"
 INNER_NAME = re.compile(r"(?<=[\s(\"'“‘-])[A-Z][a-z][\w'’-]*")
-# A capitalized word followed by "the" or "his" is a verb, as in "Who Fixed the Sawhorse's leg?", not a name.
-VERB_OBJECT = re.compile(r"\s+(?:the|a|an|his|her|its|their|this|that|these|those|my|your|our)\b", re.IGNORECASE)
+TEXT_WORD = re.compile(r"[A-Za-z]+")
+SENTENCE_OPENING = re.compile(r"""(?:^|[.!?:;"“”'‘’(\[_-])\s*$""")
 WORD_ENDINGS = ('ing', 'ed', 'es', 's', 'd')
 # Questions to the assistant itself, as opposed to requests such as "Can you tell me..." or "Do you know..."
 ADDRESSEE = re.compile(r"\b(?:you|your|yours|yourself)\b", re.IGNORECASE)
@@ -645,6 +645,15 @@ class BookIndex:
             for word, count in document_counts.items()
         }
         self.known_prefixes = {word[:KNOWN_PREFIX_LENGTH] for word in self.weights}
+        capitalized, lowercase = set(), set()
+        for passage in self.passages:
+            for word in TEXT_WORD.finditer(passage.text):
+                if word[0].islower():
+                    lowercase.add(word[0])
+                elif word[0][1:].islower() and not SENTENCE_OPENING.search(passage.text, 0, word.start()):
+                    capitalized.add(word[0].lower())
+        # Words the book capitalizes inside sentences and never writes in lowercase, such as Voe and Ozma.
+        self.proper_names = capitalized - lowercase
 
     def mentions(self, term):
         # Allow other forms of a book word: "fixed" for "fix", "Californians" for "California".
@@ -653,6 +662,9 @@ class BookIndex:
         forms |= {form + 'e' for form in forms}
         return any(form in self.weights or (
             len(form) >= KNOWN_PREFIX_LENGTH and form[:KNOWN_PREFIX_LENGTH] in self.known_prefixes) for form in forms)
+
+    def names(self, word):
+        return word.lower() in self.proper_names
 
     @classmethod
     def from_text(cls, text):
@@ -948,17 +960,17 @@ class BookSession:
 
     def outside_names(self, question):
         """Return the names in the question that the book never mentions."""
-        return [name[0] for name in INNER_NAME.finditer(question)
-                if not VERB_OBJECT.match(question, name.end())
-                and (terms := list(search_terms(name[0]))) and not all(map(self.index.mentions, terms))]
+        return [name for name in INNER_NAME.findall(question)
+                if (terms := list(search_terms(name))) and not all(map(self.index.mentions, terms))]
 
     def _about_assistant(self, question):
         # "What is your name?" says nothing about the story besides "you". A question that names something in the
         # book or says more, as in "What fruit would you have to eat to become invisible in Voe?", uses a general "you".
         if not ADDRESSEE.search(REQUEST_FRAME.sub(' ', question)):
             return False
+        # Capitals alone are not enough, since "What Is Your Name?" capitalizes every word.
         named = BOOK_NAME.search(question) or any(
-            all(map(self.index.mentions, search_terms(name))) for name in INNER_NAME.findall(question))
+            self.index.names(word) for name in INNER_NAME.findall(question) for word in TEXT_WORD.findall(name))
         return not named and len(set(search_terms(question))) <= MAX_ASSISTANT_QUESTION_TERMS
 
     def remember(self, question, answer, *, source=None):
