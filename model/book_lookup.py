@@ -51,6 +51,23 @@ FEMALE_NAME = re.compile(rf'(?:{FEMALE_NAMES})', re.IGNORECASE)
 MALE_NAME = re.compile(rf'(?:{MALE_NAMES})', re.IGNORECASE)
 NAME = rf"(?:(?i:the) )?(?:(?i:{BOOK_NAMES})\b|[A-Z][\w'-]+(?: [A-Z][\w'-]+){{0,3}})"
 NAMED_SUBJECT = re.compile(rf'(?i:who|what) (?i:is|was) ({NAME})')
+IDENTITY_QUESTION = re.compile(rf"(?i:who(?: is| was|['’]s)) ({NAME})\W*")
+DETERMINER = r'(?i:a|an|the|my|his|her|our|their|your)\s+'
+COPULA = r'(?i:is|was|shall be|will be)'
+# A description after the name: "Eureka is the sweet pet", "the Hungry Tiger, the terror", "Jim the Cab-horse".
+DESCRIPTION_LINK = re.compile(
+    rf'(?P<join>\s*(?:,|--)\s*(?:(?i:who|which)\s+{COPULA}\s+)?|\s+{COPULA}\s+)(?P<det>{DETERMINER})'
+    r'|\s+(?P<the>(?i:the)\s+)(?=[A-Z])'
+)
+# Another name before the subject: "Nick Chopper, the Tin Woodman", "the machine-man called Tik-tok",
+# "the Woggle-Bug shall be the Public Accuser", "Tik-tok the Machine Man".
+ALIAS_LINK = re.compile(rf'(?P<comma>,\s+)|\s+(?:called|named)\s+|\s+{COPULA}\s+|(?P<epithet>\s+)')
+APPOSITIVE_END = re.compile(r'''\s*(?:[.!?;:)"'’”]|$|,\s*(?:who|which)\b)''')
+ARTICLE = re.compile(r'(?i:a|an|the)\s')
+PRONOUN_DESCRIPTION = re.compile(rf"\b(he|she)(?:\s+(?:is|was)|'s)\s+(?:{DETERMINER})?$", re.IGNORECASE)
+TITLE_PREFIX = re.compile(r"(?:(?i:the)\s+)?(?:[A-Z][\w'-]*\s+)+")
+NAME_EXTENSION = re.compile(r"\s+of\s+[A-Z][\w'-]*")
+PRONOUN_LINK_CHARACTERS = 120
 QUESTION_ACTOR = re.compile(
     rf"(?i:who|what|where|when|why|how(?: long| much| high| far| often)?) "
     rf"(?i:did|does|was|were|is|has|had|could|would) ({NAME})(?= |'s\b|$)",
@@ -881,6 +898,118 @@ def _instrument_answer(question, passage, span):
     return passage.text[span.start:detail.end()] if detail else span.text
 
 
+def _subject_words(subject):
+    return r'\s+'.join(map(re.escape, _person_key(subject).split()))
+
+
+def _subject_mentions(subject, text):
+    pattern = re.compile(rf"(?<![\w'-])(?:(?i:the)\s+)?(?P<core>(?i:{_subject_words(subject)}))(?![\w-]|['’]s\b)")
+    # Capitalization separates the name "the Wizard" from an ordinary "a real wizard".
+    return [match for match in pattern.finditer(text) if match['core'][0].isupper()]
+
+
+def _dressed_as(subject, text, end):
+    # "a tall soldier in a Captain-General's uniform" wears the kind of uniform the subject wears.
+    # The article matters: "a girl in the Wizard's balloon" names an owner, not what she is.
+    worn = re.compile(rf"\s+(?i:in)\s+(?i:a|an)\s+(?P<core>(?i:{_subject_words(subject)}))['’]s\s+[a-z]")
+    match = worn.match(text, end)
+    return match is not None and match['core'][0].isupper()
+
+
+def _other_name(text, subject_key):
+    name = re.sub(rf'^{DETERMINER}', '', text.strip())
+    return BOOK_NAME.fullmatch(name) is not None and _person_key(name) != subject_key
+
+
+def _description_start(text, mention):
+    link = DESCRIPTION_LINK.match(text, mention.end())
+    if not link or (link['the'] and ARTICLE.match(mention[0])):
+        # "the Tin Woodman the Wizard" names two people, unlike "Jim the Cab-horse".
+        return None
+    determiner = 'det' if link['det'] else 'the'
+    return link.start(determiner), link.end(determiner), link['det'] is not None
+
+
+def _described_inside(span, mention, text, key):
+    start, end = span.start, span.start + len(span.text)
+    described = _description_start(text, mention)
+    if described and described[0] < end:
+        description = text[described[0]:end].strip()
+        if search_terms(description) and not _other_name(description, key):
+            return AnswerSpan(description, span.margin, span.context_end, start=described[0])
+    before, after = text[start:mention.start()], text[mention.end():end]
+    titled = (not before or TITLE_PREFIX.fullmatch(before)) and (not after or NAME_EXTENSION.fullmatch(after))
+    # A title followed by the name it belongs to, as in "Princess Ozma" for "Who is the Princess?"
+    named = not before and key in COMMON_PERSON_NOUNS and re.fullmatch(rf'\s+(?:{BOOK_NAMES})', after, re.IGNORECASE)
+    return span if (before or after) and (titled or named) else None
+
+
+def _identity_span(subject, passage, span):
+    """Keep an answer only where the passage gives it as a description of the subject or another name for it."""
+    text = passage.text[:span.context_end]
+    start = span.start
+    if start is None or not span.text or text[start:start + len(span.text)] != span.text:
+        return None
+    end = start + len(span.text)
+    key = _person_key(subject)
+    mentions = _subject_mentions(subject, text)
+    inside = [mention for mention in mentions if start <= mention.start() and mention.end() <= end]
+    if inside:
+        return next(filter(None, (_described_inside(span, mention, text, key) for mention in inside)), None)
+    if any(start < mention.end() and mention.start() < end for mention in mentions):
+        return None
+
+    other_name = _other_name(span.text, key)
+    for mention in (mention for mention in mentions if mention.end() <= start):
+        described = _description_start(text, mention)
+        if described and start in described[:2]:
+            # Another name must end the phrase: "Nick Chopper, the Tin Woodman." but not "Dorothy, the Wizard and Zeb".
+            if not other_name or (described[2] and APPOSITIVE_END.match(text, end)):
+                return span
+        elif (key in COMMON_PERSON_NOUNS and not text[mention.end():start].strip()
+              and BOOK_NAME.fullmatch(span.text) and other_name):
+            return span
+    for mention in (mention for mention in mentions if mention.start() >= end):
+        link = ALIAS_LINK.fullmatch(text, end, mention.start())
+        if not link:
+            continue
+        if link['comma'] and not APPOSITIVE_END.match(text, mention.end()):
+            continue
+        # A bare space only joins a plain name to an epithet, as in "Tik-tok the Machine Man".
+        if link['epithet'] and (not ARTICLE.match(mention[0]) or ARTICLE.match(span.text)
+                                or not span.text[0].isupper()):
+            continue
+        return span
+    if ARTICLE.match(span.text) and not other_name and _dressed_as(subject, text, end):
+        return span
+
+    # A reply to someone else asking the same question: "Who is Ozma?" "The girl that rules..."
+    asked = re.search(r'''["“]([^"“”]+\?)["”]\s*["“]$''', text[:start])
+    if asked and (named := IDENTITY_QUESTION.fullmatch(asked[1])) and _person_key(named[1]) == key:
+        return span
+
+    # A pronoun that can only point back to the subject: "Is Billina a girl?" "No; she's a yellow hen".
+    pronoun = PRONOUN_DESCRIPTION.search(text[:start])
+    if pronoun and not other_name:
+        earlier = [mention for mention in mentions
+                   if 0 <= pronoun.start() - mention.end() <= PRONOUN_LINK_CHARACTERS]
+        gender = FEMALE_NAME if pronoun[1].lower() == 'she' else MALE_NAME
+        if earlier and (not BOOK_NAME.fullmatch(key) or gender.fullmatch(key)):
+            between = text[earlier[-1].end():pronoun.start()]
+            if all(_person_key(name[0]) == key for name in BOOK_NAME.finditer(between)):
+                return span
+    return None
+
+
+def _identity_spans(question, passages, spans):
+    subject = IDENTITY_QUESTION.fullmatch(question)
+    if not subject:
+        return spans
+    checked = [_identity_span(subject[1], passage, span) for passage, span in zip(passages, spans)]
+    return [span if span is not None else AnswerSpan('', original.margin, original.context_end)
+            for span, original in zip(checked, spans)]
+
+
 class BookSession:
     def __init__(self, index, reader, *, trace_passages=False):
         self.index = index
@@ -929,7 +1058,8 @@ class BookSession:
         text, source = NO_ANSWER, None
         spans = []
         if candidates:
-            spans = self.reader.read(reader_question, [passage for passage, _ in candidates])
+            passages = [passage for passage, _ in candidates]
+            spans = _identity_spans(reader_question, passages, self.reader.read(reader_question, passages))
             text, source = _select_answer(candidates, spans, reader_question)
             weak_followup = earlier_question and any(
                 passage == source and span.margin < FOLLOWUP_RECHECK_MARGIN
@@ -940,7 +1070,8 @@ class BookSession:
                 initial_count = len(candidates)
                 extra_passages = [passage for passage, _ in expanded[initial_count:]]
                 if extra_passages:
-                    spans += self.reader.read(reader_question, extra_passages)
+                    spans += _identity_spans(
+                        reader_question, extra_passages, self.reader.read(reader_question, extra_passages))
                     candidates = expanded
                     text, source = _select_expanded_answer(reader_question, candidates, spans, initial_count)
         return text, source, candidates, spans
@@ -1262,7 +1393,9 @@ class BookSession:
             # A short question about a quoted request cannot point to a different scene.
             text, source = NO_ANSWER, None
             reread = self._reread_request_reason(previous_request[1], candidates)
-        elif reread is None and source is None and candidates and spans:
+        elif (reread is None and source is None and candidates and spans
+              and not IDENTITY_QUESTION.fullmatch(reader_question)):
+            # The generic rereads cannot tell a description of the subject from another name nearby.
             reread = self._reread_repair(question, candidates) if history_used else None
             previous = self.previous_source if history_used else None
             if reread is None:
