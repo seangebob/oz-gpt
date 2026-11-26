@@ -33,6 +33,7 @@ MIN_RETRY_TERMS = 2
 CHAPTER_HEADING_WEIGHT = 0.28
 
 CHAPTER_HEADING = re.compile(r'CHAPTER (\d+)\.', re.IGNORECASE)
+CHAPTER_LABEL = re.compile(r'(?i:chapter)\s+\d+\.')
 SENTENCE_END = re.compile(r"""[.!?]["'’”_\])]*$""")
 ABBREVIATION = re.compile(r'(?:[A-Z]|Mr|Mrs|Ms|Dr|St)\.$')
 SHORT_FOLLOW_UP = re.compile(
@@ -680,6 +681,46 @@ class BookIndex:
         return [(self._with_sentence_context(passage, question_terms), score) for passage, score in ranked]
 
 
+def _chapter_heading_end(passage):
+    """Return where the chapter label and title end when the passage opens a chapter, or 0."""
+    label = CHAPTER_LABEL.match(passage.text)
+    if not label:
+        return 0
+    if not passage.heading:
+        return label.end()
+    title = re.compile(r'\s+' + re.escape(passage.heading)).match(passage.text, label.end())
+    return title.end() if title else label.end()
+
+
+def _story_span(passage, span):
+    """Keep only the story text of an extract, so a chapter heading is never an answer."""
+    if not span.text:
+        return span
+    start = passage.text.find(span.text) if span.start is None else span.start
+    end = start + len(span.text)
+    if start < 0 or passage.text[start:end] != span.text:
+        return span
+    heading_end = _chapter_heading_end(passage)
+    if start >= heading_end:
+        return span
+    # "THE CAB-HORSE Jim the Cab-horse" keeps "Jim the Cab-horse" after the chapter title.
+    story = passage.text[heading_end:end].strip(' ,;:-')
+    if not re.search(r'[A-Za-z]', story):
+        return AnswerSpan('', span.margin, span.context_end)
+    return AnswerSpan(story, span.margin, span.context_end, start=passage.text.index(story, heading_end))
+
+
+class StoryTextReader:
+    """Pass questions to an extractive reader and keep chapter headings out of its extracts."""
+
+    def __init__(self, reader):
+        self.reader = reader
+
+    def read(self, question, passages):
+        spans = self.reader.read(question, passages)
+        return [_story_span(passage, span) for passage, span in zip(passages, spans)] + list(spans[len(passages):])
+
+
 class ExtractiveReader:
     def __init__(self):
         try:
@@ -884,7 +925,7 @@ def _instrument_answer(question, passage, span):
 class BookSession:
     def __init__(self, index, reader, *, trace_passages=False):
         self.index = index
-        self.reader = reader
+        self.reader = reader if isinstance(reader, StoryTextReader) else StoryTextReader(reader)
         self.trace_passages = trace_passages
         self.reset()
 

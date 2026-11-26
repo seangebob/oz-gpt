@@ -159,7 +159,8 @@ class ChatEvaluationTests(unittest.TestCase):
         def read(question, passages):
             return [AnswerSpan('a basket', 9, start=p.text.index('a basket')) for p in passages]
 
-        book = BookSession(index, Mock(read=Mock(side_effect=read)))
+        reader = Mock(read=Mock(side_effect=read))
+        book = BookSession(index, reader)
         classifier = Mock(predict=Mock(return_value='A lantern.'))
         chat = ChatSession(Mock(), ChatTokenizer(chars), first_reply_classifier=classifier, book_session=book)
 
@@ -168,7 +169,7 @@ class ChatEvaluationTests(unittest.TestCase):
         self.assertEqual((result.text, result.reply_method, result.source), ('a basket', 'book', passage))
         self.assertIsNone(result.passage_trace)
         self.assertEqual(book.previous_source, passage)
-        self.assertEqual(book.reader.read.call_count, 2)
+        self.assertEqual(reader.read.call_count, 2)
 
     def test_reported_speech_routes_to_a_passage_with_the_requested_speaker(self):
         index = BookIndex.from_text(
