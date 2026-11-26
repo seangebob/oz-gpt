@@ -819,7 +819,9 @@ Dana wanted to hear from the council.
                 self.assertEqual(session.reply(question, remember=False).text, NO_ANSWER)
         reader.read.assert_not_called()
         # Names the book mentions, forms that share their stem, and a capitalized first word are not outside it.
-        for question in ('Who drives the buggy for Jim?', 'What did the Eurekans do?', 'Shakespeare wrote what?'):
+        # So are other forms of a book word, and a capitalized word used as a verb before its object.
+        for question in ('Who drives the buggy for Jim?', 'What did the Eurekans do?', 'Shakespeare wrote what?',
+                         'Is Zeb Driving now?', 'Who Fixed the buggy?', 'Who Mended his harness?'):
             with self.subTest(question=question):
                 self.assertEqual(session.outside_names(question), [])
 
@@ -836,6 +838,12 @@ Dana wanted to hear from the council.
                                                'oats'), NO_ANSWER)
         # A general "you" can still be answered from the narration, and a request is not about the assistant.
         self.assertEqual(self.addressed_answer('What could you sit on in the shed?', speech, 'bench'), 'bench')
+        # A question that names something in the book or says more than "you" is about the story.
+        fruit = '"If you eat a dama," said the voice, "you become invisible."'
+        for question in ('What fruit would you have to eat to become invisible in Voe?',
+                         'What fruit would you have to eat to become invisible?'):
+            with self.subTest(question=question):
+                self.assertEqual(self.addressed_answer(question, fruit, 'dama'), 'dama')
         self.assertEqual(self.addressed_answer('Can you tell me the name of the girl?', speech, 'Ozma'), 'Ozma')
         self.assertEqual(self.addressed_answer('What is the name of the girl?', speech, 'Ozma'), 'Ozma')
 

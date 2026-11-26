@@ -32,6 +32,7 @@ DIRECTION_SCORE_TOLERANCE = 0.25
 MIN_RETRY_TERMS = 2
 CHAPTER_HEADING_WEIGHT = 0.28
 KNOWN_PREFIX_LENGTH = 6
+MAX_ASSISTANT_QUESTION_TERMS = 2
 
 CHAPTER_HEADING = re.compile(r'CHAPTER (\d+)\.', re.IGNORECASE)
 SENTENCE_END = re.compile(r"""[.!?]["'’”_\])]*$""")
@@ -179,6 +180,9 @@ PLURAL_AT_END = re.compile(rf'(?:{PLURAL_PHRASE})$')
 DEFINITE_NOUN = re.compile(r'\b(?i:the) ([\w-]+)')
 # A name inside the question, not its first word: "Who wrote Hamlet?", "How tall is Mount Everest?"
 INNER_NAME = re.compile(r"(?<=[\s(\"'“‘-])[A-Z][a-z][\w'’-]*")
+# A capitalized word followed by "the" or "his" is a verb, as in "Who Fixed the Sawhorse's leg?", not a name.
+VERB_OBJECT = re.compile(r"\s+(?:the|a|an|his|her|its|their|this|that|these|those|my|your|our)\b", re.IGNORECASE)
+WORD_ENDINGS = ('ing', 'ed', 'es', 's', 'd')
 # Questions to the assistant itself, as opposed to requests such as "Can you tell me..." or "Do you know..."
 ADDRESSEE = re.compile(r"\b(?:you|your|yours|yourself)\b", re.IGNORECASE)
 REQUEST_FRAME = re.compile(
@@ -643,9 +647,12 @@ class BookIndex:
         self.known_prefixes = {word[:KNOWN_PREFIX_LENGTH] for word in self.weights}
 
     def mentions(self, term):
-        # A shared stem allows forms such as "Californians" for the book's "California".
-        return term in self.weights or (
-            len(term) >= KNOWN_PREFIX_LENGTH and term[:KNOWN_PREFIX_LENGTH] in self.known_prefixes)
+        # Allow other forms of a book word: "fixed" for "fix", "Californians" for "California".
+        forms = {term} | {term[:-len(ending)] for ending in WORD_ENDINGS
+                          if term.endswith(ending) and len(term) - len(ending) >= 3}
+        forms |= {form + 'e' for form in forms}
+        return any(form in self.weights or (
+            len(form) >= KNOWN_PREFIX_LENGTH and form[:KNOWN_PREFIX_LENGTH] in self.known_prefixes) for form in forms)
 
     @classmethod
     def from_text(cls, text):
@@ -888,10 +895,6 @@ def _overlapping_passages(first, second):
             and second.start_line <= first.end_line)
 
 
-def _addressed_to_assistant(question):
-    return ADDRESSEE.search(REQUEST_FRAME.sub(' ', question)) is not None
-
-
 def _opens_quote(text, index):
     mark = text[index]
     if mark != '"':
@@ -945,8 +948,18 @@ class BookSession:
 
     def outside_names(self, question):
         """Return the names in the question that the book never mentions."""
-        return [name for name in INNER_NAME.findall(question)
-                if (terms := list(search_terms(name))) and not all(map(self.index.mentions, terms))]
+        return [name[0] for name in INNER_NAME.finditer(question)
+                if not VERB_OBJECT.match(question, name.end())
+                and (terms := list(search_terms(name[0]))) and not all(map(self.index.mentions, terms))]
+
+    def _about_assistant(self, question):
+        # "What is your name?" says nothing about the story besides "you". A question that names something in the
+        # book or says more, as in "What fruit would you have to eat to become invisible in Voe?", uses a general "you".
+        if not ADDRESSEE.search(REQUEST_FRAME.sub(' ', question)):
+            return False
+        named = BOOK_NAME.search(question) or any(
+            all(map(self.index.mentions, search_terms(name))) for name in INNER_NAME.findall(question))
+        return not named and len(set(search_terms(question))) <= MAX_ASSISTANT_QUESTION_TERMS
 
     def remember(self, question, answer, *, source=None):
         self._remember_resolved(self._followup(question) or question, answer, source)
@@ -1335,7 +1348,7 @@ class BookSession:
                 sentence, _ = _answer_sentence(source, reread.span)
                 if sentence and len(sentence.split()) <= 32:
                     text = sentence
-        if source is not None and _addressed_to_assistant(question):
+        if source is not None and self._about_assistant(question):
             # In the book, "you" inside quotation marks is one character speaking to another, not to the reader.
             start = source.text.find(text)
             if start < 0 or _in_speech(source.text, start):
