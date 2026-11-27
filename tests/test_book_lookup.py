@@ -37,7 +37,7 @@ class BookLookupTests(unittest.TestCase):
         index = BookIndex([unrelated, relevant])
         self.assertEqual(index.search('Where did Zeb return?')[0][0], relevant)
 
-    def test_answers_never_come_from_a_chapter_heading(self):
+    def test_answers_come_from_a_chapter_heading_only_when_the_title_answers(self):
         index = BookIndex.from_text('CHAPTER 16.\n\nJIM, THE CAB-HORSE\n\nJim the Cab-horse found a large room.\n')
         opening, = index.passages
         self.assertTrue(opening.text.startswith('CHAPTER 16. JIM, THE CAB-HORSE Jim'))
@@ -56,6 +56,21 @@ class BookLookupTests(unittest.TestCase):
                 if expected != NO_ANSWER:
                     span = reply.passage_trace.spans[0]
                     self.assertEqual(opening.text[span.start:span.start + len(span.text)], expected)
+
+        # A title-only extract stays when the rest of the title restates the question and the extract adds to it.
+        index = BookIndex.from_text('CHAPTER 20.\n\nZEB RETURNS TO THE RANCH\n\nZeb drove on.\n')
+        opening, = index.passages
+        cases = [
+            ('Where does Zeb return?', 'THE RANCH', 'THE RANCH'),
+            ('Where does Zeb return?', 'CHAPTER 20.', NO_ANSWER),
+            # The title doesn't mention driving, and the extract only repeats the ranch.
+            ('Where did Zeb drive?', 'THE RANCH', NO_ANSWER),
+            ('What is the ranch?', 'THE RANCH', NO_ANSWER),
+        ]
+        for question, extract, expected in cases:
+            with self.subTest(question=question, extract=extract):
+                reader = Mock(read=Mock(return_value=[AnswerSpan(extract, 9, start=opening.text.index(extract))]))
+                self.assertEqual(BookSession(index, reader).reply(question).text, expected)
 
         # Capitals later in a chapter are story text, such as a shouted line.
         later = Passage('Chapter 1', 10, 12, '"GOODNESS SAKE!" cried Jim.', 'THE EARTHQUAKE')
