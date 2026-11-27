@@ -94,6 +94,7 @@ class ChatEvaluationTests(unittest.TestCase):
         tokenizer = ChatTokenizer(chars)
         book = Mock(spec=BookSession, previous_source=None)
         book.outside_names.return_value = []
+        book.resolve.side_effect = lambda question: question
         model, classifier = Mock(), Mock()
         classifier.predict.return_value = 'A horse.'
 
@@ -111,7 +112,8 @@ class ChatEvaluationTests(unittest.TestCase):
                          ('classifier', 'generator', 'generator'))
         self.assertTrue(second.history_used)
         book.reply.assert_not_called()
-        book.remember.assert_called_with('What happened next?', 'A cab-horse.')
+        # The generated reply stays in chat history but is not stored as a book answer.
+        book.remember.assert_called_with('What happened next?', '')
 
     def test_cited_first_reply_can_override_an_unrelated_classifier_answer(self):
         tokenizer = ChatTokenizer(chars)
@@ -316,6 +318,37 @@ class ChatEvaluationTests(unittest.TestCase):
 
         self.assertEqual((reply.text, reply.reply_method), ('I can help with questions about Oz.', 'classifier'))
 
+    def test_person_followup_after_an_uncited_reply_reaches_the_book(self):
+        passage = Passage('Chapter 1', 1, 2, 'Jim pulled the buggy.')
+
+        def read(question, candidates):
+            if question != 'What did Jim pull?':
+                return [AnswerSpan('', -1) for _ in candidates]
+            return [AnswerSpan('the buggy', 9, start=candidate.text.index('the buggy')) for candidate in candidates]
+
+        for first_reply in ('classifier', 'generator'):
+            with self.subTest(first_reply=first_reply):
+                book = BookSession(BookIndex([passage]), Mock(read=Mock(side_effect=read)))
+                classifier = Mock(predict=Mock(return_value='A horse.' if first_reply == 'classifier' else None))
+                chat = ChatSession(self.generator('A horse.' + END_OF_TURN), ChatTokenizer(chars),
+                                   first_reply_classifier=classifier, book_session=book)
+                self.assertEqual(chat.reply('Who is Jim?').reply_method, first_reply)
+
+                followup = chat.reply('What did he pull?')
+
+                self.assertEqual((followup.text, followup.reply_method), ('the buggy', 'book'))
+                self.assertEqual(followup.source, passage)
+
+        # "What kind?" and "What was it made of?" continue the reply itself, so they stay with the generator.
+        for followup in ('What kind?', 'What was it made of?'):
+            with self.subTest(followup=followup):
+                book = BookSession(BookIndex([passage]), Mock(read=Mock(side_effect=read)))
+                classifier = Mock(predict=Mock(return_value='A horse.'))
+                chat = ChatSession(self.generator('A cab-horse.' + END_OF_TURN), ChatTokenizer(chars),
+                                   first_reply_classifier=classifier, book_session=book)
+                chat.reply('Who is Jim?')
+                self.assertEqual(chat.reply(followup).reply_method, 'generator')
+
     def generator(self, *replies):
         tokenizer = ChatTokenizer(chars)
         replies = iter(replies)
@@ -429,7 +462,8 @@ class ChatEvaluationTests(unittest.TestCase):
         self.assertEqual(rows[1]['passage_trace']['previous_answer'], 'a buggy')
         self.assertIsNone(rows[2]['source'])
         self.assertIsNone(rows[2]['passage_trace']['selected_rank'])
-        self.assertEqual(book.previous_answer, 'At the ranch.')
+        # A generated reply keeps the question as the book subject but is not used to resolve a pronoun.
+        self.assertEqual((book.previous_question, book.previous_answer), ('Where is Zeb?', ''))
 
     def test_history_modes_use_the_right_reply_and_reset_between_conversations(self):
         tokenizer = ChatTokenizer(chars)

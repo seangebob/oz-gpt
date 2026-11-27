@@ -5,7 +5,8 @@ import re
 import torch
 
 from model.book_lookup import (
-    BOOK_NAME, NO_ANSWER, REPORTING_ACTOR, Passage, PassageTrace, search_terms, uses_book_history,
+    BOOK_NAME, NO_ANSWER, PERSONAL_REFERENCE, PLURAL_PERSON, REPORTING_ACTOR, Passage, PassageTrace, search_terms,
+    uses_book_history,
 )
 from model.chat_data import END_MARKER, END_OF_TURN, REPLY_RESERVE, format_compact_turn, format_prompt, format_turn, pack_history
 from model.model import block_size
@@ -30,6 +31,12 @@ PROPER_WORD = re.compile(r"\b[A-Z][a-z]+(?:-[A-Z][a-z]+)*\b")
 
 def _names_subject(question):
     return bool(BOOK_NAME.search(question) or any(match.start() > 0 for match in PROPER_WORD.finditer(question)))
+
+
+def _refers_to_person(question):
+    # "What did he pull?" points back to the person asked about. "What was it made of?" usually points to the thing
+    # in the reply, such as Dorothy's suit-case, which only the chat history holds.
+    return PERSONAL_REFERENCE.search(question) is not None or PLURAL_PERSON.search(question) is not None
 
 
 def _scene_terms(question):
@@ -85,6 +92,7 @@ class ChatSession:
         self.history.clear()
         self._first_reply = True
         self._follows_unanswered = False
+        self._follows_uncited = False
         if self.book_session is not None:
             self.book_session.reset()
 
@@ -92,7 +100,17 @@ class ChatSession:
         self._remember_generation(user_text, reply)
         if self.book_session is not None:
             self.book_session.remember(user_text, reply)
+            self._follows_unanswered = self._follows_uncited = False
+
+    def _remember_uncited(self, user_text, reply, *, trusted):
+        # A classifier or generated reply has no passage behind it. A follow-up about a person, such as "What did he
+        # pull?" after "Who is Jim?", can still look up the earlier subject. "What kind?" continues the reply itself.
+        # Only a classifier fact, not generated text, helps resolve the pronoun.
+        self._remember_generation(user_text, reply)
+        if self.book_session is not None:
+            self.book_session.remember(user_text, reply if trusted else '')
             self._follows_unanswered = False
+            self._follows_uncited = True
 
     def _remember_unanswered(self, user_text):
         # Without an answer to cite, only a question that names someone, directly or through a resolved
@@ -104,6 +122,7 @@ class ChatSession:
         self.history.clear()
         self.book_session.remember(user_text, '')
         self._follows_unanswered = True
+        self._follows_uncited = False
 
     def _remember_generation(self, user_text, reply):
         self.history.append((user_text.strip(), reply.strip()))
@@ -163,6 +182,7 @@ class ChatSession:
         remaining = block_size + 1 - len(token_ids)
         limit = min(self.max_tokens, remaining)
         follows_unanswered = self._follows_unanswered
+        follows_uncited = self._follows_uncited
         classified = None
         if self.first_reply_classifier is not None and self._first_reply and not self.history:
             answer = self.first_reply_classifier.predict(user_text)
@@ -182,14 +202,16 @@ class ChatSession:
                 and not UNANCHORED_EVENT.fullmatch(user_text)
                 and (classified is None or len(question_terms) >= 2)
                 and (self._first_reply or follows_unanswered or self.book_session.previous_source is not None
-                     or not uses_book_history(user_text))):
+                     or not uses_book_history(user_text)
+                     or (follows_uncited and _refers_to_person(user_text)
+                         and _names_subject(self.book_session.resolve(user_text))))):
             book_reply = self.book_session.reply(user_text, remember=False, include_trace=True)
             routed = self._route_book_reply(user_text, book_reply, classified, question_terms)
             if routed is not None:
                 self._first_reply = False
                 if remember:
                     self.book_session.remember_reply(routed)
-                    self._follows_unanswered = False
+                    self._follows_unanswered = self._follows_uncited = False
                     if set(routed.text) <= self.tokenizer.ids.keys():
                         self._remember_generation(user_text, routed.text)
                     else:
@@ -210,7 +232,7 @@ class ChatSession:
 
         if classified is not None:
             if remember:
-                self.remember(user_text, classified)
+                self._remember_uncited(user_text, classified, trusted=True)
             self._first_reply = False
             return ChatReply(classified, False, False, False, reply_method='classifier',
                              passage_trace=trace)
@@ -225,7 +247,7 @@ class ChatSession:
         text = output.removesuffix(END_OF_TURN).strip()
         if remember:
             if ended and text and END_MARKER not in text:
-                self.remember(user_text, text)
+                self._remember_uncited(user_text, text, trusted=False)
             elif self.book_session is not None:
                 self._remember_unanswered(user_text)
         return ChatReply(
