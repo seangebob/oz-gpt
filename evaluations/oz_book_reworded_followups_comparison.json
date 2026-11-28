@@ -1,0 +1,523 @@
+{
+  "evaluated_code_commit": "034dcb5967d400801a03b83502717315558043bf",
+  "book_sha256": "fabc56e4b72b19364d8079ebd88dedf0e045935f340e9fcfa842c2d709c50cf9",
+  "reader_model": "deepset/minilm-uncased-squad2",
+  "reader_revision": "934656cdda79824eabf503ed56e15c01ddbdbe3f",
+  "history": "generated",
+  "purpose": "Check whether the 40-turn benchmark score carries over to new wording. Its earlier misses guided the book lookup repairs, so it measures the targeted cases rather than new questions.",
+  "design": "Keep each first question and expected answer, and reword every follow-up without changing its meaning, its pronouns or its source lines. The rewordings were written before either fixture was rerun.",
+  "review_method": "A reply counts when it conveys the expected fact and its citation supports it in the requested scene, following the README review instructions. Abstentions count as misses.",
+  "reproduction": {
+    "original": "OMP_NUM_THREADS=2 python -m model.chat_evaluation run --book --trace-passages --history generated --test-data data/oz_book_lookup_generalization_test.jsonl --output <new-report>",
+    "reworded": "OMP_NUM_THREADS=2 python -m model.chat_evaluation run --book --trace-passages --history generated --test-data data/oz_book_lookup_reworded_followups.jsonl --output <new-report>",
+    "separate_check": "OMP_NUM_THREADS=2 python -m model.chat_evaluation run --book --trace-passages --history generated --test-data data/oz_book_lookup_followup_check.jsonl --output <new-report>"
+  },
+  "benchmarks": {
+    "original_wording": {
+      "fixture": "data/oz_book_lookup_generalization_test.jsonl",
+      "test_sha256": "9fff016f4c4d293ca411ca9afeabb3f1613daf39f7efb46b24c7dc601a2f25c8",
+      "correct_first_replies_with_support": 20,
+      "first_replies": 20,
+      "correct_followups_with_support": 20,
+      "followups": 20,
+      "abstentions": 0,
+      "cited_replies_wrong_or_unsupported": 0
+    },
+    "reworded_followups": {
+      "fixture": "data/oz_book_lookup_reworded_followups.jsonl",
+      "test_sha256": "97cd10091d6e441e25196352a9906bc52e6e8dcbcd7c180d761064f0f040de53",
+      "correct_first_replies_with_support": 20,
+      "first_replies": 20,
+      "correct_followups_with_support": 11,
+      "followups": 20,
+      "abstentions": 7,
+      "cited_replies_wrong_or_unsupported": 2
+    },
+    "separate_followup_check": {
+      "fixture": "data/oz_book_lookup_followup_check.jsonl",
+      "test_sha256": "8a38106e57a6830b5e0aa0817e4e13485383f0c40785da18650c4396057d4dde",
+      "use": "Frozen before the follow-up repairs, with source ranges absent from earlier fixtures.",
+      "correct_first_replies_with_support": 6,
+      "first_replies": 6,
+      "correct_followups_with_support": 1,
+      "followups": 6,
+      "abstentions": 1,
+      "cited_replies_wrong_or_unsupported": 4
+    }
+  },
+  "reviewed_followups": [
+    {
+      "conversation": 2,
+      "turn": 2,
+      "expected": "The top of the buggy blocked many of the bright rays.",
+      "original": {
+        "prompt": "What let them open their eyes again?",
+        "reply": "the top of the buggy shut out many of the piercing rays",
+        "citation": {
+          "section": "Chapter 2",
+          "start_line": 444,
+          "end_line": 465
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "What allowed them to uncover their eyes afterward?",
+        "reply": "the top of the buggy shut out many of the piercing rays",
+        "citation": {
+          "section": "Chapter 2",
+          "start_line": 428,
+          "end_line": 452
+        },
+        "result": "correct"
+      }
+    },
+    {
+      "conversation": 3,
+      "turn": 2,
+      "expected": "Some stones.",
+      "original": {
+        "prompt": "What else did he say fell along with them?",
+        "reply": "some stones",
+        "citation": {
+          "section": "Chapter 3",
+          "start_line": 796,
+          "end_line": 824
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "According to him, what else came down with them?",
+        "reply": "Rain of Stones",
+        "citation": {
+          "section": "Chapter 3",
+          "start_line": 767,
+          "end_line": 793
+        },
+        "result": "wrong"
+      }
+    },
+    {
+      "conversation": 4,
+      "turn": 2,
+      "expected": "He went up in a balloon.",
+      "original": {
+        "prompt": "What did he do to draw crowds to it?",
+        "reply": "I go up in a balloon",
+        "citation": {
+          "section": "Chapter 3",
+          "start_line": 931,
+          "end_line": 954
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "How did he attract people to the show?",
+        "reply": "I go up in a balloon",
+        "citation": {
+          "section": "Chapter 3",
+          "start_line": 931,
+          "end_line": 954
+        },
+        "result": "correct"
+      }
+    },
+    {
+      "conversation": 4,
+      "turn": 3,
+      "expected": "Three rings.",
+      "original": {
+        "prompt": "How many rings did the show have?",
+        "reply": "three",
+        "citation": {
+          "section": "Chapter 3",
+          "start_line": 931,
+          "end_line": 954
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "How many rings did that circus have?",
+        "reply": "three",
+        "citation": {
+          "section": "Chapter 3",
+          "start_line": 931,
+          "end_line": 954
+        },
+        "result": "correct"
+      }
+    },
+    {
+      "conversation": 5,
+      "turn": 2,
+      "expected": "They grow together again over time.",
+      "original": {
+        "prompt": "How do they mend when the roofs crack?",
+        "reply": "No; but they will grow together again, in time, and we must wait until they do.",
+        "citation": {
+          "section": "Chapter 4",
+          "start_line": 1113,
+          "end_line": 1135
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "When a roof cracks there, how does it get repaired?",
+        "reply": "I couldn't find an answer supported by the book.",
+        "citation": null,
+        "result": "abstained"
+      }
+    },
+    {
+      "conversation": 5,
+      "turn": 3,
+      "expected": "A Rain of Stones.",
+      "original": {
+        "prompt": "What caused that damage in the first place?",
+        "reply": "a Rain of Stones",
+        "citation": {
+          "section": "Chapter 4",
+          "start_line": 1113,
+          "end_line": 1135
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "What made the roofs crack originally?",
+        "reply": "Rain of Stones",
+        "citation": {
+          "section": "Chapter 4",
+          "start_line": 1113,
+          "end_line": 1135
+        },
+        "result": "correct"
+      }
+    },
+    {
+      "conversation": 7,
+      "turn": 2,
+      "expected": "She would not let the kitten hurt them.",
+      "original": {
+        "prompt": "What did Dorothy promise them?",
+        "reply": "I'll not let the kitten hurt you.",
+        "citation": {
+          "section": "Chapter 5",
+          "start_line": 1530,
+          "end_line": 1556
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "What did Dorothy assure them of?",
+        "reply": "I couldn't find an answer supported by the book.",
+        "citation": null,
+        "result": "abstained"
+      }
+    },
+    {
+      "conversation": 8,
+      "turn": 2,
+      "expected": "The Black Pit in the mountains.",
+      "original": {
+        "prompt": "Where did she plan to send the animals instead?",
+        "reply": "the Black Pit",
+        "citation": {
+          "section": "Chapter 6",
+          "start_line": 1686,
+          "end_line": 1701
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "Where was she going to put the animals rather than there?",
+        "reply": "the Black Pit",
+        "citation": {
+          "section": "Chapter 6",
+          "start_line": 1686,
+          "end_line": 1701
+        },
+        "result": "correct"
+      }
+    },
+    {
+      "conversation": 9,
+      "turn": 2,
+      "expected": "They caught them to eat.",
+      "original": {
+        "prompt": "What did the mother say they sometimes did with them?",
+        "reply": "catch them to eat",
+        "citation": {
+          "section": "Chapter 9",
+          "start_line": 2283,
+          "end_line": 2302
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "What did the mother say they did with them now and then?",
+        "reply": "I couldn't find an answer supported by the book.",
+        "citation": null,
+        "result": "abstained"
+      }
+    },
+    {
+      "conversation": 10,
+      "turn": 2,
+      "expected": "Nine days.",
+      "original": {
+        "prompt": "How many days did he fight them before he got away?",
+        "reply": "nine",
+        "citation": {
+          "section": "Chapter 9",
+          "start_line": 2358,
+          "end_line": 2378
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "For how many days did he battle them before escaping?",
+        "reply": "nine",
+        "citation": {
+          "section": "Chapter 9",
+          "start_line": 2358,
+          "end_line": 2378
+        },
+        "result": "correct"
+      }
+    },
+    {
+      "conversation": 12,
+      "turn": 2,
+      "expected": "He thought the place was dangerous and unfit for living creatures. Everything looked dead.",
+      "original": {
+        "prompt": "Why did he want that?",
+        "reply": "It's dangerous. I've taken a look at this place, and it's no fit country for real creatures to go to. Everything's dead, up there--no flesh or blood or growing thing anywhere.",
+        "citation": {
+          "section": "Chapter 11",
+          "start_line": 2857,
+          "end_line": 2880
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "What was his reason for asking that?",
+        "reply": "I couldn't find an answer supported by the book.",
+        "citation": null,
+        "result": "abstained"
+      }
+    },
+    {
+      "conversation": 13,
+      "turn": 2,
+      "expected": "In the buggy.",
+      "original": {
+        "prompt": "Where did he put it after tying it up?",
+        "reply": "buggy",
+        "citation": {
+          "section": "Chapter 11",
+          "start_line": 3009,
+          "end_line": 3025
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "Once it was tied, where did he place it?",
+        "reply": "buggy",
+        "citation": {
+          "section": "Chapter 11",
+          "start_line": 3008,
+          "end_line": 3025
+        },
+        "result": "correct"
+      }
+    },
+    {
+      "conversation": 13,
+      "turn": 3,
+      "expected": "Its wings and arms.",
+      "original": {
+        "prompt": "Which parts of the captive had the strap pinned down?",
+        "reply": "wings and arms",
+        "citation": {
+          "section": "Chapter 11",
+          "start_line": 3018,
+          "end_line": 3027
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "What did the strap hold down on the prisoner?",
+        "reply": "I couldn't find an answer supported by the book.",
+        "citation": null,
+        "result": "abstained"
+      }
+    },
+    {
+      "conversation": 14,
+      "turn": 2,
+      "expected": "A great cloud of pursuing Gargoyles.",
+      "original": {
+        "prompt": "What did Dorothy see coming after them when she looked back?",
+        "reply": "Gargoyles",
+        "citation": {
+          "section": "Chapter 12",
+          "start_line": 3355,
+          "end_line": 3368
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "When Dorothy glanced behind them, what was following?",
+        "reply": "I couldn't find an answer supported by the book.",
+        "citation": null,
+        "result": "abstained"
+      }
+    },
+    {
+      "conversation": 15,
+      "turn": 2,
+      "expected": "Sixty-six years old.",
+      "original": {
+        "prompt": "How old did it say it and its siblings had just turned?",
+        "reply": "sixty-six",
+        "citation": {
+          "section": "Chapter 13",
+          "start_line": 3510,
+          "end_line": 3536
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "What age had it and its siblings just reached, according to it?",
+        "reply": "sixty-six",
+        "citation": {
+          "section": "Chapter 13",
+          "start_line": 3510,
+          "end_line": 3536
+        },
+        "result": "correct"
+      }
+    },
+    {
+      "conversation": 17,
+      "turn": 2,
+      "expected": "The Emerald City.",
+      "original": {
+        "prompt": "What did it represent?",
+        "reply": "the Emerald City",
+        "citation": {
+          "section": "Chapter 17",
+          "start_line": 4640,
+          "end_line": 4655
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "What was it meant to stand for?",
+        "reply": "The Oz Spangled Banner",
+        "citation": {
+          "section": "Chapter 17",
+          "start_line": 4640,
+          "end_line": 4655
+        },
+        "result": "wrong"
+      }
+    },
+    {
+      "conversation": 17,
+      "turn": 3,
+      "expected": "The four countries of Oz.",
+      "original": {
+        "prompt": "What did the four colors around it stand for?",
+        "reply": "the four countries of Oz",
+        "citation": {
+          "section": "Chapter 17",
+          "start_line": 4640,
+          "end_line": 4655
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "What did the four surrounding colors represent?",
+        "reply": "the four countries of Oz",
+        "citation": {
+          "section": "Chapter 17",
+          "start_line": 4640,
+          "end_line": 4655
+        },
+        "result": "correct"
+      }
+    },
+    {
+      "conversation": 18,
+      "turn": 2,
+      "expected": "The Tin Woodman.",
+      "original": {
+        "prompt": "Who made replacements for them?",
+        "reply": "Tin Woodman",
+        "citation": {
+          "section": "Chapter 17",
+          "start_line": 4841,
+          "end_line": 4859
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "Who replaced them?",
+        "reply": "Tin Woodman",
+        "citation": {
+          "section": "Chapter 17",
+          "start_line": 4841,
+          "end_line": 4859
+        },
+        "result": "correct"
+      }
+    },
+    {
+      "conversation": 19,
+      "turn": 2,
+      "expected": "If he had one, it was invisible.",
+      "original": {
+        "prompt": "What did Ozma tell the Woggle-Bug about it?",
+        "reply": "If you have, it is invisible",
+        "citation": {
+          "section": "Chapter 19",
+          "start_line": 5128,
+          "end_line": 5153
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "What was Ozma's reply to the Woggle-Bug about that?",
+        "reply": "I couldn't find an answer supported by the book.",
+        "citation": null,
+        "result": "abstained"
+      }
+    },
+    {
+      "conversation": 20,
+      "turn": 2,
+      "expected": "Uncle Hugson.",
+      "original": {
+        "prompt": "Who came out to meet them when they got there?",
+        "reply": "Uncle Hugson",
+        "citation": {
+          "section": "Chapter 20",
+          "start_line": 5397,
+          "end_line": 5418
+        },
+        "correct_with_support": true
+      },
+      "reworded": {
+        "prompt": "Who greeted them on their arrival?",
+        "reply": "Uncle Hugson",
+        "citation": {
+          "section": "Chapter 20",
+          "start_line": 5397,
+          "end_line": 5418
+        },
+        "result": "correct"
+      }
+    }
+  ],
+  "conclusion": "The same 20 follow-ups score 20/20 as written and 11/20 when reworded, with 7 abstentions and 2 wrong answers. The separate follow-up check still scores 1/6 supported follow-ups. Report the separate check and the reworded score alongside the 40-turn result."
+}
