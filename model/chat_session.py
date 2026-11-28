@@ -33,10 +33,10 @@ def _names_subject(question):
     return bool(BOOK_NAME.search(question) or any(match.start() > 0 for match in PROPER_WORD.finditer(question)))
 
 
-def _refers_to_person(question):
+def _person_references(question):
     # "What did he pull?" points back to the person asked about. "What was it made of?" usually points to the thing
     # in the reply, such as Dorothy's suit-case, which only the chat history holds.
-    return PERSONAL_REFERENCE.search(question) is not None or PLURAL_PERSON.search(question) is not None
+    return len(PERSONAL_REFERENCE.findall(question)) + len(PLURAL_PERSON.findall(question))
 
 
 def _scene_terms(question):
@@ -101,6 +101,13 @@ class ChatSession:
         if self.book_session is not None:
             self.book_session.remember(user_text, reply)
             self._follows_unanswered = self._follows_uncited = False
+
+    def _resolves_person(self, question):
+        # "What did he pull?" after "Who is Jim?" becomes "What did Jim pull?". "Where did they go with Dorothy?" names
+        # Dorothy but "they" has no referent, so the book would answer about a group it can't identify. A pronoun left
+        # after the subject is filled in, as in "Who was going to show Zeb his room?", may refer within the question.
+        resolved = self.book_session.resolve(question)
+        return _person_references(resolved) < _person_references(question) and _names_subject(resolved)
 
     def _remember_uncited(self, user_text, reply, *, trusted):
         # A classifier or generated reply has no passage behind it. A follow-up about a person, such as "What did he
@@ -203,8 +210,7 @@ class ChatSession:
                 and (classified is None or len(question_terms) >= 2)
                 and (self._first_reply or follows_unanswered or self.book_session.previous_source is not None
                      or not uses_book_history(user_text)
-                     or (follows_uncited and _refers_to_person(user_text)
-                         and _names_subject(self.book_session.resolve(user_text))))):
+                     or (follows_uncited and self._resolves_person(user_text)))):
             book_reply = self.book_session.reply(user_text, remember=False, include_trace=True)
             routed = self._route_book_reply(user_text, book_reply, classified, question_terms)
             if routed is not None:

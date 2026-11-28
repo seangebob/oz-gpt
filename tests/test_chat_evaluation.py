@@ -319,10 +319,11 @@ class ChatEvaluationTests(unittest.TestCase):
         self.assertEqual((reply.text, reply.reply_method), ('I can help with questions about Oz.', 'classifier'))
 
     def test_person_followup_after_an_uncited_reply_reaches_the_book(self):
-        passage = Passage('Chapter 1', 1, 2, 'Jim pulled the buggy.')
+        passage = Passage('Chapter 1', 1, 2, 'Jim pulled the buggy with Dorothy in it.')
 
         def read(question, candidates):
-            if question != 'What did Jim pull?':
+            # The reader would also find "the buggy" for the unresolved "Where did they go with Dorothy?"
+            if not question.startswith('What did Jim pull') and 'Dorothy' not in question:
                 return [AnswerSpan('', -1) for _ in candidates]
             return [AnswerSpan('the buggy', 9, start=candidate.text.index('the buggy')) for candidate in candidates]
 
@@ -339,8 +340,16 @@ class ChatEvaluationTests(unittest.TestCase):
                 self.assertEqual((followup.text, followup.reply_method), ('the buggy', 'book'))
                 self.assertEqual(followup.source, passage)
 
-        # "What kind?" and "What was it made of?" continue the reply itself, so they stay with the generator.
-        for followup in ('What kind?', 'What was it made of?'):
+        # "his" can stay once "he" is resolved to Jim.
+        book = BookSession(BookIndex([passage]), Mock(read=Mock(side_effect=read)))
+        chat = ChatSession(self.generator('A horse.' + END_OF_TURN), ChatTokenizer(chars),
+                           first_reply_classifier=Mock(predict=Mock(return_value='A horse.')), book_session=book)
+        chat.reply('Who is Jim?')
+        self.assertEqual(chat.reply('What did he pull for his master?').reply_method, 'book')
+
+        # "What kind?" and "What was it made of?" continue the reply itself, so they stay with the generator. "They"
+        # has no referent after "Who is Jim?", even though the follow-up names Dorothy.
+        for followup in ('What kind?', 'What was it made of?', 'Where did they go with Dorothy?'):
             with self.subTest(followup=followup):
                 book = BookSession(BookIndex([passage]), Mock(read=Mock(side_effect=read)))
                 classifier = Mock(predict=Mock(return_value='A horse.'))
