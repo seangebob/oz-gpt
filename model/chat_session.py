@@ -1,12 +1,13 @@
 from collections import deque
 from dataclasses import dataclass, replace
+from difflib import SequenceMatcher
 import re
 
 import torch
 
 from model.book_lookup import (
-    BOOK_NAME, NO_ANSWER, PERSONAL_REFERENCE, PLURAL_PERSON, REPORTING_ACTOR, Passage, PassageTrace, search_terms,
-    uses_book_history,
+    BOOK_NAME, COORDINATED_ACTOR, FEMALE_NAME, IDENTITY_QUESTION, MALE_NAME, NAME_ANSWER, NO_ANSWER, PERSONAL_REFERENCE, PLURAL_PERSON,
+    QUESTION_ACTOR, REPORTING_ACTOR, Passage, PassageTrace, search_terms, uses_book_history,
 )
 from model.chat_data import END_MARKER, END_OF_TURN, REPLY_RESERVE, format_compact_turn, format_prompt, format_turn, pack_history
 from model.model import block_size
@@ -33,10 +34,55 @@ def _names_subject(question):
     return bool(BOOK_NAME.search(question) or any(match.start() > 0 for match in PROPER_WORD.finditer(question)))
 
 
-def _person_references(question):
+def _is_person_pronoun(word):
     # "What did he pull?" points back to the person asked about. "What was it made of?" usually points to the thing
     # in the reply, such as Dorothy's suit-case, which only the chat history holds.
-    return len(PERSONAL_REFERENCE.findall(question)) + len(PLURAL_PERSON.findall(question))
+    return PERSONAL_REFERENCE.fullmatch(word) is not None or PLURAL_PERSON.fullmatch(word) is not None
+
+
+def _asked_person(question, answer):
+    """Return the person an earlier question asks about, or '' when it doesn't name them."""
+    question = question.replace('’', "'").strip()
+    if identity := IDENTITY_QUESTION.fullmatch(question):
+        return identity[1]
+    if re.match(r'who\b', question, re.IGNORECASE):
+        # "Who drove the buggy?" asks about whoever the answer names. "Who is Ozma's father?" asks about her father,
+        # not Ozma.
+        name = answer.strip(' .?!"')
+        return name if NAME_ANSWER.fullmatch(name) else ''
+    actor = QUESTION_ACTOR.match(question)
+    if not actor or actor[1].endswith("'s") or question.startswith("'s", actor.end()):
+        return ''
+    # "What did Zeb and the Wizard take off the hinges?" asks about both of them.
+    pair = COORDINATED_ACTOR.match(question, actor.end())
+    return f'{actor[1]} and {pair[1]}' if pair else actor[1]
+
+
+def _person_key(name):
+    return name.casefold().removesuffix("'s").removeprefix('the ')
+
+
+def _fits_pronoun(name, pronoun):
+    pronoun = pronoun.lower()
+    if ' and ' in name:
+        return pronoun in {'they', 'them', 'their'}
+    if pronoun in {'she', 'her', 'hers'}:
+        return MALE_NAME.fullmatch(name) is None
+    if pronoun in {'he', 'him', 'his'}:
+        return FEMALE_NAME.fullmatch(name) is None
+    return True
+
+
+def _replaces_pronouns_with(question, resolved, person):
+    """Return whether rewriting question as resolved only replaced personal pronouns, each with person."""
+    before, after = (re.findall(r"[\w'-]+", text.replace('’', "'")) for text in (question, resolved))
+    changes = [(before[i1:i2], ' '.join(after[j1:j2]))
+               for tag, i1, i2, j1, j2 in SequenceMatcher(a=before, b=after, autojunk=False).get_opcodes()
+               if tag != 'equal']
+    return bool(person) and bool(changes) and all(
+        len(old) == 1 and _is_person_pronoun(old[0]) and _person_key(new) == _person_key(person)
+        and _fits_pronoun(new.removesuffix("'s"), old[0])
+        for old, new in changes)
 
 
 def _scene_terms(question):
@@ -104,10 +150,12 @@ class ChatSession:
 
     def _resolves_person(self, question):
         # "What did he pull?" after "Who is Jim?" becomes "What did Jim pull?". "Where did they go with Dorothy?" names
-        # Dorothy but "they" has no referent, so the book would answer about a group it can't identify. A pronoun left
-        # after the subject is filled in, as in "Who was going to show Zeb his room?", may refer within the question.
+        # Dorothy but "they" has no referent, and after "Who is Ozma's father?", "What happened to him?" would become a
+        # question about Ozma. A pronoun left after the subject is filled in, as in "How did Jim make them scatter?",
+        # may refer to something else in the question.
         resolved = self.book_session.resolve(question)
-        return _person_references(resolved) < _person_references(question) and _names_subject(resolved)
+        person = _asked_person(self.book_session.previous_question or '', self.book_session.previous_answer or '')
+        return _replaces_pronouns_with(question, resolved, person) and _names_subject(resolved)
 
     def _remember_uncited(self, user_text, reply, *, trusted):
         # A classifier or generated reply has no passage behind it. A follow-up about a person, such as "What did he

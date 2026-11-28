@@ -95,6 +95,7 @@ class ChatEvaluationTests(unittest.TestCase):
         book = Mock(spec=BookSession, previous_source=None)
         book.outside_names.return_value = []
         book.resolve.side_effect = lambda question: question
+        book.previous_question = book.previous_answer = ''
         model, classifier = Mock(), Mock()
         classifier.predict.return_value = 'A horse.'
 
@@ -319,13 +320,16 @@ class ChatEvaluationTests(unittest.TestCase):
         self.assertEqual((reply.text, reply.reply_method), ('I can help with questions about Oz.', 'classifier'))
 
     def test_person_followup_after_an_uncited_reply_reaches_the_book(self):
-        passage = Passage('Chapter 1', 1, 2, 'Jim pulled the buggy with Dorothy in it.')
+        passage = Passage('Chapter 1', 1, 2, 'Jim pulled the buggy with Dorothy in it. Ozma rescued Dorothy. '
+                                             'Zeb and the Wizard lifted the doors.')
 
         def read(question, candidates):
-            # The reader would also find "the buggy" for the unresolved "Where did they go with Dorothy?"
-            if not question.startswith('What did Jim pull') and 'Dorothy' not in question:
+            # The reader would also answer the unresolved "Where did they go with Dorothy?" and "What happened to Ozma?"
+            answer = ('rescued Dorothy' if 'happened to Ozma' in question
+                      else 'lifted the doors' if 'Zeb and the Wizard do' in question else 'the buggy')
+            if not question.startswith('What did Jim pull') and 'Dorothy' not in question and answer == 'the buggy':
                 return [AnswerSpan('', -1) for _ in candidates]
-            return [AnswerSpan('the buggy', 9, start=candidate.text.index('the buggy')) for candidate in candidates]
+            return [AnswerSpan(answer, 9, start=candidate.text.index(answer)) for candidate in candidates]
 
         for first_reply in ('classifier', 'generator'):
             with self.subTest(first_reply=first_reply):
@@ -357,6 +361,20 @@ class ChatEvaluationTests(unittest.TestCase):
                                    first_reply_classifier=classifier, book_session=book)
                 chat.reply('Who is Jim?')
                 self.assertEqual(chat.reply(followup).reply_method, 'generator')
+
+        # "they" can mean the pair the earlier question asked about.
+        book = BookSession(BookIndex([passage]), Mock(read=Mock(side_effect=read)))
+        chat = ChatSession(self.generator('Revolvers.' + END_OF_TURN), ChatTokenizer(chars),
+                           first_reply_classifier=Mock(predict=Mock(return_value=None)), book_session=book)
+        chat.reply('What did Zeb and the Wizard take off the hinges?')
+        self.assertEqual(chat.reply('What did they do with the doors?').text, 'lifted the doors')
+
+        # "Who is Ozma's father?" asks about her father, so "him" must not become Ozma.
+        book = BookSession(BookIndex([passage]), Mock(read=Mock(side_effect=read)))
+        chat = ChatSession(self.generator('A king.' + END_OF_TURN, 'A king.' + END_OF_TURN), ChatTokenizer(chars),
+                           first_reply_classifier=Mock(predict=Mock(return_value=None)), book_session=book)
+        self.assertEqual(chat.reply("Who is Ozma's father?").reply_method, 'generator')
+        self.assertEqual(chat.reply('What happened to him?').reply_method, 'generator')
 
     def generator(self, *replies):
         tokenizer = ChatTokenizer(chars)
