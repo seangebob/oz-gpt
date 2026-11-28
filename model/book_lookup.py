@@ -35,6 +35,7 @@ KNOWN_PREFIX_LENGTH = 6
 MAX_ASSISTANT_QUESTION_TERMS = 2
 
 CHAPTER_HEADING = re.compile(r'CHAPTER (\d+)\.', re.IGNORECASE)
+CHAPTER_LABEL = re.compile(r'(?i:chapter)\s+\d+\.')
 SENTENCE_END = re.compile(r"""[.!?]["'’”_\])]*$""")
 ABBREVIATION = re.compile(r'(?:[A-Z]|Mr|Mrs|Ms|Dr|St)\.$')
 SHORT_FOLLOW_UP = re.compile(
@@ -737,6 +738,62 @@ class BookIndex:
         return [(self._with_sentence_context(passage, question_terms), score) for passage, score in ranked]
 
 
+def _chapter_heading(passage):
+    """Return where the chapter title starts and where the heading ends when the passage opens a chapter."""
+    label = CHAPTER_LABEL.match(passage.text)
+    if not label:
+        return 0, 0
+    if not passage.heading:
+        return label.end(), label.end()
+    title = re.compile(r'\s+' + re.escape(passage.heading)).match(passage.text, label.end())
+    return (title.end() - len(passage.heading), title.end()) if title else (label.end(), label.end())
+
+
+def _title_answers(question, heading, answer):
+    # "ZEB RETURNS TO THE RANCH" answers "Where does Zeb return?" with "THE RANCH": the rest of the title restates
+    # the question, and the answer adds something new. "THE DEN OF THE DRAGONETTES" only repeats "What is a dragonette?"
+    def terms(text):
+        # Compare "proved" with the title's "PROVE" as confirm_candidates does.
+        return {term.removesuffix('e') if len(term) > 4 else term for term in search_terms(text)}
+
+    asked, answered = terms(question), terms(answer)
+    return bool(asked) and bool(answered) and not asked & answered and asked <= terms(heading)
+
+
+def _story_span(question, passage, span):
+    """Keep chapter headings out of an extract unless the chapter title itself answers the question."""
+    if not span.text:
+        return span
+    start = passage.text.find(span.text) if span.start is None else span.start
+    end = start + len(span.text)
+    if start < 0 or passage.text[start:end] != span.text:
+        return span
+    title_start, heading_end = _chapter_heading(passage)
+    if start >= heading_end:
+        return span
+    if end <= heading_end:
+        if start >= title_start and _title_answers(question, passage.heading, span.text):
+            return span
+        return AnswerSpan('', span.margin, span.context_end)
+    # "THE CAB-HORSE Jim the Cab-horse" keeps "Jim the Cab-horse" after the chapter title.
+    story = passage.text[heading_end:end].strip(' ,;:-')
+    if not re.search(r'[A-Za-z]', story):
+        return AnswerSpan('', span.margin, span.context_end)
+    return AnswerSpan(story, span.margin, span.context_end, start=passage.text.index(story, heading_end))
+
+
+class StoryTextReader:
+    """Pass questions to an extractive reader and keep chapter headings out of its extracts unless they answer."""
+
+    def __init__(self, reader):
+        self.reader = reader
+
+    def read(self, question, passages):
+        spans = self.reader.read(question, passages)
+        story = [_story_span(question, passage, span) for passage, span in zip(passages, spans)]
+        return story + list(spans[len(passages):])
+
+
 class ExtractiveReader:
     def __init__(self):
         try:
@@ -1074,7 +1131,7 @@ def _identity_spans(question, passages, spans):
 class BookSession:
     def __init__(self, index, reader, *, trace_passages=False):
         self.index = index
-        self.reader = reader
+        self.reader = reader if isinstance(reader, StoryTextReader) else StoryTextReader(reader)
         self.trace_passages = trace_passages
         self.reset()
 

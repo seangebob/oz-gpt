@@ -260,6 +260,8 @@ Try `Where was the Wizard born?`. Book lookup searches the bundled text and uses
 
 The first run downloads the [MiniLM extractive answer reader](https://huggingface.co/deepset/minilm-uncased-squad2). The reader runs locally on CPU. `--chat` continues to use the Oz checkpoint trained in this project.
 
+Chapter headings help rank passages but are never returned as answers. An extract that starts in a heading, such as `THE CAB-HORSE Jim the Cab-horse`, keeps only the story text, `Jim the Cab-horse`.
+
 ### Evaluate chat checkpoints and book lookup
 
 Run the same checkpoint with ordinary chat history and with history disabled to measure the effect of memory.
